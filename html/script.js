@@ -505,7 +505,13 @@ function deletePartnership(id) {
 window.addEventListener('message', (event) => {
     const data = event.data;
 
-    if (data.action === 'updateProducts') {
+    if (data.action === 'open') {
+        // Déjà géré en haut
+        return;
+    } else if (data.action === 'close') {
+        // Déjà géré en haut
+        return;
+    } else if (data.action === 'updateProducts') {
         tabletData.products = data.products;
         loadProductsSelect();
         if (tabletData.isBoss) {
@@ -523,6 +529,7 @@ window.addEventListener('message', (event) => {
         }
     } else if (data.action === 'invoiceCreated') {
         // Notification ou autre feedback
+        loadQuickStats();
     } else if (data.action === 'receiveInvoiceHistory') {
         receiveInvoiceHistory(data.invoices);
     } else if (data.action === 'receiveStats') {

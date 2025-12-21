@@ -75,9 +75,14 @@ end
 
 -- Fermer la tablette
 function CloseTablet()
+    if not isTabletOpen then return end
+
     isTabletOpen = false
-    SendNUIMessage({ action = 'close' })
     SetNuiFocus(false, false)
+
+    -- Petit délai pour s'assurer que tout est bien fermé
+    Wait(100)
+    SendNUIMessage({ action = 'close' })
 end
 
 -- Commande /tablette
