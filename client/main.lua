@@ -1,20 +1,28 @@
 ESX = exports['es_extended']:getSharedObject()
 local isTabletOpen = false
-local PlayerData = {}
 
--- Player data
+-- Récupérer les données du joueur
+CreateThread(function()
+    while ESX.GetPlayerData().job == nil do
+        Wait(100)
+    end
+end)
+
 RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(xPlayer)
-    PlayerData = xPlayer
+    ESX.PlayerData = xPlayer
 end)
 
 RegisterNetEvent('esx:setJob')
 AddEventHandler('esx:setJob', function(job)
-    PlayerData.job = job
+    ESX.PlayerData.job = job
 end)
 
 -- Vérifier si le joueur est boss
 function IsBoss()
+    local PlayerData = ESX.GetPlayerData()
+    if not PlayerData.job then return false end
+
     for _, grade in ipairs(Config.BossGrades) do
         if PlayerData.job.grade_name == grade then
             return true
@@ -26,7 +34,16 @@ end
 -- Ouvrir la tablette
 function OpenTablet()
     if isTabletOpen then return end
-    if not PlayerData.job or PlayerData.job.name == 'unemployed' then
+
+    local PlayerData = ESX.GetPlayerData()
+
+    -- Vérification du job
+    if not PlayerData.job then
+        ESX.ShowNotification(Config.Translations['no_job'])
+        return
+    end
+
+    if PlayerData.job.name == 'unemployed' then
         ESX.ShowNotification(Config.Translations['no_job'])
         return
     end
