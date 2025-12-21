@@ -54,7 +54,24 @@ function GetJobEmployees(job)
     return employees
 end
 
--- Données initiales du joueur (commission + produits + partenariats)
+-- Obtenir toutes les entreprises (jobs) disponibles
+function GetAllCompanies()
+    local companies = {}
+    local jobs = ESX.GetJobs()
+
+    for jobName, jobData in pairs(jobs) do
+        if jobName ~= 'unemployed' then
+            table.insert(companies, {
+                name = jobName,
+                label = jobData.label
+            })
+        end
+    end
+
+    return companies
+end
+
+-- Données initiales du joueur (commission + produits + partenariats + entreprises)
 ESX.RegisterServerCallback('tablet:getPlayerData', function(source, cb)
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then cb(nil) return end
@@ -71,10 +88,14 @@ ESX.RegisterServerCallback('tablet:getPlayerData', function(source, cb)
     -- Partenariats du job
     local partnerships = GetJobPartnerships(job)
 
+    -- Toutes les entreprises du serveur
+    local companies = GetAllCompanies()
+
     cb({
         commission = commission,
         products = products,
-        partnerships = partnerships
+        partnerships = partnerships,
+        companies = companies
     })
 end)
 
@@ -223,6 +244,77 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
     local commissionPercent = GetEmployeeCommission(job, identifier)
     local commissionAmount = total * (commissionPercent / 100)
 
+    -- Type de facture (citizen ou company)
+    local invoiceType = invoiceData.type or 'citizen'
+    local targetInfo = ''
+
+    -- Traiter le paiement selon le type
+    if invoiceType == 'citizen' then
+        -- Facturation citoyen
+        local targetId = invoiceData.targetId
+        local targetPlayer = ESX.GetPlayerFromId(targetId)
+
+        if not targetPlayer then
+            TriggerClientEvent('esx:showNotification', _source, '❌ Joueur introuvable (ID: '..targetId..')')
+            return
+        end
+
+        local targetMoney = targetPlayer.getAccount('bank').money
+
+        if targetMoney < total then
+            TriggerClientEvent('esx:showNotification', _source, '❌ Le client n\'a pas assez d\'argent en banque')
+            return
+        end
+
+        -- Débiter le client
+        targetPlayer.removeAccountMoney('bank', total)
+
+        -- Créditer le compte société du job
+        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..job, function(account)
+            if account then
+                account.addMoney(total)
+            end
+        end)
+
+        targetInfo = targetPlayer.getName()..' (ID: '..targetId..')'
+
+        -- Notif au client
+        TriggerClientEvent('esx:showNotification', targetId, '💸 Facture payée: '..total..'€ pour '..ESX.GetJobLabel(job))
+    else
+        -- Facturation entreprise
+        local targetCompany = invoiceData.targetCompany
+
+        -- Débiter le compte société de l'entreprise cible
+        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..targetCompany, function(targetAccount)
+            if not targetAccount then
+                TriggerClientEvent('esx:showNotification', _source, '❌ Compte entreprise introuvable')
+                return
+            end
+
+            if targetAccount.money < total then
+                TriggerClientEvent('esx:showNotification', _source, '❌ L\'entreprise n\'a pas assez d\'argent')
+                return
+            end
+
+            -- Débiter l'entreprise cible
+            targetAccount.removeMoney(total)
+
+            -- Créditer le compte société du job créateur
+            TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..job, function(account)
+                if account then
+                    account.addMoney(total)
+                end
+            end)
+
+            -- Enregistrer le paiement
+            MySQL.insert('INSERT INTO tablet_company_payments (from_job, to_company, amount, invoice_id) VALUES (?, ?, ?, ?)', {
+                targetCompany, job, total, 0
+            })
+        end)
+
+        targetInfo = ESX.GetJobLabel(targetCompany) or targetCompany
+    end
+
     -- Insérer en BDD
     local invoiceId = MySQL.insert.await([[
         INSERT INTO tablet_invoices
@@ -236,31 +328,15 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
         subtotal,
         manualDiscount,
         partnershipDiscount,
-        partnershipName,
+        targetInfo,
         Config.TaxRate,
         total,
         commissionPercent,
         commissionAmount
     })
 
-    -- Si partenariat avec paiement inter-entreprise
-    if partnershipName then
-        -- Débiter le compte société (ESX society)
-        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..job, function(account)
-            if account then
-                local partnerAmount = subtotal * (partnershipDiscount / 100)
-                account.removeMoney(partnerAmount)
-
-                -- Enregistrer le paiement
-                MySQL.insert('INSERT INTO tablet_company_payments (from_job, to_company, amount, invoice_id) VALUES (?, ?, ?, ?)', {
-                    job, partnershipName, partnerAmount, invoiceId
-                })
-            end
-        end)
-    end
-
     -- Notification
-    TriggerClientEvent('esx:showNotification', _source, Config.Translations['invoice_created'])
+    TriggerClientEvent('esx:showNotification', _source, '✅ Facture créée: '..total..'€ • Commission: '..commissionAmount..'€')
 
     -- Reload data
     TriggerClientEvent('tablet:invoiceCreated', _source)

@@ -94,9 +94,42 @@
                     <p>Créez et gérez vos factures clients</p>
                 </div>
                 <div class="invoice-form">
-                    <div class="form-group">
-                        <label>Client / Destinataire</label>
-                        <input type="text" id="invoiceClient" placeholder="Nom du client">
+                    <div class="form-section">
+                        <h3>Type de Facture</h3>
+                        <div class="invoice-type-selector">
+                            <button class="type-btn active" data-type="citizen">
+                                <i class="fa-solid fa-user"></i>
+                                <span>Citoyen</span>
+                            </button>
+                            <button class="type-btn" data-type="company">
+                                <i class="fa-solid fa-building"></i>
+                                <span>Entreprise</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="citizenSection">
+                        <h3>Informations Client</h3>
+                        <div class="client-info-grid">
+                            <div class="form-group">
+                                <label>ID Serveur du Joueur</label>
+                                <input type="number" id="citizenId" placeholder="Ex: 12" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Nom du Client (optionnel)</label>
+                                <input type="text" id="citizenName" placeholder="Ex: John Doe">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="companySection" style="display: none;">
+                        <h3>Entreprise Partenaire</h3>
+                        <div class="form-group">
+                            <label>Sélectionner l'Entreprise</label>
+                            <select id="companySelect">
+                                <option value="">Choisir une entreprise</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-section">

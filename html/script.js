@@ -5,9 +5,11 @@ let tabletData = {
     commission: 0,
     products: [],
     partnerships: [],
+    companies: [],
     invoiceItems: [],
     currentDiscount: 0,
-    currentPartnership: null
+    currentPartnership: null,
+    invoiceType: 'citizen' // 'citizen' or 'company'
 };
 
 // Utilitaires
@@ -59,6 +61,7 @@ function openTablet(data) {
     tabletData.commission = data.commission || 0;
     tabletData.products = data.products || [];
     tabletData.partnerships = data.partnerships || [];
+    tabletData.companies = data.companies || [];
 
     document.getElementById('companyName').textContent = data.jobLabel || data.job;
     document.getElementById('userName').textContent = data.userName;
@@ -75,6 +78,10 @@ function openTablet(data) {
     // Charger les produits dans le select
     loadProductsSelect();
     loadPartnershipsSelect();
+    loadCompaniesSelect();
+
+    // Setup invoice type selector
+    setupInvoiceTypeSelector();
 
     // Charger les données initiales
     loadQuickStats();
@@ -162,6 +169,48 @@ function loadPartnershipsSelect() {
         option.dataset.discount = partner.discount_percent;
         option.dataset.name = partner.company_name;
         select.appendChild(option);
+    });
+}
+
+function loadCompaniesSelect() {
+    const select = document.getElementById('companySelect');
+    select.innerHTML = '<option value="">Choisir une entreprise</option>';
+
+    tabletData.companies.forEach(company => {
+        const option = document.createElement('option');
+        option.value = company.name;
+        option.textContent = company.label;
+        option.dataset.name = company.name;
+        option.dataset.label = company.label;
+        select.appendChild(option);
+    });
+}
+
+function setupInvoiceTypeSelector() {
+    const typeBtns = document.querySelectorAll('.type-btn');
+    const citizenSection = document.getElementById('citizenSection');
+    const companySection = document.getElementById('companySection');
+
+    typeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.type;
+
+            // Update active state
+            typeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update invoice type
+            tabletData.invoiceType = type;
+
+            // Toggle sections
+            if (type === 'citizen') {
+                citizenSection.style.display = 'block';
+                companySection.style.display = 'none';
+            } else {
+                citizenSection.style.display = 'none';
+                companySection.style.display = 'block';
+            }
+        });
     });
 }
 
@@ -264,18 +313,40 @@ function calculateInvoiceSummary() {
 // Créer facture
 document.getElementById('createInvoiceBtn').addEventListener('click', () => {
     if (tabletData.invoiceItems.length === 0) {
+        alert('Veuillez ajouter au moins un article');
         return;
     }
 
-    const client = document.getElementById('invoiceClient').value || 'Client';
     const manualDiscount = parseFloat(document.getElementById('manualDiscount').value) || 0;
 
-    const invoiceData = {
-        client: client,
+    let invoiceData = {
+        type: tabletData.invoiceType,
         items: tabletData.invoiceItems,
         manualDiscount: manualDiscount,
         partnership: tabletData.currentPartnership
     };
+
+    if (tabletData.invoiceType === 'citizen') {
+        const citizenId = parseInt(document.getElementById('citizenId').value);
+        const citizenName = document.getElementById('citizenName').value || '';
+
+        if (!citizenId) {
+            alert('Veuillez entrer l\'ID du joueur');
+            return;
+        }
+
+        invoiceData.targetId = citizenId;
+        invoiceData.targetName = citizenName;
+    } else {
+        const companyName = document.getElementById('companySelect').value;
+
+        if (!companyName) {
+            alert('Veuillez sélectionner une entreprise');
+            return;
+        }
+
+        invoiceData.targetCompany = companyName;
+    }
 
     postData('createInvoice', invoiceData);
 
@@ -287,11 +358,28 @@ document.getElementById('createInvoiceBtn').addEventListener('click', () => {
 function resetInvoiceForm() {
     tabletData.invoiceItems = [];
     tabletData.currentPartnership = null;
-    document.getElementById('invoiceClient').value = '';
+    tabletData.invoiceType = 'citizen';
+
+    document.getElementById('citizenId').value = '';
+    document.getElementById('citizenName').value = '';
+    document.getElementById('companySelect').selectedIndex = 0;
     document.getElementById('productSelect').selectedIndex = 0;
     document.getElementById('productQty').value = 1;
     document.getElementById('manualDiscount').value = 0;
     document.getElementById('partnershipSelect').selectedIndex = 0;
+
+    // Reset type selector
+    document.querySelectorAll('.type-btn').forEach(btn => {
+        if (btn.dataset.type === 'citizen') {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    document.getElementById('citizenSection').style.display = 'block';
+    document.getElementById('companySection').style.display = 'none';
+
     renderInvoiceItems();
     calculateInvoiceSummary();
 }
