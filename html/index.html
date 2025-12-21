@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablette de Gestion</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="tablet-container" id="tablet">
+        <!-- Header -->
+        <div class="tablet-header">
+            <div class="header-left">
+                <span class="company-icon">🏢</span>
+                <span class="company-name" id="companyName">Entreprise</span>
+            </div>
+            <div class="header-right">
+                <span class="user-name" id="userName">Employé</span>
+                <button class="close-btn" id="closeBtn">✕</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="tablet-nav">
+            <button class="nav-btn active" data-page="home">
+                <span class="nav-icon">🏠</span>
+                <span>Accueil</span>
+            </button>
+            <button class="nav-btn" data-page="invoice">
+                <span class="nav-icon">📝</span>
+                <span>Facture</span>
+            </button>
+            <button class="nav-btn" data-page="history">
+                <span class="nav-icon">📄</span>
+                <span>Historique</span>
+            </button>
+            <button class="nav-btn" data-page="stats">
+                <span class="nav-icon">📊</span>
+                <span>Stats</span>
+            </button>
+            <button class="nav-btn" data-page="management" id="managementTab" style="display: none;">
+                <span class="nav-icon">⚙️</span>
+                <span>Gestion</span>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="tablet-content">
+            <!-- Page Accueil -->
+            <div class="page active" id="page-home">
+                <div class="welcome-card">
+                    <h2>Bienvenue sur votre tablette de gestion</h2>
+                    <p>Gérez vos factures, commissions et bien plus encore</p>
+                </div>
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <div class="stat-label">Ma Commission</div>
+                            <div class="stat-value" id="quickCommission">0€</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📄</div>
+                        <div class="stat-info">
+                            <div class="stat-label">Mes Factures</div>
+                            <div class="stat-value" id="quickInvoices">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💵</div>
+                        <div class="stat-info">
+                            <div class="stat-label">% Commission</div>
+                            <div class="stat-value" id="quickPercent">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Facture -->
+            <div class="page" id="page-invoice">
+                <h2>Créer une Facture</h2>
+                <div class="invoice-form">
+                    <div class="form-group">
+                        <label>Client / Destinataire</label>
+                        <input type="text" id="invoiceClient" placeholder="Nom du client">
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Articles</h3>
+                        <div class="product-selector">
+                            <select id="productSelect">
+                                <option value="">Sélectionner un produit</option>
+                            </select>
+                            <input type="number" id="productQty" placeholder="Qté" value="1" min="1">
+                            <button class="btn-add" id="addProductBtn">Ajouter</button>
+                        </div>
+                        <div class="invoice-items" id="invoiceItems">
+                            <!-- Items dynamiques -->
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Remises & Partenariats</h3>
+                        <div class="discount-section">
+                            <div class="form-group">
+                                <label>Remise manuelle (%)</label>
+                                <input type="number" id="manualDiscount" placeholder="0" min="0" max="100" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Partenariat</label>
+                                <select id="partnershipSelect">
+                                    <option value="">Aucun</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="invoice-summary">
+                        <div class="summary-row">
+                            <span>Total HT:</span>
+                            <span id="summaryHT">0.00€</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Remise:</span>
+                            <span id="summaryDiscount">0%</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>TVA (20%):</span>
+                            <span id="summaryTax">0.00€</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total TTC:</span>
+                            <span id="summaryTotal">0.00€</span>
+                        </div>
+                        <div class="summary-row commission">
+                            <span>Votre Commission:</span>
+                            <span id="summaryCommission">0.00€</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary btn-large" id="createInvoiceBtn">Créer la Facture</button>
+                </div>
+            </div>
+
+            <!-- Page Historique -->
+            <div class="page" id="page-history">
+                <h2>Mes Factures</h2>
+                <div class="invoice-list" id="invoiceList">
+                    <!-- Factures dynamiques -->
+                </div>
+            </div>
+
+            <!-- Page Stats -->
+            <div class="page" id="page-stats">
+                <h2>Statistiques</h2>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-title">CA du Mois</div>
+                        <div class="stat-big-value" id="statRevenue">0€</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">Factures Émises</div>
+                        <div class="stat-big-value" id="statInvoicesCount">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">Commission Totale</div>
+                        <div class="stat-big-value" id="statCommission">0€</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">Taux Commission</div>
+                        <div class="stat-big-value" id="statCommissionRate">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Gestion (Boss only) -->
+            <div class="page" id="page-management">
+                <h2>Gestion - Patron</h2>
+                <div class="management-tabs">
+                    <button class="mgmt-tab active" data-tab="products">Produits</button>
+                    <button class="mgmt-tab" data-tab="employees">Employés</button>
+                    <button class="mgmt-tab" data-tab="partnerships">Partenariats</button>
+                </div>
+
+                <!-- Tab Produits -->
+                <div class="mgmt-content active" id="mgmt-products">
+                    <div class="add-section">
+                        <input type="text" id="newProductName" placeholder="Nom du produit">
+                        <input type="number" id="newProductPrice" placeholder="Prix" step="0.01">
+                        <button class="btn-primary" id="addNewProductBtn">Ajouter</button>
+                    </div>
+                    <div class="product-list" id="productList">
+                        <!-- Produits dynamiques -->
+                    </div>
+                </div>
+
+                <!-- Tab Employés -->
+                <div class="mgmt-content" id="mgmt-employees">
+                    <div class="employee-list" id="employeeList">
+                        <!-- Employés dynamiques -->
+                    </div>
+                </div>
+
+                <!-- Tab Partenariats -->
+                <div class="mgmt-content" id="mgmt-partnerships">
+                    <div class="add-section">
+                        <input type="text" id="newPartnerName" placeholder="Nom entreprise">
+                        <input type="number" id="newPartnerDiscount" placeholder="Remise %" min="0" max="100">
+                        <button class="btn-primary" id="addPartnerBtn">Ajouter</button>
+                    </div>
+                    <div class="partner-list" id="partnerList">
+                        <!-- Partenariats dynamiques -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
