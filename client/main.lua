@@ -66,7 +66,8 @@ function OpenTablet()
             isBoss = isBoss,
             commission = playerData.commission or Config.DefaultCommission,
             products = playerData.products or {},
-            partnerships = playerData.partnerships or {}
+            partnerships = playerData.partnerships or {},
+            companies = playerData.companies or {}
         })
 
         SetNuiFocus(true, true)
