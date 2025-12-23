@@ -376,7 +376,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
         end
 
         -- Vérifier l'argent du joueur
-        local money = xPlayer.getAccount('bank').money
+        local money = tonumber(xPlayer.getAccount('bank').money) or 0
         if money < total then
             TriggerClientEvent('esx:showNotification', _source, '❌ Vous n\'avez pas assez d\'argent en banque')
             return
@@ -410,7 +410,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
                 return
             end
 
-            if payerAccount.money < total then
+            if tonumber(payerAccount.money) < total then
                 TriggerClientEvent('esx:showNotification', _source, '❌ Votre entreprise n\'a pas assez d\'argent')
                 return
             end

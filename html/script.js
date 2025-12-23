@@ -9,7 +9,8 @@ let tabletData = {
     invoiceItems: [],
     currentDiscount: 0,
     currentPartnership: null,
-    invoiceType: 'citizen' // 'citizen' or 'company'
+    invoiceType: 'citizen', // 'citizen' or 'company'
+    taxRate: 20.0 // Default, sera mis à jour par le serveur
 };
 
 // Utilitaires
@@ -62,6 +63,7 @@ function openTablet(data) {
     tabletData.products = data.products || [];
     tabletData.partnerships = data.partnerships || [];
     tabletData.companies = data.companies || [];
+    tabletData.taxRate = data.taxRate || 20.0;
 
     document.getElementById('companyName').textContent = data.jobLabel || data.job;
     document.getElementById('userName').textContent = data.userName;
@@ -352,7 +354,7 @@ function calculateInvoiceSummary() {
     const totalDiscount = manualDiscount + partnerDiscount;
     const discountAmount = subtotal * (totalDiscount / 100);
     const afterDiscount = subtotal - discountAmount;
-    const taxAmount = afterDiscount * 0.20; // 20% TVA
+    const taxAmount = afterDiscount * (tabletData.taxRate / 100);
     const total = afterDiscount + taxAmount;
     const commission = total * (tabletData.commission / 100);
 
@@ -361,6 +363,9 @@ function calculateInvoiceSummary() {
     document.getElementById('summaryTax').textContent = formatCurrency(taxAmount);
     document.getElementById('summaryTotal').textContent = formatCurrency(total);
     document.getElementById('summaryCommission').textContent = formatCurrency(commission);
+
+    // Mettre à jour le label de la TVA avec le taux actuel
+    document.querySelector('#invoiceSummaryList li:nth-child(3) span:first-child').textContent = `TVA (${tabletData.taxRate}%):`;
 }
 
 // Créer facture

@@ -67,7 +67,8 @@ function OpenTablet()
             commission = playerData.commission or Config.DefaultCommission,
             products = playerData.products or {},
             partnerships = playerData.partnerships or {},
-            companies = playerData.companies or {}
+            companies = playerData.companies or {},
+            taxRate = Config.TaxRate
         })
 
         SetNuiFocus(true, true)
