@@ -656,6 +656,77 @@ function deletePartnership(id) {
     postData('deletePartnership', { id });
 }
 
+// Invoice Menu
+function openInvoiceMenu(invoices) {
+    const menu = document.getElementById('invoiceMenu');
+    const list = document.getElementById('invoiceMenuList');
+
+    list.innerHTML = '';
+
+    invoices.forEach(invoice => {
+        const items = JSON.parse(invoice.items);
+        const itemsList = items.map(item => `${item.name} x${item.quantity}`).join(', ');
+
+        const card = document.createElement('div');
+        card.className = 'pending-invoice-card';
+        card.innerHTML = `
+            <div class="pending-invoice-header">
+                <div class="pending-invoice-id">Facture #${invoice.id}</div>
+                <div class="pending-invoice-company">${invoice.employee_name}</div>
+            </div>
+            <div class="pending-invoice-body">
+                <div class="pending-detail">
+                    <div class="pending-detail-label">Articles</div>
+                    <div class="pending-detail-value">${itemsList}</div>
+                </div>
+                <div class="pending-detail">
+                    <div class="pending-detail-label">Date</div>
+                    <div class="pending-detail-value">${formatDate(invoice.created_at)}</div>
+                </div>
+                <div class="pending-detail">
+                    <div class="pending-detail-label">Montant Total</div>
+                    <div class="pending-detail-value total">${formatCurrency(invoice.total)}</div>
+                </div>
+                <div class="pending-detail">
+                    <div class="pending-detail-label">Entreprise</div>
+                    <div class="pending-detail-value">${invoice.partnership_name || 'N/A'}</div>
+                </div>
+            </div>
+            <div class="pending-invoice-actions">
+                <button class="btn-pay" onclick="payInvoice(${invoice.id})">
+                    <i class="fa-solid fa-credit-card"></i> Payer ${formatCurrency(invoice.total)}
+                </button>
+            </div>
+        `;
+        list.appendChild(card);
+    });
+
+    menu.classList.add('show');
+}
+
+function closeInvoiceMenu() {
+    document.getElementById('invoiceMenu').classList.remove('show');
+}
+
+function payInvoice(invoiceId) {
+    if (confirm('Confirmez-vous le paiement de cette facture ?')) {
+        postData('payInvoice', { invoiceId });
+    }
+}
+
+document.getElementById('closeInvoiceMenuBtn').addEventListener('click', () => {
+    postData('closeInvoiceMenu', {});
+    closeInvoiceMenu();
+});
+
+// ESC pour fermer invoice menu
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('invoiceMenu').classList.contains('show')) {
+        postData('closeInvoiceMenu', {});
+        closeInvoiceMenu();
+    }
+});
+
 // Listener pour les mises à jour du serveur
 window.addEventListener('message', (event) => {
     const data = event.data;
@@ -665,6 +736,12 @@ window.addEventListener('message', (event) => {
         return;
     } else if (data.action === 'close') {
         // Déjà géré en haut
+        return;
+    } else if (data.action === 'openInvoiceMenu') {
+        openInvoiceMenu(data.invoices);
+        return;
+    } else if (data.action === 'closeInvoiceMenu') {
+        closeInvoiceMenu();
         return;
     } else if (data.action === 'updateProducts') {
         tabletData.products = data.products;

@@ -91,6 +91,23 @@ RegisterCommand(Config.Command, function()
     OpenTablet()
 end, false)
 
+-- Commande /facture
+RegisterCommand('facture', function()
+    ESX.TriggerServerCallback('tablet:getPendingInvoices', function(invoices)
+        if not invoices or #invoices == 0 then
+            ESX.ShowNotification('📄 Vous n\'avez aucune facture en attente')
+            return
+        end
+
+        SendNUIMessage({
+            action = 'openInvoiceMenu',
+            invoices = invoices
+        })
+
+        SetNuiFocus(true, true)
+    end)
+end, false)
+
 -- NUI Callbacks
 RegisterNUICallback('close', function(data, cb)
     CloseTablet()
@@ -163,6 +180,16 @@ RegisterNUICallback('deletePartnership', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('payInvoice', function(data, cb)
+    TriggerServerEvent('tablet:payInvoice', data.invoiceId)
+    cb('ok')
+end)
+
+RegisterNUICallback('closeInvoiceMenu', function(data, cb)
+    SetNuiFocus(false, false)
+    cb('ok')
+end)
+
 -- Events serveur -> client
 RegisterNetEvent('tablet:updateProducts')
 AddEventHandler('tablet:updateProducts', function(products)
@@ -192,6 +219,15 @@ RegisterNetEvent('tablet:invoiceCreated')
 AddEventHandler('tablet:invoiceCreated', function()
     SendNUIMessage({
         action = 'invoiceCreated'
+    })
+end)
+
+RegisterNetEvent('tablet:refreshInvoices')
+AddEventHandler('tablet:refreshInvoices', function()
+    -- Refermer le menu et notifier
+    SetNuiFocus(false, false)
+    SendNUIMessage({
+        action = 'closeInvoiceMenu'
     })
 end)
 

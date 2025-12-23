@@ -16,6 +16,167 @@ body {
     background: transparent;
 }
 
+/* Invoice Menu */
+.invoice-menu {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.invoice-menu.show {
+    display: flex;
+}
+
+.invoice-menu-container {
+    width: 700px;
+    max-height: 80vh;
+    background: #0f172a;
+    border-radius: 12px;
+    border: 1px solid #1e293b;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.25s ease-out;
+}
+
+.invoice-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.invoice-menu-header h2 {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.invoice-menu-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.invoice-menu-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.invoice-menu-content::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+.invoice-menu-content::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+
+.pending-invoice-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+}
+
+.pending-invoice-card:hover {
+    border-color: #475569;
+    transform: translateX(4px);
+}
+
+.pending-invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #334155;
+}
+
+.pending-invoice-id {
+    font-size: 16px;
+    font-weight: 600;
+    color: #60a5fa;
+}
+
+.pending-invoice-company {
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.pending-invoice-body {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.pending-detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.pending-detail-label {
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.pending-detail-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.pending-detail-value.total {
+    font-size: 20px;
+    color: #60a5fa;
+}
+
+.pending-invoice-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-pay {
+    flex: 1;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-pay:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+}
+
 /* Container Principal */
 .tablet-container {
     display: none;

@@ -107,20 +107,22 @@ ESX.RegisterServerCallback('tablet:getQuickStats', function(source, cb)
     local job = xPlayer.job.name
     local identifier = xPlayer.identifier
 
-    -- Total commission du mois
+    -- Total commission du mois (seulement factures payées)
     local commission = MySQL.scalar.await([[
         SELECT IFNULL(SUM(commission_amount), 0)
         FROM tablet_invoices
         WHERE job = ? AND employee_identifier = ?
+        AND status = 'paid'
         AND MONTH(created_at) = MONTH(CURRENT_DATE())
         AND YEAR(created_at) = YEAR(CURRENT_DATE())
     ]], {job, identifier}) or 0
 
-    -- Nombre de factures du mois
+    -- Nombre de factures du mois (seulement factures payées)
     local invoiceCount = MySQL.scalar.await([[
         SELECT COUNT(*)
         FROM tablet_invoices
         WHERE job = ? AND employee_identifier = ?
+        AND status = 'paid'
         AND MONTH(created_at) = MONTH(CURRENT_DATE())
         AND YEAR(created_at) = YEAR(CURRENT_DATE())
     ]], {job, identifier}) or 0
@@ -157,29 +159,32 @@ ESX.RegisterServerCallback('tablet:getStats', function(source, cb)
     local job = xPlayer.job.name
     local identifier = xPlayer.identifier
 
-    -- CA du mois (total des factures)
+    -- CA du mois (total des factures payées)
     local revenue = MySQL.scalar.await([[
         SELECT IFNULL(SUM(total), 0)
         FROM tablet_invoices
         WHERE job = ? AND employee_identifier = ?
+        AND status = 'paid'
         AND MONTH(created_at) = MONTH(CURRENT_DATE())
         AND YEAR(created_at) = YEAR(CURRENT_DATE())
     ]], {job, identifier}) or 0
 
-    -- Nombre de factures du mois
+    -- Nombre de factures du mois (seulement factures payées)
     local invoiceCount = MySQL.scalar.await([[
         SELECT COUNT(*)
         FROM tablet_invoices
         WHERE job = ? AND employee_identifier = ?
+        AND status = 'paid'
         AND MONTH(created_at) = MONTH(CURRENT_DATE())
         AND YEAR(created_at) = YEAR(CURRENT_DATE())
     ]], {job, identifier}) or 0
 
-    -- Commission totale du mois
+    -- Commission totale du mois (seulement factures payées)
     local commission = MySQL.scalar.await([[
         SELECT IFNULL(SUM(commission_amount), 0)
         FROM tablet_invoices
         WHERE job = ? AND employee_identifier = ?
+        AND status = 'paid'
         AND MONTH(created_at) = MONTH(CURRENT_DATE())
         AND YEAR(created_at) = YEAR(CURRENT_DATE())
     ]], {job, identifier}) or 0
