@@ -542,18 +542,13 @@ window.receiveInvoiceHistory = function(invoices) {
 };
 
 function cancelInvoice(invoiceId, status) {
-    const message = status === 'paid'
-        ? 'Voulez-vous vraiment annuler et rembourser cette facture ?'
-        : 'Voulez-vous vraiment annuler cette facture ?';
+    // Annuler directement sans confirmation (le bouton est déjà explicite)
+    postData('cancelInvoice', { invoiceId: invoiceId });
 
-    if (confirm(message)) {
-        postData('cancelInvoice', { invoiceId: invoiceId });
-
-        // Rafraîchir l'historique après un court délai
-        setTimeout(() => {
-            loadInvoiceHistory();
-        }, 500);
-    }
+    // Rafraîchir l'historique après un court délai
+    setTimeout(() => {
+        loadInvoiceHistory();
+    }, 500);
 }
 
 // Stats
