@@ -137,12 +137,19 @@ function switchPage(page) {
 
 // Quick Stats
 function loadQuickStats() {
-    postData('getQuickStats', {}, (response) => {
+    fetch(`https://${GetParentResourceName()}/getQuickStats`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+    })
+    .then(resp => resp.json())
+    .then(response => {
         if (response) {
             document.getElementById('quickCommission').textContent = formatCurrency(response.commission || 0);
             document.getElementById('quickInvoices').textContent = response.invoiceCount || 0;
         }
-    });
+    })
+    .catch(err => console.error('Error loading quick stats:', err));
 }
 
 // Produits
@@ -473,10 +480,24 @@ window.receiveInvoiceHistory = function(invoices) {
     invoices.forEach(invoice => {
         const div = document.createElement('div');
         div.className = 'invoice-card';
+
+        // Déterminer le badge de statut
+        let statusBadge = '';
+        if (invoice.status === 'paid') {
+            statusBadge = '<span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">✓ PAYÉE</span>';
+        } else if (invoice.status === 'pending') {
+            statusBadge = '<span style="background: #f59e0b; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">⏳ EN ATTENTE</span>';
+        } else if (invoice.status === 'cancelled') {
+            statusBadge = '<span style="background: #ef4444; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">✕ ANNULÉE</span>';
+        }
+
         div.innerHTML = `
             <div class="invoice-header">
                 <div class="invoice-id">Facture #${invoice.id}</div>
-                <div class="invoice-date">${formatDate(invoice.created_at)}</div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    ${statusBadge}
+                    <div class="invoice-date">${formatDate(invoice.created_at)}</div>
+                </div>
             </div>
             <div class="invoice-body">
                 <div class="invoice-detail">
