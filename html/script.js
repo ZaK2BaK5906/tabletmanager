@@ -284,8 +284,24 @@ document.getElementById('addCustomProductBtn').addEventListener('click', () => {
     const price = parseFloat(priceInput.value);
     const qty = parseInt(qtyInput.value) || 1;
 
-    if (!name || !price || price <= 0) {
-        alert('Veuillez remplir le nom et le prix du produit');
+    // Validation sans bloquer le NUI
+    if (!name) {
+        nameInput.style.border = '2px solid #ef4444';
+        nameInput.placeholder = '⚠️ Nom requis';
+        setTimeout(() => {
+            nameInput.style.border = '';
+            nameInput.placeholder = 'Nom du produit';
+        }, 2000);
+        return;
+    }
+
+    if (!price || price <= 0 || isNaN(price)) {
+        priceInput.style.border = '2px solid #ef4444';
+        priceInput.placeholder = '⚠️ Prix requis';
+        setTimeout(() => {
+            priceInput.style.border = '';
+            priceInput.placeholder = 'Prix';
+        }, 2000);
         return;
     }
 
