@@ -151,6 +151,21 @@ RegisterNUICallback('getManagementData', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('getEmployeeStats', function(data, cb)
+    ESX.TriggerServerCallback('tablet:getEmployeeStats', function(employeeStats)
+        SendNUIMessage({
+            action = 'receiveEmployeeStats',
+            stats = employeeStats
+        })
+    end)
+    cb('ok')
+end)
+
+RegisterNUICallback('resetSales', function(data, cb)
+    TriggerServerEvent('tablet:resetSales')
+    cb('ok')
+end)
+
 RegisterNUICallback('createInvoice', function(data, cb)
     TriggerServerEvent('tablet:createInvoice', data)
     cb('ok')

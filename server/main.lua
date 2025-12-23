@@ -214,6 +214,74 @@ ESX.RegisterServerCallback('tablet:getManagementData', function(source, cb)
     })
 end)
 
+-- Stats détaillées des employés (boss only)
+ESX.RegisterServerCallback('tablet:getEmployeeStats', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer or not IsBoss(xPlayer) then cb(nil) return end
+
+    local job = xPlayer.job.name
+
+    -- Récupérer tous les employés du job avec leurs stats
+    local employeeStats = {}
+    local xPlayers = ESX.GetExtendedPlayers('job', job)
+
+    for _, player in pairs(xPlayers) do
+        local identifier = player.identifier
+        local name = player.getName()
+
+        -- Stats du mois en cours
+        local monthStats = MySQL.single.await([[
+            SELECT
+                COUNT(*) as invoice_count,
+                IFNULL(SUM(CASE WHEN status = 'paid' THEN subtotal ELSE 0 END), 0) as total_ht,
+                IFNULL(SUM(CASE WHEN status = 'paid' THEN total ELSE 0 END), 0) as total_ttc,
+                IFNULL(SUM(CASE WHEN status = 'paid' THEN commission_amount ELSE 0 END), 0) as total_commission
+            FROM tablet_invoices
+            WHERE job = ? AND employee_identifier = ?
+            AND MONTH(created_at) = MONTH(CURRENT_DATE())
+            AND YEAR(created_at) = YEAR(CURRENT_DATE())
+        ]], {job, identifier})
+
+        -- Commission actuelle
+        local commission = GetEmployeeCommission(job, identifier)
+
+        table.insert(employeeStats, {
+            identifier = identifier,
+            name = name,
+            commission_percent = commission,
+            invoice_count = monthStats and monthStats.invoice_count or 0,
+            total_ht = monthStats and tonumber(monthStats.total_ht) or 0,
+            total_ttc = monthStats and tonumber(monthStats.total_ttc) or 0,
+            total_commission = monthStats and tonumber(monthStats.total_commission) or 0
+        })
+    end
+
+    cb(employeeStats)
+end)
+
+-- Réinitialiser les ventes (boss only)
+RegisterNetEvent('tablet:resetSales', function()
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer or not IsBoss(xPlayer) then
+        TriggerClientEvent('esx:showNotification', _source, '❌ Seuls les patrons peuvent réinitialiser les ventes')
+        return
+    end
+
+    local job = xPlayer.job.name
+
+    -- Supprimer toutes les factures du job
+    MySQL.query('DELETE FROM tablet_invoices WHERE job = ?', {job})
+
+    TriggerClientEvent('esx:showNotification', _source, '✅ Toutes les ventes ont été réinitialisées')
+
+    -- Rafraîchir les stats pour tous les employés du job
+    local xPlayers = ESX.GetExtendedPlayers('job', job)
+    for _, player in pairs(xPlayers) do
+        TriggerClientEvent('tablet:refreshStats', player.source)
+    end
+end)
+
 -- Créer une facture
 RegisterNetEvent('tablet:createInvoice', function(invoiceData)
     local _source = source

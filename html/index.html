@@ -271,6 +271,7 @@
                     <button class="mgmt-tab active" data-tab="products">Produits</button>
                     <button class="mgmt-tab" data-tab="employees">Employés</button>
                     <button class="mgmt-tab" data-tab="partnerships">Partenariats</button>
+                    <button class="mgmt-tab" data-tab="stats">Stats Employés</button>
                 </div>
 
                 <!-- Tab Produits -->
@@ -301,6 +302,28 @@
                     </div>
                     <div class="partner-list" id="partnerList">
                         <!-- Partenariats dynamiques -->
+                    </div>
+                </div>
+
+                <!-- Tab Stats Employés -->
+                <div class="mgmt-content" id="mgmt-stats">
+                    <div class="stats-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="color: #e2e8f0; font-size: 18px; margin: 0;">Statistiques des Employés - Mois en Cours</h2>
+                        <button class="btn-danger" id="resetSalesBtn" style="
+                            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: 600;
+                        ">
+                            <i class="fa-solid fa-rotate-left"></i> Réinitialiser les Ventes
+                        </button>
+                    </div>
+                    <div class="employee-stats-table" id="employeeStatsTable">
+                        <!-- Stats dynamiques -->
                     </div>
                 </div>
             </div>

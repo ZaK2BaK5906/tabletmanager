@@ -575,6 +575,11 @@ document.querySelectorAll('.mgmt-tab').forEach(tab => {
 
         document.querySelectorAll('.mgmt-content').forEach(c => c.classList.remove('active'));
         document.getElementById(`mgmt-${tabName}`).classList.add('active');
+
+        // Charger les stats employés si on clique sur l'onglet stats
+        if (tabName === 'stats') {
+            loadEmployeeStats();
+        }
     });
 });
 
@@ -594,6 +599,83 @@ window.receiveManagementData = function(data) {
     // Partenariats
     renderPartnerList(data.partnerships || []);
 };
+
+// Stats Employés
+function loadEmployeeStats() {
+    postData('getEmployeeStats', {});
+}
+
+window.receiveEmployeeStats = function(stats) {
+    const container = document.getElementById('employeeStatsTable');
+
+    if (!stats || stats.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">Aucun employé</div></div>';
+        return;
+    }
+
+    // Créer un tableau HTML
+    let html = `
+        <table style="width: 100%; border-collapse: collapse; color: #e2e8f0;">
+            <thead>
+                <tr style="background: #1e293b; border-bottom: 2px solid #334155;">
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Employé</th>
+                    <th style="padding: 12px; text-align: center; font-weight: 600;">Commission</th>
+                    <th style="padding: 12px; text-align: center; font-weight: 600;">Factures</th>
+                    <th style="padding: 12px; text-align: right; font-weight: 600;">Total HT</th>
+                    <th style="padding: 12px; text-align: right; font-weight: 600;">Total TTC</th>
+                    <th style="padding: 12px; text-align: right; font-weight: 600;">Commission Gagnée</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    let totalHT = 0;
+    let totalTTC = 0;
+    let totalCommission = 0;
+
+    stats.forEach((employee, index) => {
+        totalHT += employee.total_ht;
+        totalTTC += employee.total_ttc;
+        totalCommission += employee.total_commission;
+
+        const bgColor = index % 2 === 0 ? '#0f172a' : '#1e293b';
+        html += `
+            <tr style="background: ${bgColor}; border-bottom: 1px solid #334155;">
+                <td style="padding: 12px;">${employee.name}</td>
+                <td style="padding: 12px; text-align: center;">${formatPercent(employee.commission_percent)}</td>
+                <td style="padding: 12px; text-align: center;">${employee.invoice_count}</td>
+                <td style="padding: 12px; text-align: right;">${formatCurrency(employee.total_ht)}</td>
+                <td style="padding: 12px; text-align: right;">${formatCurrency(employee.total_ttc)}</td>
+                <td style="padding: 12px; text-align: right; color: #10b981; font-weight: 600;">${formatCurrency(employee.total_commission)}</td>
+            </tr>
+        `;
+    });
+
+    // Ligne de total
+    html += `
+            <tr style="background: #334155; border-top: 2px solid #475569; font-weight: 700;">
+                <td style="padding: 12px;" colspan="3">TOTAL</td>
+                <td style="padding: 12px; text-align: right;">${formatCurrency(totalHT)}</td>
+                <td style="padding: 12px; text-align: right;">${formatCurrency(totalTTC)}</td>
+                <td style="padding: 12px; text-align: right; color: #10b981;">${formatCurrency(totalCommission)}</td>
+            </tr>
+        </tbody>
+        </table>
+    `;
+
+    container.innerHTML = html;
+};
+
+// Reset sales
+document.getElementById('resetSalesBtn').addEventListener('click', () => {
+    postData('resetSales', {});
+
+    // Rafraîchir après un court délai
+    setTimeout(() => {
+        loadEmployeeStats();
+        loadQuickStats();
+    }, 500);
+});
 
 // Gestion Produits
 document.getElementById('addNewProductBtn').addEventListener('click', () => {
@@ -832,6 +914,8 @@ window.addEventListener('message', (event) => {
         receiveStats(data.stats);
     } else if (data.action === 'receiveManagementData') {
         receiveManagementData(data.data);
+    } else if (data.action === 'receiveEmployeeStats') {
+        receiveEmployeeStats(data.stats);
     } else if (data.action === 'refreshStats') {
         // Rafraîchir les stats après paiement de facture
         loadQuickStats();
