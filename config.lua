@@ -20,7 +20,7 @@ Config.EnableLogs = false
 Config.DiscordWebhook = ''
 
 -- Taxes (%)
-Config.TaxRate = 20.0 -- TVA 20%
+Config.TaxRate = 16.75 -- VAT 16.75%
 
 -- Messages
 Config.Translations = {

@@ -10,7 +10,7 @@ let tabletData = {
     currentDiscount: 0,
     currentPartnership: null,
     invoiceType: 'citizen', // 'citizen' or 'company'
-    taxRate: 20.0 // Default, sera mis à jour par le serveur
+    taxRate: 16.75 // Default, sera mis à jour par le serveur
 };
 
 // Utilitaires
@@ -364,8 +364,8 @@ function calculateInvoiceSummary() {
     document.getElementById('summaryTotal').textContent = formatCurrency(total);
     document.getElementById('summaryCommission').textContent = formatCurrency(commission);
 
-    // Mettre à jour le label de la TVA avec le taux actuel
-    document.querySelector('#invoiceSummaryList li:nth-child(3) span:first-child').textContent = `TVA (${tabletData.taxRate}%):`;
+    // Mettre à jour le label de la VAT avec le taux actuel
+    document.querySelector('#invoiceSummaryList li:nth-child(3) span:first-child').textContent = `VAT (${tabletData.taxRate}%):`;
 }
 
 // Créer facture
