@@ -214,7 +214,27 @@ function setupInvoiceTypeSelector() {
     });
 }
 
-// Facture - Ajout produit
+// Product mode tabs
+document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        const mode = tab.dataset.mode;
+
+        // Update tabs
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Toggle sections
+        if (mode === 'list') {
+            document.getElementById('productListMode').style.display = 'flex';
+            document.getElementById('productCustomMode').style.display = 'none';
+        } else {
+            document.getElementById('productListMode').style.display = 'none';
+            document.getElementById('productCustomMode').style.display = 'block';
+        }
+    });
+});
+
+// Facture - Ajout produit depuis liste
 document.getElementById('addProductBtn').addEventListener('click', () => {
     const select = document.getElementById('productSelect');
     const qtyInput = document.getElementById('productQty');
@@ -242,6 +262,39 @@ document.getElementById('addProductBtn').addEventListener('click', () => {
 
     // Reset
     select.selectedIndex = 0;
+    qtyInput.value = 1;
+});
+
+// Facture - Ajout produit custom
+document.getElementById('addCustomProductBtn').addEventListener('click', () => {
+    const nameInput = document.getElementById('customProductName');
+    const priceInput = document.getElementById('customProductPrice');
+    const qtyInput = document.getElementById('customProductQty');
+
+    const name = nameInput.value.trim();
+    const price = parseFloat(priceInput.value);
+    const qty = parseInt(qtyInput.value) || 1;
+
+    if (!name || !price || price <= 0) {
+        alert('Veuillez remplir le nom et le prix du produit');
+        return;
+    }
+
+    tabletData.invoiceItems.push({
+        id: Date.now(),
+        productId: null, // Custom product
+        name: name,
+        price: price,
+        quantity: qty,
+        total: price * qty
+    });
+
+    renderInvoiceItems();
+    calculateInvoiceSummary();
+
+    // Reset
+    nameInput.value = '';
+    priceInput.value = '';
     qtyInput.value = 1;
 });
 
@@ -365,6 +418,9 @@ function resetInvoiceForm() {
     document.getElementById('companySelect').selectedIndex = 0;
     document.getElementById('productSelect').selectedIndex = 0;
     document.getElementById('productQty').value = 1;
+    document.getElementById('customProductName').value = '';
+    document.getElementById('customProductPrice').value = '';
+    document.getElementById('customProductQty').value = 1;
     document.getElementById('manualDiscount').value = 0;
     document.getElementById('partnershipSelect').selectedIndex = 0;
 
@@ -376,6 +432,17 @@ function resetInvoiceForm() {
             btn.classList.remove('active');
         }
     });
+
+    // Reset product mode
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        if (tab.dataset.mode === 'list') {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+    document.getElementById('productListMode').style.display = 'flex';
+    document.getElementById('productCustomMode').style.display = 'none';
 
     document.getElementById('citizenSection').style.display = 'block';
     document.getElementById('companySection').style.display = 'none';

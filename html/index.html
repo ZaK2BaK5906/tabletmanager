@@ -134,13 +134,35 @@
 
                     <div class="form-section">
                         <h3>Articles</h3>
-                        <div class="product-selector">
+
+                        <!-- Produit depuis liste -->
+                        <div class="product-mode-tabs">
+                            <button class="mode-tab active" data-mode="list">
+                                <i class="fa-solid fa-list"></i> Liste
+                            </button>
+                            <button class="mode-tab" data-mode="custom">
+                                <i class="fa-solid fa-pen"></i> Personnalisé
+                            </button>
+                        </div>
+
+                        <div class="product-selector" id="productListMode">
                             <select id="productSelect">
                                 <option value="">Sélectionner un produit</option>
                             </select>
                             <input type="number" id="productQty" placeholder="Qté" value="1" min="1">
-                            <button class="btn-add" id="addProductBtn">Ajouter</button>
+                            <button class="btn-add" id="addProductBtn"><i class="fa-solid fa-plus"></i> Ajouter</button>
                         </div>
+
+                        <!-- Produit custom -->
+                        <div class="product-custom" id="productCustomMode" style="display: none;">
+                            <div class="custom-grid">
+                                <input type="text" id="customProductName" placeholder="Nom du produit/service">
+                                <input type="number" id="customProductPrice" placeholder="Prix unitaire" step="0.01" min="0">
+                                <input type="number" id="customProductQty" placeholder="Qté" value="1" min="1">
+                            </div>
+                            <button class="btn-add" id="addCustomProductBtn"><i class="fa-solid fa-plus"></i> Ajouter Custom</button>
+                        </div>
+
                         <div class="invoice-items" id="invoiceItems">
                             <!-- Items dynamiques -->
                         </div>

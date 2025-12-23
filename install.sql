@@ -28,10 +28,17 @@ CREATE TABLE IF NOT EXISTS `tablet_invoices` (
     `total` DECIMAL(10, 2) NOT NULL DEFAULT 0.00, -- Total TTC
     `commission_percent` DECIMAL(5, 2) NOT NULL DEFAULT 0.00,
     `commission_amount` DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    `invoice_type` ENUM('citizen', 'company') NOT NULL DEFAULT 'citizen',
+    `target_identifier` VARCHAR(50) DEFAULT NULL, -- Pour citoyen
+    `target_company` VARCHAR(50) DEFAULT NULL, -- Pour entreprise
+    `status` ENUM('pending', 'paid', 'cancelled') NOT NULL DEFAULT 'pending',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `paid_at` TIMESTAMP NULL DEFAULT NULL,
     PRIMARY KEY (`id`),
     KEY `job` (`job`),
-    KEY `employee_identifier` (`employee_identifier`)
+    KEY `employee_identifier` (`employee_identifier`),
+    KEY `target_identifier` (`target_identifier`),
+    KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Table des commissions des employés

@@ -246,9 +246,10 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
 
     -- Type de facture (citizen ou company)
     local invoiceType = invoiceData.type or 'citizen'
-    local targetInfo = ''
+    local targetIdentifier = nil
+    local targetCompany = nil
 
-    -- Traiter le paiement selon le type
+    -- Vérifier la cible selon le type
     if invoiceType == 'citizen' then
         -- Facturation citoyen
         local targetId = invoiceData.targetId
@@ -259,67 +260,22 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
             return
         end
 
-        local targetMoney = targetPlayer.getAccount('bank').money
-
-        if targetMoney < total then
-            TriggerClientEvent('esx:showNotification', _source, '❌ Le client n\'a pas assez d\'argent en banque')
-            return
-        end
-
-        -- Débiter le client
-        targetPlayer.removeAccountMoney('bank', total)
-
-        -- Créditer le compte société du job
-        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..job, function(account)
-            if account then
-                account.addMoney(total)
-            end
-        end)
-
-        targetInfo = targetPlayer.getName()..' (ID: '..targetId..')'
-
-        -- Notif au client
-        TriggerClientEvent('esx:showNotification', targetId, '💸 Facture payée: '..total..'€ pour '..ESX.GetJobLabel(job))
+        targetIdentifier = targetPlayer.identifier
     else
         -- Facturation entreprise
-        local targetCompany = invoiceData.targetCompany
+        targetCompany = invoiceData.targetCompany
 
-        -- Débiter le compte société de l'entreprise cible
-        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..targetCompany, function(targetAccount)
-            if not targetAccount then
-                TriggerClientEvent('esx:showNotification', _source, '❌ Compte entreprise introuvable')
-                return
-            end
-
-            if targetAccount.money < total then
-                TriggerClientEvent('esx:showNotification', _source, '❌ L\'entreprise n\'a pas assez d\'argent')
-                return
-            end
-
-            -- Débiter l'entreprise cible
-            targetAccount.removeMoney(total)
-
-            -- Créditer le compte société du job créateur
-            TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..job, function(account)
-                if account then
-                    account.addMoney(total)
-                end
-            end)
-
-            -- Enregistrer le paiement
-            MySQL.insert('INSERT INTO tablet_company_payments (from_job, to_company, amount, invoice_id) VALUES (?, ?, ?, ?)', {
-                targetCompany, job, total, 0
-            })
-        end)
-
-        targetInfo = ESX.GetJobLabel(targetCompany) or targetCompany
+        if not targetCompany then
+            TriggerClientEvent('esx:showNotification', _source, '❌ Entreprise invalide')
+            return
+        end
     end
 
-    -- Insérer en BDD
+    -- Créer la facture en statut PENDING (pas de paiement immédiat)
     local invoiceId = MySQL.insert.await([[
         INSERT INTO tablet_invoices
-        (job, employee_identifier, employee_name, items, subtotal, discount_percent, partnership_discount, partnership_name, tax_percent, total, commission_percent, commission_amount)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (job, employee_identifier, employee_name, items, subtotal, discount_percent, partnership_discount, partnership_name, tax_percent, total, commission_percent, commission_amount, invoice_type, target_identifier, target_company, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     ]], {
         job,
         identifier,
@@ -328,18 +284,101 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
         subtotal,
         manualDiscount,
         partnershipDiscount,
-        targetInfo,
+        partnershipName,
         Config.TaxRate,
         total,
         commissionPercent,
-        commissionAmount
+        commissionAmount,
+        invoiceType,
+        targetIdentifier,
+        targetCompany
     })
 
-    -- Notification
-    TriggerClientEvent('esx:showNotification', _source, '✅ Facture créée: '..total..'€ • Commission: '..commissionAmount..'€')
+    -- Notification au créateur
+    TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' créée: '..total..'€ (En attente de paiement)')
+
+    -- Notification à la cible
+    if invoiceType == 'citizen' then
+        local targetPlayer = ESX.GetPlayerFromIdentifier(targetIdentifier)
+        if targetPlayer then
+            TriggerClientEvent('esx:showNotification', targetPlayer.source, '📄 Nouvelle facture reçue: '..total..'€ de '..ESX.GetJobLabel(job)..' • Tapez /facture')
+        end
+    end
 
     -- Reload data
     TriggerClientEvent('tablet:invoiceCreated', _source)
+end)
+
+-- Récupérer les factures en attente d'un joueur
+ESX.RegisterServerCallback('tablet:getPendingInvoices', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then cb(nil) return end
+
+    local identifier = xPlayer.identifier
+
+    -- Factures citoyennes en attente
+    local invoices = MySQL.query.await([[
+        SELECT * FROM tablet_invoices
+        WHERE target_identifier = ? AND status = 'pending'
+        ORDER BY created_at DESC
+    ]], {identifier})
+
+    cb(invoices)
+end)
+
+-- Payer une facture
+RegisterNetEvent('tablet:payInvoice', function(invoiceId)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer then return end
+
+    -- Récupérer la facture
+    local invoice = MySQL.single.await('SELECT * FROM tablet_invoices WHERE id = ? AND status = \'pending\'', {invoiceId})
+
+    if not invoice then
+        TriggerClientEvent('esx:showNotification', _source, '❌ Facture introuvable ou déjà payée')
+        return
+    end
+
+    -- Vérifier que c'est bien pour ce joueur
+    if invoice.target_identifier ~= xPlayer.identifier then
+        TriggerClientEvent('esx:showNotification', _source, '❌ Cette facture ne vous est pas destinée')
+        return
+    end
+
+    local total = invoice.total
+
+    -- Vérifier l'argent
+    local money = xPlayer.getAccount('bank').money
+    if money < total then
+        TriggerClientEvent('esx:showNotification', _source, '❌ Vous n\'avez pas assez d\'argent en banque')
+        return
+    end
+
+    -- Débiter le joueur
+    xPlayer.removeAccountMoney('bank', total)
+
+    -- Créditer le compte société du job
+    TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..invoice.job, function(account)
+        if account then
+            account.addMoney(total)
+        end
+    end)
+
+    -- Mettre à jour le statut de la facture
+    MySQL.update('UPDATE tablet_invoices SET status = \'paid\', paid_at = NOW() WHERE id = ?', {invoiceId})
+
+    -- Notifications
+    TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' payée: '..total..'€')
+
+    -- Notifier l'employé qui a créé la facture s'il est connecté
+    local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
+    if employeePlayer then
+        TriggerClientEvent('esx:showNotification', employeePlayer.source, '💰 Facture #'..invoiceId..' payée par le client! Commission: '..invoice.commission_amount..'€')
+    end
+
+    -- Refresh la liste
+    TriggerClientEvent('tablet:refreshInvoices', _source)
 end)
 
 -- Ajouter un produit (boss only)
