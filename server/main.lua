@@ -306,7 +306,8 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
     if invoiceType == 'citizen' then
         local targetPlayer = ESX.GetPlayerFromIdentifier(targetIdentifier)
         if targetPlayer then
-            TriggerClientEvent('esx:showNotification', targetPlayer.source, '📄 Nouvelle facture reçue: '..total..'€ de '..ESX.GetJobLabel(job)..' • Tapez /facture')
+            local jobLabel = ESX.GetJobs()[job] and ESX.GetJobs()[job].label or job
+            TriggerClientEvent('esx:showNotification', targetPlayer.source, '📄 Nouvelle facture reçue: '..total..'€ de '..jobLabel..' • Tapez /facture')
         end
     end
 
