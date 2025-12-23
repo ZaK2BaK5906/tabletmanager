@@ -321,13 +321,32 @@ ESX.RegisterServerCallback('tablet:getPendingInvoices', function(source, cb)
     if not xPlayer then cb(nil) return end
 
     local identifier = xPlayer.identifier
+    local job = xPlayer.job.name
+    local invoices = {}
 
-    -- Factures citoyennes en attente
-    local invoices = MySQL.query.await([[
+    -- Factures citoyennes en attente pour ce joueur
+    local citizenInvoices = MySQL.query.await([[
         SELECT * FROM tablet_invoices
         WHERE target_identifier = ? AND status = 'pending'
         ORDER BY created_at DESC
     ]], {identifier})
+
+    for _, invoice in ipairs(citizenInvoices) do
+        table.insert(invoices, invoice)
+    end
+
+    -- Factures entreprise en attente (si boss)
+    if IsBoss(xPlayer) then
+        local companyInvoices = MySQL.query.await([[
+            SELECT * FROM tablet_invoices
+            WHERE target_company = ? AND status = 'pending'
+            ORDER BY created_at DESC
+        ]], {job})
+
+        for _, invoice in ipairs(companyInvoices) do
+            table.insert(invoices, invoice)
+        end
+    end
 
     cb(invoices)
 end)
@@ -346,41 +365,92 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
         return
     end
 
-    -- Vérifier que c'est bien pour ce joueur
-    if invoice.target_identifier ~= xPlayer.identifier then
-        TriggerClientEvent('esx:showNotification', _source, '❌ Cette facture ne vous est pas destinée')
-        return
-    end
+    local total = tonumber(invoice.total)
 
-    local total = invoice.total
-
-    -- Vérifier l'argent
-    local money = xPlayer.getAccount('bank').money
-    if money < total then
-        TriggerClientEvent('esx:showNotification', _source, '❌ Vous n\'avez pas assez d\'argent en banque')
-        return
-    end
-
-    -- Débiter le joueur
-    xPlayer.removeAccountMoney('bank', total)
-
-    -- Créditer le compte société du job
-    TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..invoice.job, function(account)
-        if account then
-            account.addMoney(total)
+    -- Si facture citoyen
+    if invoice.invoice_type == 'citizen' then
+        -- Vérifier que c'est bien pour ce joueur
+        if invoice.target_identifier ~= xPlayer.identifier then
+            TriggerClientEvent('esx:showNotification', _source, '❌ Cette facture ne vous est pas destinée')
+            return
         end
-    end)
 
-    -- Mettre à jour le statut de la facture
+        -- Vérifier l'argent du joueur
+        local money = xPlayer.getAccount('bank').money
+        if money < total then
+            TriggerClientEvent('esx:showNotification', _source, '❌ Vous n\'avez pas assez d\'argent en banque')
+            return
+        end
+
+        -- Débiter le joueur
+        xPlayer.removeAccountMoney('bank', total)
+
+        -- Créditer le compte société du job
+        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..invoice.job, function(account)
+            if account then
+                account.addMoney(total)
+            end
+        end)
+
+        -- Notifications
+        TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' payée: '..total..'€')
+
+    -- Si facture entreprise
+    elseif invoice.invoice_type == 'company' then
+        -- Vérifier que le joueur est boss de l'entreprise cible
+        if xPlayer.job.name ~= invoice.target_company or not IsBoss(xPlayer) then
+            TriggerClientEvent('esx:showNotification', _source, '❌ Vous devez être patron de '..invoice.target_company..' pour payer cette facture')
+            return
+        end
+
+        -- Vérifier l'argent de la société
+        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..invoice.target_company, function(payerAccount)
+            if not payerAccount then
+                TriggerClientEvent('esx:showNotification', _source, '❌ Compte entreprise introuvable')
+                return
+            end
+
+            if payerAccount.money < total then
+                TriggerClientEvent('esx:showNotification', _source, '❌ Votre entreprise n\'a pas assez d\'argent')
+                return
+            end
+
+            -- Débiter l'entreprise payeuse
+            payerAccount.removeMoney(total)
+
+            -- Créditer l'entreprise créatrice
+            TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..invoice.job, function(receiverAccount)
+                if receiverAccount then
+                    receiverAccount.addMoney(total)
+                end
+            end)
+
+            -- Mettre à jour le statut
+            MySQL.update('UPDATE tablet_invoices SET status = \'paid\', paid_at = NOW() WHERE id = ?', {invoiceId})
+
+            -- Notifications
+            TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' payée par votre entreprise: '..total..'€')
+
+            -- Notifier l'employé créateur
+            local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
+            if employeePlayer then
+                TriggerClientEvent('esx:showNotification', employeePlayer.source, '💰 Facture #'..invoiceId..' payée par '..invoice.target_company..'! Commission: '..tonumber(invoice.commission_amount)..'€')
+            end
+
+            -- Refresh
+            TriggerClientEvent('tablet:refreshInvoices', _source)
+        end)
+
+        return -- Important: sortir ici car traitement async
+    end
+
+    -- Mettre à jour le statut de la facture (citoyen uniquement, company géré dans le callback)
     MySQL.update('UPDATE tablet_invoices SET status = \'paid\', paid_at = NOW() WHERE id = ?', {invoiceId})
-
-    -- Notifications
-    TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' payée: '..total..'€')
 
     -- Notifier l'employé qui a créé la facture s'il est connecté
     local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
     if employeePlayer then
-        TriggerClientEvent('esx:showNotification', employeePlayer.source, '💰 Facture #'..invoiceId..' payée par le client! Commission: '..invoice.commission_amount..'€')
+        TriggerClientEvent('esx:showNotification', employeePlayer.source, '💰 Facture #'..invoiceId..' payée par le client! Commission: '..tonumber(invoice.commission_amount)..'€')
     end
 
     -- Refresh la liste
