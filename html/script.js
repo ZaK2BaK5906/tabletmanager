@@ -709,9 +709,14 @@ function closeInvoiceMenu() {
 }
 
 function payInvoice(invoiceId) {
-    if (confirm('Confirmez-vous le paiement de cette facture ?')) {
-        postData('payInvoice', { invoiceId });
-    }
+    // Payer la facture et fermer le menu
+    postData('payInvoice', { invoiceId });
+
+    // Fermer le menu après un court délai pour laisser le serveur traiter
+    setTimeout(() => {
+        closeInvoiceMenu();
+        postData('closeInvoiceMenu', {});
+    }, 100);
 }
 
 document.getElementById('closeInvoiceMenuBtn').addEventListener('click', () => {
