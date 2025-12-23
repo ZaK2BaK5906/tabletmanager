@@ -435,6 +435,8 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
             local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
             if employeePlayer then
                 TriggerClientEvent('esx:showNotification', employeePlayer.source, '💰 Facture #'..invoiceId..' payée par '..invoice.target_company..'! Commission: '..tonumber(invoice.commission_amount)..'€')
+                -- Rafraîchir les stats de l'employé dans sa tablette
+                TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
             end
 
             -- Refresh
@@ -451,6 +453,8 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
     local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
     if employeePlayer then
         TriggerClientEvent('esx:showNotification', employeePlayer.source, '💰 Facture #'..invoiceId..' payée par le client! Commission: '..tonumber(invoice.commission_amount)..'€')
+        -- Rafraîchir les stats de l'employé dans sa tablette
+        TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
     end
 
     -- Refresh la liste

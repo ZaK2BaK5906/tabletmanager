@@ -232,6 +232,14 @@ AddEventHandler('tablet:refreshInvoices', function()
     })
 end)
 
+RegisterNetEvent('tablet:refreshStats')
+AddEventHandler('tablet:refreshStats', function()
+    -- Rafraîchir les statistiques dans la tablette
+    SendNUIMessage({
+        action = 'refreshStats'
+    })
+end)
+
 -- Fermer avec ESC
 RegisterNUICallback('escape', function(data, cb)
     CloseTablet()

@@ -778,5 +778,14 @@ window.addEventListener('message', (event) => {
         receiveStats(data.stats);
     } else if (data.action === 'receiveManagementData') {
         receiveManagementData(data.data);
+    } else if (data.action === 'refreshStats') {
+        // Rafraîchir les stats après paiement de facture
+        loadQuickStats();
+        if (document.querySelector('.nav-item[data-page="stats"]').classList.contains('active')) {
+            loadStats();
+        }
+        if (document.querySelector('.nav-item[data-page="invoices"]').classList.contains('active')) {
+            loadInvoiceHistory();
+        }
     }
 });
