@@ -461,6 +461,77 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
     TriggerClientEvent('tablet:refreshInvoices', _source)
 end)
 
+-- Annuler/Supprimer une facture (boss only)
+RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer or not IsBoss(xPlayer) then
+        TriggerClientEvent('esx:showNotification', _source, '❌ Seuls les patrons peuvent annuler des factures')
+        return
+    end
+
+    local job = xPlayer.job.name
+
+    -- Récupérer la facture pour vérifier qu'elle appartient à ce job
+    local invoice = MySQL.single.await('SELECT * FROM tablet_invoices WHERE id = ? AND job = ?', {invoiceId, job})
+
+    if not invoice then
+        TriggerClientEvent('esx:showNotification', _source, '❌ Facture introuvable')
+        return
+    end
+
+    -- Si la facture est déjà payée, rembourser
+    if invoice.status == 'paid' then
+        local total = tonumber(invoice.total)
+
+        -- Débiter le compte société du job
+        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..job, function(account)
+            if account and account.money >= total then
+                account.removeMoney(total)
+
+                -- Rembourser selon le type
+                if invoice.invoice_type == 'citizen' then
+                    -- Rembourser le citoyen
+                    local targetPlayer = ESX.GetPlayerFromIdentifier(invoice.target_identifier)
+                    if targetPlayer then
+                        targetPlayer.addAccountMoney('bank', total)
+                        TriggerClientEvent('esx:showNotification', targetPlayer.source, '💰 Facture #'..invoiceId..' annulée - Remboursé: '..total..'€')
+                    end
+                elseif invoice.invoice_type == 'company' then
+                    -- Rembourser l'entreprise
+                    TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..invoice.target_company, function(targetAccount)
+                        if targetAccount then
+                            targetAccount.addMoney(total)
+                        end
+                    end)
+                end
+
+                -- Mettre à jour le statut
+                MySQL.update('UPDATE tablet_invoices SET status = \'cancelled\' WHERE id = ?', {invoiceId})
+                TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' annulée et remboursée')
+
+                -- Notifier l'employé
+                local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
+                if employeePlayer then
+                    TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
+                end
+            else
+                TriggerClientEvent('esx:showNotification', _source, '❌ Votre société n\'a pas assez d\'argent pour rembourser')
+            end
+        end)
+    else
+        -- Si pending, juste annuler
+        MySQL.update('UPDATE tablet_invoices SET status = \'cancelled\' WHERE id = ?', {invoiceId})
+        TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' annulée')
+    end
+
+    -- Rafraîchir pour tous les employés du job
+    local xPlayers = ESX.GetExtendedPlayers('job', job)
+    for _, player in pairs(xPlayers) do
+        TriggerClientEvent('tablet:refreshStats', player.source)
+    end
+end)
+
 -- Ajouter un produit (boss only)
 RegisterNetEvent('tablet:addProduct', function(data)
     local _source = source

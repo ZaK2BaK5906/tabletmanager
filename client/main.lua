@@ -181,6 +181,11 @@ RegisterNUICallback('deletePartnership', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('cancelInvoice', function(data, cb)
+    TriggerServerEvent('tablet:cancelInvoice', data.invoiceId)
+    cb('ok')
+end)
+
 RegisterNUICallback('payInvoice', function(data, cb)
     TriggerServerEvent('tablet:payInvoice', data.invoiceId)
     cb('ok')

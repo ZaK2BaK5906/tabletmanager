@@ -491,6 +491,28 @@ window.receiveInvoiceHistory = function(invoices) {
             statusBadge = '<span style="background: #ef4444; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">✕ ANNULÉE</span>';
         }
 
+        // Bouton annuler pour les patrons (seulement si pas déjà annulée)
+        let cancelButton = '';
+        if (tabletData.isBoss && invoice.status !== 'cancelled') {
+            cancelButton = `
+                <button onclick="cancelInvoice(${invoice.id}, '${invoice.status}')" style="
+                    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    font-weight: 600;
+                    margin-top: 8px;
+                    width: 100%;
+                    transition: all 0.2s;
+                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <i class="fa-solid fa-times-circle"></i> ${invoice.status === 'paid' ? 'Annuler & Rembourser' : 'Annuler'}
+                </button>
+            `;
+        }
+
         div.innerHTML = `
             <div class="invoice-header">
                 <div class="invoice-id">Facture #${invoice.id}</div>
@@ -513,10 +535,26 @@ window.receiveInvoiceHistory = function(invoices) {
                     <div class="detail-value">${formatPercent(invoice.discount_percent + invoice.partnership_discount)}</div>
                 </div>
             </div>
+            ${cancelButton}
         `;
         container.appendChild(div);
     });
 };
+
+function cancelInvoice(invoiceId, status) {
+    const message = status === 'paid'
+        ? 'Voulez-vous vraiment annuler et rembourser cette facture ?'
+        : 'Voulez-vous vraiment annuler cette facture ?';
+
+    if (confirm(message)) {
+        postData('cancelInvoice', { invoiceId: invoiceId });
+
+        // Rafraîchir l'historique après un court délai
+        setTimeout(() => {
+            loadInvoiceHistory();
+        }, 500);
+    }
+}
 
 // Stats
 function loadStats() {
