@@ -504,6 +504,12 @@
                         <button class="category-btn active" data-category="all">Tous</button>
                     </div>
 
+                    <!-- Barre de recherche -->
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" id="vehicleCatalogSearch" placeholder="🔍 Rechercher un véhicule..."
+                               style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px;">
+                    </div>
+
                     <!-- Catalogue véhicules -->
                     <div class="vehicles-grid" id="vehiclesGrid">
                         <!-- Véhicules dynamiques -->
@@ -710,6 +716,9 @@
         </div>
 
         <div class="menu-content">
+            <div class="search-bar">
+                <input type="text" id="vehicleSearchInput" placeholder="🔍 Rechercher un véhicule...">
+            </div>
             <div class="vehicle-list" id="vehicleList">
                 <!-- Véhicules chargés dynamiquement -->
             </div>

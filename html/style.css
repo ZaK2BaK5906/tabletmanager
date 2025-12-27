@@ -1745,27 +1745,27 @@ h3 {
     display: none;
     position: fixed;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 500px;
-    max-height: 80vh;
+    left: 20px;
+    transform: translateY(-50%);
+    width: 450px;
+    max-height: 85vh;
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     border: 2px solid #3b82f6;
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     overflow: hidden;
-    animation: slideIn 0.3s ease;
+    animation: slideInLeft 0.3s ease;
     z-index: 10000;
 }
 
-@keyframes slideIn {
+@keyframes slideInLeft {
     from {
         opacity: 0;
-        transform: translate(-50%, -60%);
+        transform: translateY(-50%) translateX(-100%);
     }
     to {
         opacity: 1;
-        transform: translate(-50%, -50%);
+        transform: translateY(-50%) translateX(0);
     }
 }
 
@@ -1945,4 +1945,50 @@ h3 {
 #assignVehicleMenu .selected-vehicle-info p {
     color: #cbd5e1;
     font-size: 14px;
+}
+
+/* Scrollbar pour menu assignation */
+#assignVehicleMenu .menu-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+#assignVehicleMenu .menu-content::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 10px;
+}
+
+#assignVehicleMenu .menu-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 10px;
+    border: 2px solid #0f172a;
+}
+
+#assignVehicleMenu .menu-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Barre de recherche */
+#assignVehicleMenu .search-bar {
+    margin-bottom: 15px;
+}
+
+#assignVehicleMenu .search-bar input {
+    width: 100%;
+    padding: 12px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+#assignVehicleMenu .search-bar input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#assignVehicleMenu .search-bar input::placeholder {
+    color: #64748b;
 }

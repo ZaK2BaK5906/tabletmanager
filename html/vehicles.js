@@ -18,9 +18,42 @@ function loadVehicles() {
             vehiclesData = response;
             renderVehicles();
             renderCategoryFilters();
+            setupCatalogSearch();
         }
     })
     .catch(err => console.error('Error loading vehicles:', err));
+}
+
+// Setup recherche catalogue
+function setupCatalogSearch() {
+    const searchInput = document.getElementById('vehicleCatalogSearch');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.oninput = function() {
+            const query = this.value.toLowerCase();
+            const activeCategory = document.querySelector('.category-btn.active')?.dataset.category || 'all';
+
+            let filtered = activeCategory === 'all'
+                ? vehiclesData
+                : vehiclesData.filter(v => v.category === activeCategory);
+
+            if (query) {
+                filtered = filtered.filter(v =>
+                    v.name.toLowerCase().includes(query) ||
+                    v.model.toLowerCase().includes(query) ||
+                    (v.category && v.category.toLowerCase().includes(query))
+                );
+            }
+
+            renderVehicles(filtered);
+        };
+    }
+}
+
+// Capitaliser première lettre
+function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 // Render filtres catégories
@@ -32,7 +65,7 @@ function renderCategoryFilters() {
 
     let html = '<button class="category-btn active" data-category="all">Tous</button>';
     categories.forEach(cat => {
-        html += `<button class="category-btn" data-category="${cat}">${cat}</button>`;
+        html += `<button class="category-btn" data-category="${cat}">${capitalize(cat)}</button>`;
     });
 
     container.innerHTML = html;

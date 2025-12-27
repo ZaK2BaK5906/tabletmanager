@@ -5,6 +5,7 @@
 let selectedVehicle = null;
 let targetPlayerId = null;
 let targetPlayerName = '';
+let allVehicles = [];
 
 // Écouter les messages pour ouvrir/fermer le menu
 window.addEventListener('message', (event) => {
@@ -13,17 +14,43 @@ window.addEventListener('message', (event) => {
     if (data.action === 'openAssignVehicle') {
         targetPlayerId = data.targetId;
         targetPlayerName = data.targetName;
+        allVehicles = data.vehicles;
         openAssignMenu(data.vehicles);
+        setupVehicleSearch();
     } else if (data.action === 'closeAssignVehicle') {
         closeAssignMenu();
     }
 });
 
+function setupVehicleSearch() {
+    const searchInput = document.getElementById('vehicleSearchInput');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.oninput = function() {
+            const query = this.value.toLowerCase();
+            const filtered = allVehicles.filter(v =>
+                v.name.toLowerCase().includes(query) ||
+                v.model.toLowerCase().includes(query)
+            );
+            displayVehicleList(filtered);
+        };
+    }
+}
+
 function openAssignMenu(vehicles) {
     document.getElementById('targetPlayerName').textContent = `Vendre à: ${targetPlayerName}`;
+    displayVehicleList(vehicles);
+    document.getElementById('assignVehicleMenu').style.display = 'block';
+}
 
+function displayVehicleList(vehicles) {
     const list = document.getElementById('vehicleList');
     list.innerHTML = '';
+
+    if (!vehicles || vehicles.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 30px; color: #64748b;"><i class="fa-solid fa-search" style="font-size: 40px; margin-bottom: 10px;"></i><p>Aucun véhicule trouvé</p></div>';
+        return;
+    }
 
     vehicles.forEach(vehicle => {
         const stock = parseInt(vehicle.stock);
@@ -58,8 +85,6 @@ function openAssignMenu(vehicles) {
 
         list.appendChild(item);
     });
-
-    document.getElementById('assignVehicleMenu').style.display = 'block';
 }
 
 function selectVehicleForAssign(vehicle, element) {
