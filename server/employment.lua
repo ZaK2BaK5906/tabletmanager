@@ -53,20 +53,35 @@ ESX.RegisterServerCallback('employment:getCompanies', function(source, cb)
                     is_recruiting = profile.is_recruiting == 1
                 })
             else
-                -- Créer un profil par défaut si non existant
+                -- Créer un profil par défaut si non existant (IGNORE si existe déjà)
                 MySQL.insert.await([[
-                    INSERT INTO company_profiles (job_name, job_label, description, is_recruiting)
+                    INSERT IGNORE INTO company_profiles (job_name, job_label, description, is_recruiting)
                     VALUES (?, ?, ?, 1)
                 ]], {jobName, jobData.label, 'Rejoignez notre équipe !'})
 
-                table.insert(companies, {
-                    job_name = jobName,
-                    job_label = jobData.label,
-                    photo_url = Config.CompanyLogos[jobName] or Config.DefaultCompanyLogo,
-                    description = 'Rejoignez notre équipe !',
-                    salary_info = nil,
-                    is_recruiting = true
-                })
+                -- Re-query pour obtenir la vraie valeur (au cas où le profil existait déjà)
+                local newProfile = MySQL.single.await('SELECT * FROM company_profiles WHERE job_name = ?', {jobName})
+
+                if newProfile then
+                    table.insert(companies, {
+                        job_name = jobName,
+                        job_label = jobData.label,
+                        photo_url = Config.CompanyLogos[jobName] or Config.DefaultCompanyLogo,
+                        description = newProfile.description,
+                        salary_info = newProfile.salary_info,
+                        is_recruiting = newProfile.is_recruiting == 1
+                    })
+                else
+                    -- Fallback (ne devrait jamais arriver)
+                    table.insert(companies, {
+                        job_name = jobName,
+                        job_label = jobData.label,
+                        photo_url = Config.CompanyLogos[jobName] or Config.DefaultCompanyLogo,
+                        description = 'Rejoignez notre équipe !',
+                        salary_info = nil,
+                        is_recruiting = true
+                    })
+                end
             end
         end
     end
@@ -215,13 +230,18 @@ AddEventHandler('employment:toggleRecruitment', function()
     print('[EMPLOYMENT DEBUG] Job:', job, 'Profile exists:', profile ~= nil)
 
     if not profile then
-        -- Créer le profile par défaut
+        -- Créer le profile par défaut (IGNORE si existe déjà)
         MySQL.insert.await([[
-            INSERT INTO company_profiles (job_name, job_label, description, is_recruiting)
-            VALUES (?, ?, ?, 1)
+            INSERT IGNORE INTO company_profiles (job_name, job_label, description, is_recruiting)
+            VALUES (?, ?, ?, 0)
         ]], {job, jobLabel, 'Rejoignez notre équipe !'})
-        profile = { is_recruiting = 1 }
-        print('[EMPLOYMENT DEBUG] Created new profile with is_recruiting = 1')
+        -- Re-query to get the actual value (in case it already existed)
+        profile = MySQL.single.await('SELECT is_recruiting FROM company_profiles WHERE job_name = ?', {job})
+        if not profile then
+            -- Should never happen, but fallback to default
+            profile = { is_recruiting = 0 }
+        end
+        print('[EMPLOYMENT DEBUG] Created or found profile with is_recruiting =', profile.is_recruiting)
     else
         print('[EMPLOYMENT DEBUG] Current is_recruiting value:', profile.is_recruiting)
     end
