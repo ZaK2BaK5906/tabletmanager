@@ -699,9 +699,48 @@
         </div>
     </div>
 
+    <!-- Menu Assignation Véhicule -->
+    <div id="assignVehicleMenu">
+        <div class="menu-header">
+            <h2><i class="fa-solid fa-car"></i> Assigner un Véhicule</h2>
+            <p id="targetPlayerName">Sélectionnez un véhicule à assigner</p>
+            <button class="close-btn" onclick="closeAssignMenu()">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div class="menu-content">
+            <div class="vehicle-list" id="vehicleList">
+                <!-- Véhicules chargés dynamiquement -->
+            </div>
+
+            <div class="form-section" id="plateSection">
+                <div class="selected-vehicle-info" id="selectedVehicleInfo"></div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-id-card"></i> Plaque d'immatriculation (optionnel)</label>
+                    <input type="text" id="plateInput" placeholder="Laissez vide pour auto-générer" maxlength="8">
+                    <p style="color: #64748b; font-size: 12px; margin-top: 5px;">
+                        <i class="fa-solid fa-info-circle"></i> Vide = plaque aléatoire (ex: XYZ 1234)
+                    </p>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="backToVehicleList()">
+                        <i class="fa-solid fa-arrow-left"></i> Retour
+                    </button>
+                    <button class="btn btn-primary" onclick="confirmAssignment()">
+                        <i class="fa-solid fa-check"></i> Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
     <script src="vehicles.js"></script>
     <script src="notes.js"></script>
+    <script src="vehicle-assign.js"></script>
     <script src="employment.js"></script>
 </body>
 </html>
