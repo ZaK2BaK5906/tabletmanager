@@ -16,8 +16,9 @@ client_scripts {
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'server/webhook.lua',    -- DOIT être chargé en premier
-    'server/migration.lua',  -- Migration auto des tables
+    'server/webhook.lua',       -- DOIT être chargé en premier
+    'server/notifications.lua', -- Notifications
+    'server/migration.lua',     -- Migration auto des tables
     'server/employment.lua',
     'server/main.lua'
 }
