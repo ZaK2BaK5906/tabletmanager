@@ -16,7 +16,9 @@ client_scripts {
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'server/*.lua'
+    'server/webhook.lua',  -- DOIT être chargé en premier
+    'server/employment.lua',
+    'server/main.lua'
 }
 
 ui_page 'html/index.html'

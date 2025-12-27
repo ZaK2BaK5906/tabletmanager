@@ -5,6 +5,8 @@
 
 -- Fonction pour envoyer un webhook Discord
 function SendWebhook(webhookType, data)
+    -- Protection si Config.Webhooks n'existe pas
+    if not Config or not Config.Webhooks then return end
     if not Config.Webhooks.Enabled then return end
 
     local webhookUrl = Config.Webhooks[webhookType]
