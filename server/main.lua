@@ -299,44 +299,17 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
 
     local job = xPlayer.job.name
     local societyAccount = 'society_' .. job
-    local balance = 0
-    local transactions = {}
 
-    -- Essayer d'obtenir le solde via okokBanking
-    local okokAccount = MySQL.single.await('SELECT value FROM okokBanking_societies WHERE society = ?', {societyAccount})
-    if okokAccount then
-        balance = tonumber(okokAccount.value) or 0
+    -- Utiliser le même système que les factures
+    TriggerEvent('esx_addonaccount:getSharedAccount', societyAccount, function(account)
+        local balance = 0
+        local transactions = {}
 
-        -- Récupérer transactions okokBanking
-        local okokTransactions = MySQL.query.await([[
-            SELECT
-                amount,
-                type,
-                date,
-                receiver,
-                sender,
-                label
-            FROM okokBanking_transactions
-            WHERE receiver LIKE ? OR sender LIKE ?
-            ORDER BY date DESC
-            LIMIT 100
-        ]], {'%'..societyAccount..'%', '%'..societyAccount..'%'}) or {}
-
-        for _, trans in ipairs(okokTransactions) do
-            local isCredit = trans.receiver and trans.receiver:find(societyAccount) ~= nil
-            table.insert(transactions, {
-                type = isCredit and 'credit' or 'debit',
-                amount = tonumber(trans.amount) or 0,
-                date = trans.date or '',
-                label = trans.label or (isCredit and 'Crédit reçu' or 'Débit effectué')
-            })
+        if account then
+            balance = tonumber(account.money) or 0
         end
-    else
-        -- Fallback ESX addon_account_data
-        local accountData = MySQL.single.await('SELECT money FROM addon_account_data WHERE account_name = ?', {societyAccount})
-        balance = accountData and tonumber(accountData.money) or 0
 
-        -- Récupérer factures payées du mois (crédits)
+        -- Récupérer factures payées (crédits)
         local paidInvoices = MySQL.query.await([[
             SELECT
                 total as amount,
@@ -344,10 +317,8 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
                 CONCAT('Facture #', id, ' - ', customer_name) as label
             FROM tablet_invoices
             WHERE job = ? AND status = 'paid'
-            AND MONTH(paid_at) = MONTH(CURRENT_DATE())
-            AND YEAR(paid_at) = YEAR(CURRENT_DATE())
             ORDER BY paid_at DESC
-            LIMIT 50
+            LIMIT 100
         ]], {job}) or {}
 
         for _, invoice in ipairs(paidInvoices) do
@@ -367,10 +338,8 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
                 CONCAT('Commission - ', employee_name) as label
             FROM tablet_invoices
             WHERE job = ? AND status = 'paid' AND commission_amount > 0
-            AND MONTH(paid_at) = MONTH(CURRENT_DATE())
-            AND YEAR(paid_at) = YEAR(CURRENT_DATE())
             ORDER BY paid_at DESC
-            LIMIT 50
+            LIMIT 100
         ]], {job}) or {}
 
         for _, comm in ipairs(commissions) do
@@ -381,31 +350,31 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
                 label = comm.label
             })
         end
-    end
 
-    -- Trier par date
-    table.sort(transactions, function(a, b)
-        return (a.date or '') > (b.date or '')
-    end)
+        -- Trier par date
+        table.sort(transactions, function(a, b)
+            return (a.date or '') > (b.date or '')
+        end)
 
-    -- Calculer totaux
-    local totalCredits = 0
-    local totalDebits = 0
+        -- Calculer totaux
+        local totalCredits = 0
+        local totalDebits = 0
 
-    for _, trans in ipairs(transactions) do
-        if trans.type == 'credit' then
-            totalCredits = totalCredits + trans.amount
-        else
-            totalDebits = totalDebits + trans.amount
+        for _, trans in ipairs(transactions) do
+            if trans.type == 'credit' then
+                totalCredits = totalCredits + trans.amount
+            else
+                totalDebits = totalDebits + trans.amount
+            end
         end
-    end
 
-    cb({
-        balance = balance,
-        transactions = transactions,
-        totalCredits = totalCredits,
-        totalDebits = totalDebits
-    })
+        cb({
+            balance = balance,
+            transactions = transactions,
+            totalCredits = totalCredits,
+            totalDebits = totalDebits
+        })
+    end)
 end)
 
 -- Données audit pour DOJ (accès complet à toutes les sociétés)
@@ -555,14 +524,14 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
     })
 
     -- Notification au créateur
-    ShowNotification(_source, '✅ Facture #'..invoiceId..' créée: '..total..'€ (En attente de paiement)', 'success')
+    ShowNotification(_source, '✅ Facture #'..invoiceId..' créée: '..total..'$ (En attente de paiement)', 'success')
 
     -- Notification à la cible
     if invoiceType == 'citizen' then
         local targetPlayer = ESX.GetPlayerFromIdentifier(targetIdentifier)
         if targetPlayer then
             local jobLabel = ESX.GetJobs()[job] and ESX.GetJobs()[job].label or job
-            ShowNotification(targetPlayer.source, '📄 Nouvelle facture reçue: '..total..'€ de '..jobLabel..' • Tapez /facture', 'info')
+            ShowNotification(targetPlayer.source, '📄 Nouvelle facture reçue: '..total..'$ de '..jobLabel..' • Tapez /facture', 'info')
         end
     elseif invoiceType == 'company' and targetCompany then
         -- Notifier tous les patrons de l'entreprise cible en ligne
@@ -570,7 +539,7 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
         local xPlayers = ESX.GetExtendedPlayers()
         for _, targetPlayer in ipairs(xPlayers) do
             if targetPlayer.job.name == targetCompany and IsBoss(targetPlayer) then
-                ShowNotification(targetPlayer.source, '📄 Nouvelle facture entreprise reçue: '..total..'€ de '..jobLabel..' • Tapez /facture', 'warning')
+                ShowNotification(targetPlayer.source, '📄 Nouvelle facture entreprise reçue: '..total..'$ de '..jobLabel..' • Tapez /facture', 'warning')
             end
         end
     end
@@ -672,7 +641,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
         end)
 
         -- Notifications
-        ShowNotification(_source, '✅ Facture #'..invoiceId..' payée: '..total..'€', 'success')
+        ShowNotification(_source, '✅ Facture #'..invoiceId..' payée: '..total..'$', 'success')
 
     -- Si facture entreprise
     elseif invoice.invoice_type == 'company' then
@@ -708,12 +677,12 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
             MySQL.update.await('UPDATE tablet_invoices SET status = \'paid\', paid_at = NOW() WHERE id = ?', {invoiceId})
 
             -- Notifications
-            ShowNotification(_source, '✅ Facture #'..invoiceId..' payée par votre entreprise: '..total..'€', 'success')
+            ShowNotification(_source, '✅ Facture #'..invoiceId..' payée par votre entreprise: '..total..'$', 'success')
 
             -- Notifier l'employé créateur
             local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
             if employeePlayer then
-                ShowNotification(employeePlayer.source, '💰 Facture #'..invoiceId..' payée par '..invoice.target_company..'! Commission: '..tonumber(invoice.commission_amount)..'€', 'info')
+                ShowNotification(employeePlayer.source, '💰 Facture #'..invoiceId..' payée par '..invoice.target_company..'! Commission: '..tonumber(invoice.commission_amount)..'$', 'info')
                 -- Rafraîchir les stats de l'employé dans sa tablette
                 TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
                 -- Rafraîchir la liste des factures de l'employé
@@ -724,7 +693,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
             local xPlayers = ESX.GetExtendedPlayers()
             for _, bossPlayer in ipairs(xPlayers) do
                 if bossPlayer.job.name == invoice.job and IsBoss(bossPlayer) and bossPlayer.identifier ~= invoice.employee_identifier then
-                    ShowNotification(bossPlayer.source, '💰 Facture #'..invoiceId..' payée: '..total..'€ de '..invoice.target_company, 'success')
+                    ShowNotification(bossPlayer.source, '💰 Facture #'..invoiceId..' payée: '..total..'$ de '..invoice.target_company, 'success')
                     TriggerClientEvent('tablet:refreshInvoices', bossPlayer.source)
                 end
             end
@@ -752,7 +721,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
     -- Notifier l'employé qui a créé la facture s'il est connecté
     local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
     if employeePlayer then
-        ShowNotification(employeePlayer.source, '💰 Facture #'..invoiceId..' payée par le client! Commission: '..tonumber(invoice.commission_amount)..'€', 'info')
+        ShowNotification(employeePlayer.source, '💰 Facture #'..invoiceId..' payée par le client! Commission: '..tonumber(invoice.commission_amount)..'$', 'info')
         -- Rafraîchir les stats de l'employé dans sa tablette
         TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
         -- Rafraîchir la liste des factures de l'employé
@@ -763,7 +732,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
     local xPlayers = ESX.GetExtendedPlayers()
     for _, bossPlayer in ipairs(xPlayers) do
         if bossPlayer.job.name == invoice.job and IsBoss(bossPlayer) and bossPlayer.identifier ~= invoice.employee_identifier then
-            ShowNotification(bossPlayer.source, '💰 Facture #'..invoiceId..' payée: '..total..'€', 'success')
+            ShowNotification(bossPlayer.source, '💰 Facture #'..invoiceId..' payée: '..total..'$', 'success')
             TriggerClientEvent('tablet:refreshInvoices', bossPlayer.source)
         end
     end
@@ -816,7 +785,7 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
                     local targetPlayer = ESX.GetPlayerFromIdentifier(invoice.target_identifier)
                     if targetPlayer then
                         targetPlayer.addAccountMoney('bank', total)
-                        ShowNotification(targetPlayer.source, '💰 Facture #'..invoiceId..' annulée - Remboursé: '..total..'€', 'info')
+                        ShowNotification(targetPlayer.source, '💰 Facture #'..invoiceId..' annulée - Remboursé: '..total..'$', 'info')
                     end
                 elseif invoice.invoice_type == 'company' then
                     -- Rembourser l'entreprise
@@ -830,7 +799,7 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
                     local xPlayers = ESX.GetExtendedPlayers()
                     for _, bossPlayer in ipairs(xPlayers) do
                         if bossPlayer.job.name == invoice.target_company and IsBoss(bossPlayer) then
-                            ShowNotification(bossPlayer.source, '💰 Facture #'..invoiceId..' annulée - Remboursé: '..total..'€', 'info')
+                            ShowNotification(bossPlayer.source, '💰 Facture #'..invoiceId..' annulée - Remboursé: '..total..'$', 'info')
                         end
                     end
                 end

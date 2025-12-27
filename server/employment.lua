@@ -204,11 +204,19 @@ AddEventHandler('employment:toggleRecruitment', function()
     end
 
     local job = xPlayer.job.name
+    local jobLabel = xPlayer.job.label
 
-    -- Obtenir le statut actuel
+    -- Obtenir le statut actuel ou créer le profile
     local profile = MySQL.single.await('SELECT is_recruiting FROM company_profiles WHERE job_name = ?', {job})
 
-    if not profile then return end
+    if not profile then
+        -- Créer le profile par défaut
+        MySQL.insert.await([[
+            INSERT INTO company_profiles (job_name, job_label, description, is_recruiting)
+            VALUES (?, ?, ?, 1)
+        ]], {job, jobLabel, 'Rejoignez notre équipe !'})
+        profile = { is_recruiting = 1 }
+    end
 
     local newStatus = profile.is_recruiting == 1 and 0 or 1
 

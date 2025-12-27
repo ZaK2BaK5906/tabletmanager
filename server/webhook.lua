@@ -41,8 +41,8 @@ function CreateWebhookEmbed(webhookType, data)
         embed.fields = {
             { name = '🏢 Entreprise', value = data.jobLabel or data.job, inline = true },
             { name = '👤 Employé', value = data.employeeName, inline = true },
-            { name = '💰 Montant Total', value = string.format('%.2f€', data.total), inline = true },
-            { name = '📊 Commission', value = string.format('%.2f€ (%.1f%%)', data.commissionAmount, data.commissionPercent), inline = true },
+            { name = '💰 Montant Total', value = string.format('%.2f$', data.total), inline = true },
+            { name = '📊 Commission', value = string.format('%.2f$ (%.1f%%)', data.commissionAmount, data.commissionPercent), inline = true },
             { name = '🎯 Type', value = data.invoiceType == 'citizen' and 'Citoyen' or 'Entreprise', inline = true },
             { name = '📍 Cible', value = data.targetName or data.targetCompany or 'N/A', inline = true },
         }
@@ -53,10 +53,10 @@ function CreateWebhookEmbed(webhookType, data)
         embed.description = string.format('**Facture #%s** payée par **%s**', data.invoiceId, data.paidBy)
         embed.fields = {
             { name = '🏢 Entreprise', value = data.job, inline = true },
-            { name = '💰 Montant', value = string.format('%.2f€', data.total), inline = true },
+            { name = '💰 Montant', value = string.format('%.2f$', data.total), inline = true },
             { name = '💳 Payé par', value = data.paidBy, inline = true },
-            { name = '📊 Commission versée', value = string.format('%.2f€', data.commissionAmount), inline = true },
-            { name = '🏦 Ajouté à la société', value = string.format('%.2f€', data.societyAmount), inline = true },
+            { name = '📊 Commission versée', value = string.format('%.2f$', data.commissionAmount), inline = true },
+            { name = '🏦 Ajouté à la société', value = string.format('%.2f$', data.societyAmount), inline = true },
         }
 
     elseif webhookType == 'InvoiceCancelled' then
@@ -65,7 +65,7 @@ function CreateWebhookEmbed(webhookType, data)
         embed.description = string.format('**Facture #%s** annulée', data.invoiceId)
         embed.fields = {
             { name = '🏢 Entreprise', value = data.job, inline = true },
-            { name = '💰 Montant', value = string.format('%.2f€', data.total), inline = true },
+            { name = '💰 Montant', value = string.format('%.2f$', data.total), inline = true },
             { name = '👤 Annulée par', value = data.cancelledBy, inline = true },
             { name = '📍 Statut précédent', value = data.previousStatus == 'paid' and '✅ Payée (Remboursée)' or '⏳ En attente', inline = true },
         }
@@ -78,7 +78,7 @@ function CreateWebhookEmbed(webhookType, data)
         embed.fields = {
             { name = '🏢 Entreprise', value = data.job, inline = true },
             { name = '📦 Produit', value = data.productName, inline = true },
-            { name = '💰 Prix', value = string.format('%.2f€', data.price), inline = true },
+            { name = '💰 Prix', value = string.format('%.2f$', data.price), inline = true },
             { name = '👤 Ajouté par', value = data.addedBy, inline = true },
         }
 
@@ -89,7 +89,7 @@ function CreateWebhookEmbed(webhookType, data)
         embed.fields = {
             { name = '🏢 Entreprise', value = data.job, inline = true },
             { name = '📦 Produit', value = data.productName, inline = true },
-            { name = '💰 Prix', value = string.format('%.2f€', data.price), inline = true },
+            { name = '💰 Prix', value = string.format('%.2f$', data.price), inline = true },
             { name = '👤 Supprimé par', value = data.deletedBy, inline = true },
         }
 
