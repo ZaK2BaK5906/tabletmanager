@@ -220,6 +220,16 @@ RegisterNUICallback('resetSales', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('resetCommissions', function(data, cb)
+    TriggerServerEvent('tablet:resetCommissions')
+    cb('ok')
+end)
+
+RegisterNUICallback('resetVAT', function(data, cb)
+    TriggerServerEvent('tablet:resetVAT')
+    cb('ok')
+end)
+
 RegisterNUICallback('getAuditData', function(data, cb)
     ESX.TriggerServerCallback('tablet:getAuditData', function(auditData)
         SendNUIMessage({
