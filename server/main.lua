@@ -339,30 +339,19 @@ RegisterNetEvent('tablet:resetSales', function()
 
     local job = xPlayer.job.name
 
-    -- Compter le nombre de factures et commandes avant suppression
+    -- Compter le nombre de factures avant suppression
     local invoiceCount = MySQL.scalar.await('SELECT COUNT(*) FROM tablet_invoices WHERE job = ?', {job}) or 0
-    local vehicleOrderCount = 0
 
-    if job == 'dealership' then
-        vehicleOrderCount = MySQL.scalar.await('SELECT COUNT(*) FROM vehicle_orders WHERE job = ?', {job}) or 0
-    end
-
-    -- Supprimer toutes les factures du job
+    -- Supprimer toutes les factures du job (les commandes véhicules restent intactes)
     MySQL.query('DELETE FROM tablet_invoices WHERE job = ?', {job})
 
-    -- Supprimer toutes les commandes véhicules si dealership
-    if job == 'dealership' then
-        MySQL.query('DELETE FROM vehicle_orders WHERE job = ?', {job})
-    end
-
-    ShowNotification(_source, '✅ Toutes les ventes ont été réinitialisées', 'success')
+    ShowNotification(_source, '✅ Toutes les factures ont été réinitialisées', 'success')
 
     -- Webhook
     SendWebhook('SalesReset', {
         job = job,
         resetBy = xPlayer.getName(),
-        affectedInvoices = invoiceCount,
-        affectedVehicleOrders = vehicleOrderCount
+        affectedInvoices = invoiceCount
     })
 
     -- Rafraîchir les stats pour tous les employés du job
