@@ -2,8 +2,14 @@
 -- CLIENT DEALERSHIP - OX_TARGET INTERACTIONS
 -- ============================================
 
--- Options ox_target pour les citoyens
-exports.ox_target:addGlobalPlayer({
+CreateThread(function()
+    -- Attendre que ESX soit prêt
+    while not ESX.PlayerLoaded do
+        Wait(100)
+    end
+
+    -- Options ox_target pour les citoyens
+    exports.ox_target:addGlobalPlayer({
     {
         name = 'tablet_create_invoice',
         icon = 'fa-solid fa-file-invoice-dollar',
@@ -39,7 +45,7 @@ exports.ox_target:addGlobalPlayer({
         onSelect = function(data)
             local targetId = GetPlayerServerId(data.entity)
             -- Ouvrir menu de sélection de véhicule
-            TriggerServerCallback('dealership:getVehicleStock', nil, function(vehicles)
+            ESX.TriggerServerCallback('dealership:getVehicleStock', function(vehicles)
                 if vehicles and #vehicles > 0 then
                     openVehicleAssignMenu(targetId, vehicles)
                 else
@@ -48,7 +54,8 @@ exports.ox_target:addGlobalPlayer({
             end)
         end
     }
-})
+    })
+end)
 
 -- Menu pour assigner un véhicule
 function openVehicleAssignMenu(targetId, vehicles)
@@ -100,11 +107,6 @@ function openVehicleAssignMenu(targetId, vehicles)
     end, function(data, menu)
         menu.close()
     end)
-end
-
--- Callback helper
-function TriggerServerCallback(name, requestId, cb)
-    ESX.TriggerServerCallback(name, cb, requestId)
 end
 
 print('^2[Dealership]^0 Client chargé')
