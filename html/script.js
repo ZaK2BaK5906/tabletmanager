@@ -872,8 +872,27 @@ function loadEmployeeStats() {
     postData('getEmployeeStats', {});
 }
 
-window.receiveEmployeeStats = function(stats) {
+window.receiveEmployeeStats = function(data) {
     const container = document.getElementById('employeeStatsTable');
+
+    // Extraire les données selon le nouveau format
+    const stats = data.employees || data; // Compatibilité avec ancien format
+    const totalVehiclePurchases = data.totalVehiclePurchases || 0;
+    const totalProfit = data.totalProfit || 0;
+
+    // Mettre à jour les stats de l'entreprise
+    const vehiclePurchasesEl = document.getElementById('totalVehiclePurchases');
+    const profitEl = document.getElementById('totalProfit');
+
+    if (vehiclePurchasesEl) {
+        vehiclePurchasesEl.textContent = formatCurrency(totalVehiclePurchases);
+    }
+
+    if (profitEl) {
+        profitEl.textContent = formatCurrency(totalProfit);
+        // Couleur en fonction du profit (vert si positif, rouge si négatif)
+        profitEl.style.color = totalProfit >= 0 ? '#22c55e' : '#ef4444';
+    }
 
     if (!stats || stats.length === 0) {
         container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">Aucun employé</div></div>';

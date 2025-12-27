@@ -360,6 +360,26 @@
                             <i class="fa-solid fa-rotate-left"></i> Réinitialiser les Ventes
                         </button>
                     </div>
+
+                    <!-- Stats Entreprise -->
+                    <div class="company-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; padding: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fa-solid fa-truck" style="color: #f59e0b; font-size: 20px;"></i>
+                                <span style="color: #94a3b8; font-size: 13px;">Total Achats Véhicules</span>
+                            </div>
+                            <div id="totalVehiclePurchases" style="color: #f59e0b; font-size: 24px; font-weight: 700;">$0.00</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; padding: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fa-solid fa-chart-line" style="color: #22c55e; font-size: 20px;"></i>
+                                <span style="color: #94a3b8; font-size: 13px;">Bénéfice Net</span>
+                            </div>
+                            <div id="totalProfit" style="color: #22c55e; font-size: 24px; font-weight: 700;">$0.00</div>
+                            <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Revenus - Commissions - Achats</div>
+                        </div>
+                    </div>
+
                     <div class="employee-stats-table" id="employeeStatsTable">
                         <!-- Stats dynamiques -->
                     </div>

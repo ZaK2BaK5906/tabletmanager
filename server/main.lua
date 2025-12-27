@@ -297,7 +297,35 @@ ESX.RegisterServerCallback('tablet:getEmployeeStats', function(source, cb)
         })
     end
 
-    cb(employeeStats)
+    -- Stats globales de l'entreprise (période en cours)
+    local companyStats = MySQL.single.await([[
+        SELECT
+            IFNULL(SUM(CASE WHEN status = 'paid' THEN total ELSE 0 END), 0) as total_revenue,
+            IFNULL(SUM(CASE WHEN status = 'paid' THEN commission_amount ELSE 0 END), 0) as total_commissions
+        FROM tablet_invoices
+        WHERE job = ?
+    ]], {job})
+
+    -- Total des achats véhicules (dealership uniquement)
+    local totalVehiclePurchases = 0
+    if job == 'dealership' then
+        totalVehiclePurchases = MySQL.scalar.await([[
+            SELECT IFNULL(SUM(total_cost), 0)
+            FROM vehicle_orders
+            WHERE job = ?
+        ]], {job}) or 0
+    end
+
+    -- Calcul du bénéfice net
+    local totalRevenue = companyStats and tonumber(companyStats.total_revenue) or 0
+    local totalCommissions = companyStats and tonumber(companyStats.total_commissions) or 0
+    local totalProfit = totalRevenue - totalCommissions - tonumber(totalVehiclePurchases)
+
+    cb({
+        employees = employeeStats,
+        totalVehiclePurchases = tonumber(totalVehiclePurchases),
+        totalProfit = totalProfit
+    })
 end)
 
 -- Réinitialiser les ventes (boss only)
@@ -311,11 +339,21 @@ RegisterNetEvent('tablet:resetSales', function()
 
     local job = xPlayer.job.name
 
-    -- Compter le nombre de factures avant suppression
-    local count = MySQL.scalar.await('SELECT COUNT(*) FROM tablet_invoices WHERE job = ?', {job}) or 0
+    -- Compter le nombre de factures et commandes avant suppression
+    local invoiceCount = MySQL.scalar.await('SELECT COUNT(*) FROM tablet_invoices WHERE job = ?', {job}) or 0
+    local vehicleOrderCount = 0
+
+    if job == 'dealership' then
+        vehicleOrderCount = MySQL.scalar.await('SELECT COUNT(*) FROM vehicle_orders WHERE job = ?', {job}) or 0
+    end
 
     -- Supprimer toutes les factures du job
     MySQL.query('DELETE FROM tablet_invoices WHERE job = ?', {job})
+
+    -- Supprimer toutes les commandes véhicules si dealership
+    if job == 'dealership' then
+        MySQL.query('DELETE FROM vehicle_orders WHERE job = ?', {job})
+    end
 
     ShowNotification(_source, '✅ Toutes les ventes ont été réinitialisées', 'success')
 
@@ -323,7 +361,8 @@ RegisterNetEvent('tablet:resetSales', function()
     SendWebhook('SalesReset', {
         job = job,
         resetBy = xPlayer.getName(),
-        affectedInvoices = count
+        affectedInvoices = invoiceCount,
+        affectedVehicleOrders = vehicleOrderCount
     })
 
     -- Rafraîchir les stats pour tous les employés du job
