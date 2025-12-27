@@ -47,7 +47,7 @@ ESX.RegisterServerCallback('employment:getCompanies', function(source, cb)
                 table.insert(companies, {
                     job_name = jobName,
                     job_label = jobData.label,
-                    photo_url = Config.CompanyLogos[jobName] or nil,
+                    photo_url = Config.CompanyLogos[jobName] or Config.DefaultCompanyLogo,
                     description = profile.description,
                     salary_info = profile.salary_info,
                     is_recruiting = profile.is_recruiting == 1
@@ -62,7 +62,7 @@ ESX.RegisterServerCallback('employment:getCompanies', function(source, cb)
                 table.insert(companies, {
                     job_name = jobName,
                     job_label = jobData.label,
-                    photo_url = Config.CompanyLogos[jobName] or nil,
+                    photo_url = Config.CompanyLogos[jobName] or Config.DefaultCompanyLogo,
                     description = 'Rejoignez notre équipe !',
                     salary_info = nil,
                     is_recruiting = true
@@ -319,7 +319,7 @@ function BroadcastCompaniesUpdate()
                 table.insert(companies, {
                     job_name = jobName,
                     job_label = jobData.label,
-                    photo_url = Config.CompanyLogos[jobName] or nil,
+                    photo_url = Config.CompanyLogos[jobName] or Config.DefaultCompanyLogo,
                     description = profile.description,
                     salary_info = profile.salary_info,
                     is_recruiting = profile.is_recruiting == 1

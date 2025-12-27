@@ -109,62 +109,104 @@ function renderCompanies() {
         return;
     }
 
-    container.innerHTML = '';
+    // Créer le tableau
+    let tableHTML = `
+        <table class="jobs-table">
+            <thead>
+                <tr>
+                    <th>Logo</th>
+                    <th>Entreprise</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
     companies.forEach(company => {
-        const card = document.createElement('div');
-        card.className = 'job-card';
-
         const statusClass = company.is_recruiting ? 'status-open' : 'status-closed';
-        const statusText = company.is_recruiting ? '✓ Recrutement Ouvert' : '🔒 Recrutement Fermé';
+        const statusText = company.is_recruiting ? 'Ouvert' : 'Fermé';
+        const photoUrl = company.photo_url || 'https://i.ibb.co/7YMwD6f/default-company.png';
 
-        const photoUrl = company.photo_url || 'https://via.placeholder.com/100x100?text=' + encodeURIComponent(company.job_label);
-
-        card.innerHTML = `
-            <div class="job-card-header">
-                <img src="${photoUrl}" alt="${company.job_label}" class="company-logo" onerror="this.src='https://via.placeholder.com/100x100?text=Logo'">
-                <div class="company-info">
-                    <h3>${company.job_label}</h3>
-                    <span class="job-status ${statusClass}">${statusText}</span>
-                </div>
-            </div>
-            <div class="job-card-body">
-                <p class="job-description">${company.description || 'Aucune description disponible.'}</p>
-                ${company.salary_info ? `
-                    <div class="salary-info">
-                        <i class="fa-solid fa-money-bill-wave"></i>
-                        <span>${company.salary_info}</span>
-                    </div>
-                ` : ''}
-            </div>
-            <div class="job-card-footer">
-                ${company.is_recruiting ? `
-                    <button class="btn-apply" onclick="openApplyModal('${company.job_name}', '${company.job_label}')">
-                        <i class="fa-solid fa-paper-plane"></i> Postuler
+        tableHTML += `
+            <tr class="job-row">
+                <td class="logo-cell">
+                    <img src="${photoUrl}" alt="${company.job_label}" class="company-logo" onerror="this.src='https://i.ibb.co/7YMwD6f/default-company.png'">
+                </td>
+                <td class="company-cell">
+                    <div class="company-name">${company.job_label}</div>
+                </td>
+                <td class="status-cell">
+                    <span class="job-status ${statusClass}">
+                        <i class="fa-solid ${company.is_recruiting ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                        ${statusText}
+                    </span>
+                </td>
+                <td class="actions-cell">
+                    <button class="btn-info" onclick="showJobDetails('${company.job_name}', '${company.job_label.replace(/'/g, "\\'")}')">
+                        <i class="fa-solid fa-info-circle"></i> En savoir plus
                     </button>
-                ` : `
-                    <button class="btn-apply" disabled>
-                        <i class="fa-solid fa-lock"></i> Fermé
-                    </button>
-                `}
-            </div>
+                    ${company.is_recruiting ? `
+                        <button class="btn-apply-table" onclick="openApplyModal('${company.job_name}', '${company.job_label.replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-paper-plane"></i> Postuler
+                        </button>
+                    ` : `
+                        <button class="btn-apply-table" disabled>
+                            <i class="fa-solid fa-lock"></i> Fermé
+                        </button>
+                    `}
+                </td>
+            </tr>
         `;
-
-        // Add click event to toggle card expansion
-        const header = card.querySelector('.job-card-header');
-        header.addEventListener('click', (e) => {
-            card.classList.toggle('expanded');
-        });
-
-        // Prevent button clicks from toggling the card
-        const applyBtn = card.querySelector('.btn-apply');
-        if (applyBtn) {
-            applyBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        }
-
-        container.appendChild(card);
     });
+
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = tableHTML;
+}
+
+// Afficher les détails d'un job dans une modal
+function showJobDetails(jobName, jobLabel) {
+    const company = employmentData.companies.find(c => c.job_name === jobName);
+    if (!company) return;
+
+    const modal = document.getElementById('jobDetailsModal');
+    const photoUrl = company.photo_url || 'https://i.ibb.co/7YMwD6f/default-company.png';
+
+    document.getElementById('jobDetailsContent').innerHTML = `
+        <div class="job-details-header">
+            <img src="${photoUrl}" alt="${company.job_label}" class="job-details-logo" onerror="this.src='https://i.ibb.co/7YMwD6f/default-company.png'">
+            <div>
+                <h3>${company.job_label}</h3>
+                <span class="job-status ${company.is_recruiting ? 'status-open' : 'status-closed'}">
+                    <i class="fa-solid ${company.is_recruiting ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                    ${company.is_recruiting ? 'Recrutement Ouvert' : 'Recrutement Fermé'}
+                </span>
+            </div>
+        </div>
+        <div class="job-details-body">
+            <div class="detail-section">
+                <h4><i class="fa-solid fa-file-lines"></i> Description</h4>
+                <p>${company.description || 'Aucune description disponible.'}</p>
+            </div>
+            ${company.salary_info ? `
+                <div class="detail-section">
+                    <h4><i class="fa-solid fa-money-bill-wave"></i> Informations Salariales</h4>
+                    <p>${company.salary_info}</p>
+                </div>
+            ` : ''}
+        </div>
+        ${company.is_recruiting ? `
+            <button class="btn-large" onclick="closeModal('jobDetailsModal'); openApplyModal('${company.job_name}', '${company.job_label.replace(/'/g, "\\'")}')">
+                <i class="fa-solid fa-paper-plane"></i> Postuler Maintenant
+            </button>
+        ` : ''}
+    `;
+
+    modal.classList.add('show');
 }
 
 // Filters
@@ -381,6 +423,11 @@ function formatDate(dateString) {
 
 function closeAllModals() {
     document.querySelectorAll('.modal').forEach(modal => modal.classList.remove('show'));
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('show');
 }
 
 function showNotification(message, type) {
