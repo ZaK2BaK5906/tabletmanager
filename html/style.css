@@ -1213,6 +1213,129 @@ h3 {
     color: #ef4444;
 }
 
+/* Financial Estimates Styles */
+.financial-estimates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.estimate-card {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.estimate-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.estimate-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.estimate-icon.vat-icon {
+    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+}
+
+.estimate-info {
+    flex: 1;
+}
+
+.estimate-label {
+    color: #94a3b8;
+    font-size: 11px;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.estimate-value {
+    color: #f1f5f9;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.btn-reset-estimate {
+    background: #334155;
+    border: 1px solid #475569;
+    color: #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-reset-estimate:hover {
+    background: #475569;
+    border-color: #64748b;
+}
+
+.btn-reset-estimate i {
+    font-size: 12px;
+}
+
+.projected-balance-card {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.projected-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.projected-info {
+    flex: 1;
+}
+
+.projected-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.projected-value {
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 /* Welcome Page Styles */
 .welcome-container {
     display: flex;

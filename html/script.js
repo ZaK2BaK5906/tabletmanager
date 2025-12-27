@@ -1158,6 +1158,20 @@ function loadTransactionHistory() {
     postData('getTransactionHistory', {});
 }
 
+function resetCommissions() {
+    postData('resetCommissions', {});
+    setTimeout(() => {
+        loadTransactionHistory();
+    }, 500);
+}
+
+function resetVAT() {
+    postData('resetVAT', {});
+    setTimeout(() => {
+        loadTransactionHistory();
+    }, 500);
+}
+
 function receiveTransactionHistory(data) {
     if (!data) return;
 
@@ -1167,6 +1181,11 @@ function receiveTransactionHistory(data) {
     // Update totals
     document.getElementById('totalCredits').textContent = formatCurrency(data.totalCredits);
     document.getElementById('totalDebits').textContent = formatCurrency(data.totalDebits);
+
+    // Update financial estimates
+    document.getElementById('pendingCommissions').textContent = formatCurrency(data.pendingCommissions || 0);
+    document.getElementById('pendingVAT').textContent = formatCurrency(data.pendingVAT || 0);
+    document.getElementById('projectedBalance').textContent = formatCurrency(data.projectedBalance || 0);
 
     // Render transactions
     const container = document.getElementById('transactionsList');

@@ -378,15 +378,59 @@
                             <i class="fa-solid fa-arrow-trend-up"></i>
                             <div>
                                 <div class="summary-label">Total Crédits</div>
-                                <div class="summary-value" id="totalCredits">0€</div>
+                                <div class="summary-value" id="totalCredits">$0.00</div>
                             </div>
                         </div>
                         <div class="summary-box summary-expense">
                             <i class="fa-solid fa-arrow-trend-down"></i>
                             <div>
                                 <div class="summary-label">Total Débits</div>
-                                <div class="summary-value" id="totalDebits">0€</div>
+                                <div class="summary-value" id="totalDebits">$0.00</div>
                             </div>
+                        </div>
+                    </div>
+
+                    <h3 style="color: #e2e8f0; font-size: 16px; margin: 20px 0 10px 0;">
+                        <i class="fa-solid fa-coins"></i> Estimations Financières
+                    </h3>
+                    <div class="financial-estimates">
+                        <div class="estimate-card">
+                            <div class="estimate-header">
+                                <div class="estimate-icon">
+                                    <i class="fa-solid fa-handshake"></i>
+                                </div>
+                                <div class="estimate-info">
+                                    <div class="estimate-label">Total Primes (Commissions)</div>
+                                    <div class="estimate-value" id="pendingCommissions">$0.00</div>
+                                </div>
+                            </div>
+                            <button class="btn-reset-estimate" onclick="resetCommissions()">
+                                <i class="fa-solid fa-rotate-right"></i> Reset
+                            </button>
+                        </div>
+                        <div class="estimate-card">
+                            <div class="estimate-header">
+                                <div class="estimate-icon vat-icon">
+                                    <i class="fa-solid fa-percent"></i>
+                                </div>
+                                <div class="estimate-info">
+                                    <div class="estimate-label">Total TVA (16.75%)</div>
+                                    <div class="estimate-value" id="pendingVAT">$0.00</div>
+                                </div>
+                            </div>
+                            <button class="btn-reset-estimate" onclick="resetVAT()">
+                                <i class="fa-solid fa-rotate-right"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="projected-balance-card">
+                        <div class="projected-icon">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <div class="projected-info">
+                            <div class="projected-label">Solde Prévisionnel (après primes & TVA)</div>
+                            <div class="projected-value" id="projectedBalance">$0.00</div>
                         </div>
                     </div>
 

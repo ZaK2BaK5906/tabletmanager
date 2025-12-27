@@ -231,16 +231,16 @@ AddEventHandler('employment:toggleRecruitment', function()
     print('[EMPLOYMENT DEBUG] Job:', job, 'Profile exists:', profile ~= nil)
 
     if not profile then
-        -- Créer le profile par défaut (IGNORE si existe déjà)
+        -- Créer le profile par défaut avec recrutement OUVERT (IGNORE si existe déjà)
         MySQL.insert.await([[
             INSERT IGNORE INTO company_profiles (job_name, job_label, description, is_recruiting)
-            VALUES (?, ?, ?, 0)
+            VALUES (?, ?, ?, 1)
         ]], {job, jobLabel, 'Rejoignez notre équipe !'})
         -- Re-query to get the actual value (in case it already existed)
         profile = MySQL.single.await('SELECT is_recruiting FROM company_profiles WHERE job_name = ?', {job})
         if not profile then
             -- Should never happen, but fallback to default
-            profile = { is_recruiting = 0 }
+            profile = { is_recruiting = 1 }
         end
         print('[EMPLOYMENT DEBUG] Created or found profile with is_recruiting =', profile.is_recruiting)
     else

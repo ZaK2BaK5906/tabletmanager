@@ -304,6 +304,16 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
     local accountData = MySQL.single.await('SELECT money FROM addon_account_data WHERE account_name = ? AND owner IS NULL', {societyAccount})
     local balance = accountData and tonumber(accountData.money) or 0
 
+    -- Récupérer les dates de reset
+    local resetDates = MySQL.single.await([[
+        SELECT commission_reset_date, vat_reset_date
+        FROM company_profiles
+        WHERE job_name = ?
+    ]], {job}) or {}
+
+    local commissionResetDate = resetDates.commission_reset_date or '1970-01-01'
+    local vatResetDate = resetDates.vat_reset_date or '1970-01-01'
+
     -- Récupérer factures payées (crédits)
     local paidInvoices = MySQL.query.await([[
         SELECT
@@ -365,11 +375,90 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
         end
     end
 
+    -- Calculer estimations depuis dernier reset
+    -- Total commissions depuis reset
+    local pendingCommissions = MySQL.scalar.await([[
+        SELECT COALESCE(SUM(commission_amount), 0)
+        FROM tablet_invoices
+        WHERE job = ? AND status = 'paid'
+        AND commission_amount > 0
+        AND paid_at > ?
+    ]], {job, commissionResetDate}) or 0
+
+    -- Total VAT (16.75%) depuis reset
+    local allInvoicesForVAT = MySQL.query.await([[
+        SELECT total
+        FROM tablet_invoices
+        WHERE job = ? AND status = 'paid'
+        AND paid_at > ?
+    ]], {job, vatResetDate}) or {}
+
+    local pendingVAT = 0
+    for _, inv in ipairs(allInvoicesForVAT) do
+        pendingVAT = pendingVAT + (tonumber(inv.total) * 0.1675)
+    end
+
+    -- Solde prévisionnel après primes et VAT
+    local projectedBalance = balance - pendingCommissions - pendingVAT
+
     cb({
         balance = balance,
         transactions = transactions,
         totalCredits = totalCredits,
-        totalDebits = totalDebits
+        totalDebits = totalDebits,
+        pendingCommissions = pendingCommissions,
+        pendingVAT = pendingVAT,
+        projectedBalance = projectedBalance
+    })
+end)
+
+-- Reset compteur commissions (boss only)
+RegisterNetEvent('tablet:resetCommissions')
+AddEventHandler('tablet:resetCommissions', function()
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer or not IsBoss(xPlayer) then return end
+
+    local job = xPlayer.job.name
+
+    -- Mettre à jour la date de reset
+    MySQL.update.await([[
+        UPDATE company_profiles
+        SET commission_reset_date = NOW()
+        WHERE job_name = ?
+    ]], {job})
+
+    ShowNotification(_source, '✅ Compteur commissions réinitialisé', 'success')
+
+    -- Webhook
+    SendWebhook('CommissionReset', {
+        job = job,
+        resetBy = xPlayer.getName()
+    })
+end)
+
+-- Reset compteur VAT (boss only)
+RegisterNetEvent('tablet:resetVAT')
+AddEventHandler('tablet:resetVAT', function()
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer or not IsBoss(xPlayer) then return end
+
+    local job = xPlayer.job.name
+
+    -- Mettre à jour la date de reset
+    MySQL.update.await([[
+        UPDATE company_profiles
+        SET vat_reset_date = NOW()
+        WHERE job_name = ?
+    ]], {job})
+
+    ShowNotification(_source, '✅ Compteur TVA réinitialisé', 'success')
+
+    -- Webhook
+    SendWebhook('VATReset', {
+        job = job,
+        resetBy = xPlayer.getName()
     })
 end)
 
