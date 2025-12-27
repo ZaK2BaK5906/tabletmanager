@@ -81,6 +81,14 @@ function openTablet(data) {
         managementTab.style.display = 'none';
     }
 
+    // Afficher/masquer onglet audit
+    const auditTab = document.getElementById('auditTab');
+    if (tabletData.hasAuditAccess) {
+        auditTab.style.display = 'flex';
+    } else {
+        auditTab.style.display = 'none';
+    }
+
     // Charger les produits dans le select
     loadProductsSelect();
     loadPartnershipsSelect();
@@ -137,6 +145,8 @@ function switchPage(page) {
         loadStats();
     } else if (page === 'management') {
         loadManagementData();
+    } else if (page === 'audit') {
+        loadAuditData();
     }
 }
 
@@ -628,6 +638,111 @@ window.receiveStats = function(stats) {
     document.getElementById('statCommissionRate').textContent = formatPercent(tabletData.commission);
 };
 
+// Audit (DOJ)
+function loadAuditData() {
+    postData('getAuditData', {});
+}
+
+window.receiveAuditData = function(societies) {
+    const container = document.getElementById('auditContainer');
+
+    if (!societies || societies.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏢</div><div class="empty-state-text">Aucune société trouvée</div></div>';
+        return;
+    }
+
+    // Créer un tableau HTML pour chaque société
+    let html = '';
+
+    societies.forEach(society => {
+        html += `
+            <div class="audit-society-card" style="
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 20px;
+                border: 1px solid #334155;
+            ">
+                <div class="audit-society-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 16px;
+                    padding-bottom: 12px;
+                    border-bottom: 2px solid #334155;
+                ">
+                    <div>
+                        <h2 style="color: #60a5fa; font-size: 20px; margin: 0 0 4px 0; font-weight: 700;">
+                            <i class="fa-solid fa-building"></i> ${society.label}
+                        </h2>
+                        <p style="color: #94a3b8; font-size: 13px; margin: 0;">Job: ${society.job}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Solde Société</div>
+                        <div style="color: #10b981; font-size: 24px; font-weight: 700;">${formatCurrency(society.society_money)}</div>
+                    </div>
+                </div>
+
+                <div class="audit-society-stats" style="
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 16px;
+                ">
+                    <div class="audit-stat-box" style="
+                        background: rgba(59, 130, 246, 0.1);
+                        border: 1px solid rgba(59, 130, 246, 0.3);
+                        border-radius: 8px;
+                        padding: 16px;
+                    ">
+                        <div style="color: #94a3b8; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">
+                            <i class="fa-solid fa-file-invoice"></i> Factures (Mois)
+                        </div>
+                        <div style="color: #e2e8f0; font-size: 28px; font-weight: 700;">${society.total_invoices}</div>
+                    </div>
+
+                    <div class="audit-stat-box" style="
+                        background: rgba(16, 185, 129, 0.1);
+                        border: 1px solid rgba(16, 185, 129, 0.3);
+                        border-radius: 8px;
+                        padding: 16px;
+                    ">
+                        <div style="color: #94a3b8; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">
+                            <i class="fa-solid fa-sack-dollar"></i> Revenus (Payés)
+                        </div>
+                        <div style="color: #10b981; font-size: 28px; font-weight: 700;">${formatCurrency(society.revenue)}</div>
+                    </div>
+
+                    <div class="audit-stat-box" style="
+                        background: rgba(245, 158, 11, 0.1);
+                        border: 1px solid rgba(245, 158, 11, 0.3);
+                        border-radius: 8px;
+                        padding: 16px;
+                    ">
+                        <div style="color: #94a3b8; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">
+                            <i class="fa-solid fa-clock"></i> En Attente
+                        </div>
+                        <div style="color: #f59e0b; font-size: 28px; font-weight: 700;">${formatCurrency(society.pending_amount)}</div>
+                    </div>
+
+                    <div class="audit-stat-box" style="
+                        background: rgba(139, 92, 246, 0.1);
+                        border: 1px solid rgba(139, 92, 246, 0.3);
+                        border-radius: 8px;
+                        padding: 16px;
+                    ">
+                        <div style="color: #94a3b8; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">
+                            <i class="fa-solid fa-percent"></i> Commissions
+                        </div>
+                        <div style="color: #a78bfa; font-size: 28px; font-weight: 700;">${formatCurrency(society.commissions)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+};
+
 // Management Tabs
 document.querySelectorAll('.mgmt-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -988,5 +1103,7 @@ window.addEventListener('message', (event) => {
         if (document.querySelector('.nav-item[data-page="invoices"]').classList.contains('active')) {
             loadInvoiceHistory();
         }
+    } else if (data.action === 'receiveAuditData') {
+        receiveAuditData(data.data);
     }
 });

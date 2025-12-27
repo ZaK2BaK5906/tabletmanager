@@ -210,6 +210,16 @@ RegisterNUICallback('resetSales', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('getAuditData', function(data, cb)
+    ESX.TriggerServerCallback('tablet:getAuditData', function(auditData)
+        SendNUIMessage({
+            action = 'receiveAuditData',
+            data = auditData
+        })
+    end)
+    cb('ok')
+end)
+
 RegisterNUICallback('createInvoice', function(data, cb)
     TriggerServerEvent('tablet:createInvoice', data)
     cb('ok')
