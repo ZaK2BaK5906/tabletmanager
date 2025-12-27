@@ -46,6 +46,38 @@ CreateThread(function()
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ]])
 
+    -- Créer la table employee_financial_tracking si elle n'existe pas
+    MySQL.query([[
+        CREATE TABLE IF NOT EXISTS `employee_financial_tracking` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `job` VARCHAR(50) NOT NULL,
+            `employee_identifier` VARCHAR(60) NOT NULL,
+            `commission_reset_date` TIMESTAMP NULL DEFAULT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY `unique_job_employee` (`job`, `employee_identifier`),
+            INDEX `idx_job` (`job`),
+            INDEX `idx_employee` (`employee_identifier`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ]])
+
+    -- Ajouter les colonnes de reset financier à company_profiles si elles n'existent pas
+    local hasCommissionReset = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'company_profiles'
+        AND COLUMN_NAME = 'commission_reset_date'
+    ]])
+
+    if hasCommissionReset == 0 then
+        MySQL.query([[
+            ALTER TABLE company_profiles
+            ADD COLUMN commission_reset_date TIMESTAMP NULL DEFAULT NULL,
+            ADD COLUMN vat_reset_date TIMESTAMP NULL DEFAULT NULL
+        ]])
+        print("^2[Tablet Manager]^7 Colonnes de reset financier ajoutées ✓")
+    end
+
     print("^2[Tablet Manager]^7 Tables vérifiées ✓")
 
     -- Initialiser les profils pour les jobs existants
