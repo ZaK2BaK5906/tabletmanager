@@ -352,6 +352,26 @@ AddEventHandler('tablet:refreshStats', function()
     })
 end)
 
+-- VÉHICULES (DEALERSHIP)
+RegisterNUICallback('getVehicles', function(data, cb)
+    ESX.TriggerServerCallback('dealership:getVehicles', function(vehicles)
+        cb(vehicles)
+    end)
+end)
+
+RegisterNUICallback('orderVehicles', function(data, cb)
+    TriggerServerEvent('dealership:orderVehicles', data.vehicleModel, data.quantity)
+    cb('ok')
+end)
+
+-- Refresh véhicules (appelé depuis le serveur)
+RegisterNetEvent('dealership:refreshVehicles')
+AddEventHandler('dealership:refreshVehicles', function()
+    SendNUIMessage({
+        action = 'refreshVehicles'
+    })
+end)
+
 -- Fermer avec ESC
 RegisterNUICallback('escape', function(data, cb)
     CloseTablet()

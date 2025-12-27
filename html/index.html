@@ -60,6 +60,10 @@
                 <i class="fa-solid fa-chart-pie nav-icon"></i>
                 <span>Statistiques</span>
             </button>
+            <button class="nav-btn" data-page="vehicles" id="vehiclesTab" style="display: none;">
+                <i class="fa-solid fa-car nav-icon"></i>
+                <span>Véhicules</span>
+            </button>
             <button class="nav-btn" data-page="management" id="managementTab" style="display: none;">
                 <i class="fa-solid fa-sliders nav-icon"></i>
                 <span>Administration</span>
@@ -443,6 +447,26 @@
                     <!-- Données d'audit dynamiques -->
                 </div>
             </div>
+
+            <!-- Page Véhicules (Dealership only) -->
+            <div class="page" id="page-vehicles">
+                <div class="page-header">
+                    <h1><i class="fa-solid fa-car"></i> Catalogue Véhicules</h1>
+                    <p>Gérez votre stock de véhicules et commandez auprès du fournisseur</p>
+                </div>
+
+                <div class="vehicles-container">
+                    <!-- Filtres par catégorie -->
+                    <div class="category-filters" id="categoryFilters">
+                        <button class="category-btn active" data-category="all">Tous</button>
+                    </div>
+
+                    <!-- Catalogue véhicules -->
+                    <div class="vehicles-grid" id="vehiclesGrid">
+                        <!-- Véhicules dynamiques -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -600,7 +624,40 @@
         </div>
     </div>
 
+    <!-- Vehicle Order Modal -->
+    <div class="vehicle-order-modal" id="vehicleOrderModal">
+        <div class="vehicle-order-content">
+            <div class="vehicle-order-header">
+                <h2 id="orderVehicleName">-</h2>
+                <p>Commander des véhicules au fournisseur</p>
+            </div>
+            <div class="order-form-group">
+                <label for="orderQuantity">Quantité</label>
+                <input type="number" id="orderQuantity" min="1" value="1">
+            </div>
+            <div class="order-summary">
+                <div class="order-summary-row">
+                    <span>Prix unitaire:</span>
+                    <span id="orderUnitPrice">$0</span>
+                </div>
+                <div class="order-summary-row">
+                    <span>Quantité:</span>
+                    <span id="orderQty">1</span>
+                </div>
+                <div class="order-summary-row">
+                    <span>Total:</span>
+                    <span id="orderTotalPrice">$0</span>
+                </div>
+            </div>
+            <div class="order-modal-actions">
+                <button class="btn-cancel-order" onclick="closeOrderModal()">Annuler</button>
+                <button class="btn-confirm-order" onclick="confirmOrder()">Commander</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
+    <script src="vehicles.js"></script>
     <script src="employment.js"></script>
 </body>
 </html>

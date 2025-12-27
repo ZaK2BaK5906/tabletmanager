@@ -30,6 +30,7 @@ files {
     'html/index.html',
     'html/style.css',
     'html/script.js',
+    'html/vehicles.js',
     'html/employment.html',
     'html/employment-style.css',
     'html/employment.js'

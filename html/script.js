@@ -91,6 +91,14 @@ function openTablet(data) {
         auditTab.style.display = 'none';
     }
 
+    // Afficher/masquer onglet véhicules (dealership only)
+    const vehiclesTab = document.getElementById('vehiclesTab');
+    if (data.job === 'dealership') {
+        vehiclesTab.style.display = 'flex';
+    } else {
+        vehiclesTab.style.display = 'none';
+    }
+
     // Charger les produits dans le select
     loadProductsSelect();
     loadPartnershipsSelect();
@@ -154,6 +162,10 @@ function switchPage(page) {
         loadManagementData();
     } else if (page === 'audit') {
         loadAuditData();
+    } else if (page === 'vehicles') {
+        if (typeof loadVehicles === 'function') {
+            loadVehicles();
+        }
     }
 }
 

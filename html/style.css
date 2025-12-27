@@ -1457,3 +1457,282 @@ h3 {
 .chart-wrapper canvas {
     max-height: 280px;
 }
+
+/* ===================================
+   VEHICLES CATALOG (DEALERSHIP)
+   =================================== */
+
+.vehicles-container {
+    padding: 20px;
+}
+
+.category-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.category-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid #334155;
+    color: #94a3b8;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.category-btn:hover {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+.category-btn.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border-color: #3b82f6;
+}
+
+.vehicles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.vehicle-card {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.vehicle-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    border-color: #475569;
+}
+
+.vehicle-image {
+    width: 100%;
+    height: 160px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #475569;
+    border-bottom: 1px solid #334155;
+}
+
+.vehicle-info {
+    padding: 15px;
+}
+
+.vehicle-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 8px;
+}
+
+.vehicle-category {
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.vehicle-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.vehicle-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: #22c55e;
+}
+
+.vehicle-stock {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    padding: 4px 10px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 6px;
+    color: #60a5fa;
+}
+
+.vehicle-stock.low {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+.vehicle-stock.high {
+    background: rgba(34, 197, 94, 0.1);
+    color: #4ade80;
+}
+
+.vehicle-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-order {
+    flex: 1;
+    padding: 10px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-order:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: scale(1.02);
+}
+
+.btn-order:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modal de commande */
+.vehicle-order-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.vehicle-order-modal.show {
+    display: flex;
+}
+
+.vehicle-order-content {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.vehicle-order-header {
+    margin-bottom: 20px;
+}
+
+.vehicle-order-header h2 {
+    color: #e2e8f0;
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.vehicle-order-header p {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.order-form-group {
+    margin-bottom: 20px;
+}
+
+.order-form-group label {
+    display: block;
+    color: #94a3b8;
+    font-size: 13px;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.order-form-group input {
+    width: 100%;
+    padding: 12px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 14px;
+}
+
+.order-summary {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.order-summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.order-summary-row:last-child {
+    margin-bottom: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #e2e8f0;
+    padding-top: 8px;
+    border-top: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.order-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-confirm-order {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.btn-confirm-order:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+}
+
+.btn-cancel-order {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    border: none;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.btn-cancel-order:hover {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+}
