@@ -121,7 +121,7 @@ function displayNotesInAdmin(notes) {
     });
 }
 
-// Ajouter une note
+// Ajouter ou modifier une note
 document.addEventListener('DOMContentLoaded', () => {
     const addNoteBtn = document.getElementById('addNoteBtn');
     if (addNoteBtn) {
@@ -130,11 +130,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const content = document.getElementById('newNoteContent').value.trim();
 
             if (!title || !content) {
-                alert('Veuillez remplir le titre et le contenu');
-                return;
+                return; // Validation silencieuse (pas d'alert qui freeze)
             }
 
-            postData('addCompanyNote', { title, content });
+            const editingId = addNoteBtn.getAttribute('data-editing-id');
+
+            if (editingId) {
+                // Mode édition
+                postData('updateCompanyNote', { noteId: parseInt(editingId), title, content });
+
+                // Réinitialiser le bouton
+                addNoteBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Ajouter une Note';
+                addNoteBtn.style.background = '';
+                addNoteBtn.removeAttribute('data-editing-id');
+            } else {
+                // Mode ajout
+                postData('addCompanyNote', { title, content });
+            }
+
+            // Vider les champs
             document.getElementById('newNoteTitle').value = '';
             document.getElementById('newNoteContent').value = '';
         });
@@ -143,25 +157,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Modifier une note
 function editNote(noteId, title, content) {
-    const newTitle = prompt('Nouveau titre:', title);
-    if (newTitle === null) return;
+    // Remplir les champs du formulaire avec les valeurs actuelles
+    document.getElementById('newNoteTitle').value = title;
+    document.getElementById('newNoteContent').value = content;
 
-    const newContent = prompt('Nouveau contenu:', content);
-    if (newContent === null) return;
+    // Changer le bouton pour mode édition
+    const addBtn = document.getElementById('addNoteBtn');
+    addBtn.innerHTML = '<i class="fa-solid fa-save"></i> Sauvegarder les modifications';
+    addBtn.style.background = '#f59e0b';
 
-    if (!newTitle.trim() || !newContent.trim()) {
-        alert('Le titre et le contenu ne peuvent pas être vides');
-        return;
-    }
-
-    postData('updateCompanyNote', { noteId, title: newTitle, content: newContent });
+    // Stocker l'ID de la note en cours d'édition
+    addBtn.setAttribute('data-editing-id', noteId);
 }
 
-// Supprimer une note
+// Supprimer une note (sans confirmation pour éviter le freeze)
 function deleteNote(noteId) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) {
-        postData('deleteCompanyNote', { noteId });
-    }
+    postData('deleteCompanyNote', { noteId });
 }
 
 // Helper pour échapper le HTML
