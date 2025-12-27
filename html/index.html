@@ -6,6 +6,7 @@
     <title>Tablette de Gestion</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="employment-style.css">
 </head>
 <body>
     <!-- Menu Factures -->
@@ -351,6 +352,153 @@
         </div>
     </div>
 
+    <!-- Employment System -->
+    <div class="employment-container" id="employmentContainer">
+        <!-- Header -->
+        <div class="employment-header">
+            <div class="header-left">
+                <i class="fa-solid fa-briefcase header-icon"></i>
+                <div>
+                    <h1>Offres d'Emploi</h1>
+                    <p>Trouvez votre prochaine opportunité professionnelle</p>
+                </div>
+            </div>
+            <button class="close-btn" id="closeEmploymentBtn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Boss Controls (visible seulement pour les patrons) -->
+        <div class="boss-controls" id="bossControls" style="display: none;">
+            <div class="boss-controls-inner">
+                <button class="btn-boss" id="editProfileBtn">
+                    <i class="fa-solid fa-pen-to-square"></i> Éditer le Profil
+                </button>
+                <button class="btn-boss" id="toggleRecruitmentBtn">
+                    <i class="fa-solid fa-door-open"></i> <span id="recruitmentBtnText">Fermer Recrutement</span>
+                </button>
+                <button class="btn-boss" id="viewApplicationsBtn">
+                    <i class="fa-solid fa-inbox"></i> Candidatures <span id="applicationsBadge" class="badge">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <i class="fa-solid fa-filter"></i>
+                <select id="filterRecruiting">
+                    <option value="all">Toutes les entreprises</option>
+                    <option value="recruiting">Recrutement ouvert</option>
+                    <option value="closed">Recrutement fermé</option>
+                </select>
+            </div>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="Rechercher une entreprise...">
+            </div>
+        </div>
+
+        <!-- Job List -->
+        <div class="job-list" id="jobList">
+            <!-- Dynamic job cards -->
+        </div>
+    </div>
+
+    <!-- Modal: Apply for Job -->
+    <div class="modal" id="applyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-file-signature"></i> Postuler</h2>
+                <button class="modal-close" id="closeApplyModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="company-preview" id="applyCompanyPreview">
+                    <!-- Company info -->
+                </div>
+                <form id="applyForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Prénom <span class="required">*</span></label>
+                            <input type="text" id="applyFirstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nom <span class="required">*</span></label>
+                            <input type="text" id="applyLastName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Numéro de Téléphone <span class="required">*</span></label>
+                        <input type="tel" id="applyPhone" placeholder="Ex: 555-1234" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Expérience Professionnelle</label>
+                        <textarea id="applyExperience" rows="4" placeholder="Décrivez vos expériences précédentes..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Lettre de Motivation</label>
+                        <textarea id="applyMotivation" rows="4" placeholder="Pourquoi souhaitez-vous rejoindre cette entreprise ?"></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary btn-large">
+                        <i class="fa-solid fa-paper-plane"></i> Envoyer la Candidature
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Company Profile (Boss only) -->
+    <div class="modal" id="editProfileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-building"></i> Éditer le Profil de l'Entreprise</h2>
+                <button class="modal-close" id="closeEditProfileModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm">
+                    <div class="form-group">
+                        <label>Photo de l'Entreprise (URL ImgBB)</label>
+                        <input type="url" id="editPhotoUrl" placeholder="https://i.ibb.co/...">
+                        <small>Uploadez votre image sur <a href="https://imgbb.com" target="_blank">ImgBB.com</a></small>
+                    </div>
+                    <div class="form-group">
+                        <label>Description de l'Entreprise</label>
+                        <textarea id="editDescription" rows="5" placeholder="Décrivez votre entreprise, ses activités, sa culture..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Informations Salariales</label>
+                        <textarea id="editSalaryInfo" rows="3" placeholder="Ex: Salaire: 2000-3000€/mois + Commissions"></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary btn-large">
+                        <i class="fa-solid fa-save"></i> Sauvegarder les Modifications
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: View Applications (Boss only) -->
+    <div class="modal" id="applicationsModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-inbox"></i> Candidatures Reçues</h2>
+                <button class="modal-close" id="closeApplicationsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="applications-filters">
+                    <button class="filter-btn active" data-status="all">Toutes</button>
+                    <button class="filter-btn" data-status="pending">En attente</button>
+                    <button class="filter-btn" data-status="accepted">Acceptées</button>
+                    <button class="filter-btn" data-status="rejected">Refusées</button>
+                </div>
+                <div class="applications-list" id="applicationsList">
+                    <!-- Dynamic applications -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
+    <script src="employment.js"></script>
 </body>
 </html>
