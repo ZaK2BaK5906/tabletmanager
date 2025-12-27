@@ -641,6 +641,8 @@ AddEventHandler('tablet:resetEmployeeCommission', function(employeeIdentifier)
     local xPlayers = ESX.GetExtendedPlayers('job', job)
     for _, player in pairs(xPlayers) do
         TriggerClientEvent('tablet:refreshStats', player.source)
+        -- Rafraîchir aussi les stats des employés (tableau + stats entreprise)
+        TriggerClientEvent('tablet:refreshEmployeeStats', player.source)
     end
 end)
 

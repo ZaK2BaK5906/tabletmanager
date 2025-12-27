@@ -1232,6 +1232,12 @@ window.addEventListener('message', (event) => {
         if (invoicesNav && invoicesNav.classList.contains('active')) {
             loadInvoiceHistory();
         }
+    } else if (data.action === 'refreshEmployeeStats') {
+        // Rafraîchir les stats des employés + stats entreprise
+        const adminNav = document.querySelector('.nav-item[data-page="admin"]');
+        if (adminNav && adminNav.classList.contains('active')) {
+            loadEmployeeStats();
+        }
     } else if (data.action === 'refreshInvoices') {
         // Rafraîchir uniquement les factures sans fermer la tablette
         loadQuickStats();

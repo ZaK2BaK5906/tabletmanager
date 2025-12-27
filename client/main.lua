@@ -352,6 +352,14 @@ AddEventHandler('tablet:refreshStats', function()
     })
 end)
 
+RegisterNetEvent('tablet:refreshEmployeeStats')
+AddEventHandler('tablet:refreshEmployeeStats', function()
+    -- Rafraîchir les statistiques des employés (tableau + stats entreprise)
+    SendNUIMessage({
+        action = 'refreshEmployeeStats'
+    })
+end)
+
 -- VÉHICULES (DEALERSHIP)
 RegisterNUICallback('getVehicles', function(data, cb)
     ESX.TriggerServerCallback('dealership:getVehicles', function(vehicles)
