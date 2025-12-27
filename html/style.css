@@ -1212,3 +1212,130 @@ h3 {
 .transaction-amount.debit {
     color: #ef4444;
 }
+
+/* Welcome Page Styles */
+.welcome-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 40px;
+    gap: 30px;
+}
+
+.welcome-header {
+    text-align: center;
+}
+
+.welcome-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: wave 2s ease-in-out infinite;
+}
+
+@keyframes wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-15deg); }
+    75% { transform: rotate(15deg); }
+}
+
+.welcome-icon i {
+    color: #fbbf24;
+    filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.3));
+}
+
+.welcome-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 8px;
+}
+
+.welcome-subtitle {
+    font-size: 16px;
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.welcome-card {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border: 1px solid #475569;
+}
+
+.welcome-info {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.info-row > i {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 12px;
+    font-size: 20px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.info-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-label {
+    color: #94a3b8;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    color: #f1f5f9;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.welcome-message {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-left: 4px solid #3b82f6;
+    border-radius: 8px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 500px;
+    width: 100%;
+}
+
+.welcome-message i {
+    font-size: 24px;
+    color: #fbbf24;
+    flex-shrink: 0;
+}
+
+.welcome-message p {
+    color: #cbd5e1;
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.5;
+}

@@ -73,34 +73,44 @@
         <div class="tablet-content">
             <!-- Page Accueil -->
             <div class="page active" id="page-home">
-                <div class="page-header">
-                    <h1>Dashboard</h1>
-                    <p>Vue d'ensemble de votre activité</p>
-                </div>
-                <div class="quick-stats">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <i class="fa-solid fa-wallet stat-icon"></i>
-                            <span class="stat-label">Commission Mensuelle</span>
+                <div class="welcome-container">
+                    <div class="welcome-header">
+                        <div class="welcome-icon">
+                            <i class="fa-solid fa-hand-wave"></i>
                         </div>
-                        <div class="stat-value" id="quickCommission">0.00€</div>
-                        <div class="stat-trend positive"><i class="fa-solid fa-arrow-up"></i> Ce mois</div>
+                        <h1 class="welcome-title">Bienvenue</h1>
+                        <p class="welcome-subtitle" id="welcomeGreeting">Bonne journée !</p>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <i class="fa-solid fa-receipt stat-icon"></i>
-                            <span class="stat-label">Factures Émises</span>
+
+                    <div class="welcome-card">
+                        <div class="welcome-info">
+                            <div class="info-row">
+                                <i class="fa-solid fa-user"></i>
+                                <div class="info-content">
+                                    <span class="info-label">Nom Complet</span>
+                                    <span class="info-value" id="welcomeName">-</span>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <i class="fa-solid fa-briefcase"></i>
+                                <div class="info-content">
+                                    <span class="info-label">Poste</span>
+                                    <span class="info-value" id="welcomeJob">-</span>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <i class="fa-solid fa-clock"></i>
+                                <div class="info-content">
+                                    <span class="info-label">Heure Actuelle</span>
+                                    <span class="info-value" id="welcomeTime">--:--</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-value" id="quickInvoices">0</div>
-                        <div class="stat-trend neutral"><i class="fa-solid fa-minus"></i> Ce mois</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <i class="fa-solid fa-percent stat-icon"></i>
-                            <span class="stat-label">Taux Commission</span>
-                        </div>
-                        <div class="stat-value" id="quickPercent">0.0%</div>
-                        <div class="stat-trend neutral"><i class="fa-solid fa-minus"></i> Actuel</div>
+
+                    <div class="welcome-message">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <p id="welcomeMotivation">Bon courage pour votre journée de travail !</p>
                     </div>
                 </div>
             </div>

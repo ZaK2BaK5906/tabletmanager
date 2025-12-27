@@ -71,7 +71,9 @@ function openTablet(data) {
 
     document.getElementById('companyName').textContent = data.jobLabel || data.job;
     document.getElementById('userName').textContent = data.userName;
-    document.getElementById('quickPercent').textContent = formatPercent(tabletData.commission);
+
+    // Populate welcome page
+    updateWelcomePage(data.userName, data.jobLabel || data.job);
 
     // Afficher/masquer onglet gestion
     const managementTab = document.getElementById('managementTab');
@@ -99,7 +101,6 @@ function openTablet(data) {
     setupInvoiceTypeSelector();
 
     // Charger les données initiales
-    loadQuickStats();
     loadInvoiceHistory();
     loadStats();
 
@@ -113,6 +114,12 @@ function openTablet(data) {
 function closeTablet() {
     document.getElementById('tablet').classList.remove('show');
     postData('close', {});
+
+    // Clear welcome clock interval
+    if (window.welcomeClockInterval) {
+        clearInterval(window.welcomeClockInterval);
+        window.welcomeClockInterval = null;
+    }
 
     // Reset
     resetInvoiceForm();
@@ -1191,4 +1198,56 @@ function receiveTransactionHistory(data) {
     });
 
     container.innerHTML = html;
+}
+
+// Welcome Page Functions
+function updateWelcomePage(userName, jobLabel) {
+    // Set user name
+    document.getElementById('welcomeName').textContent = userName || '-';
+
+    // Set job
+    document.getElementById('welcomeJob').textContent = jobLabel || '-';
+
+    // Set greeting based on time
+    updateWelcomeGreeting();
+
+    // Update time
+    updateWelcomeTime();
+
+    // Start clock interval
+    if (window.welcomeClockInterval) {
+        clearInterval(window.welcomeClockInterval);
+    }
+    window.welcomeClockInterval = setInterval(updateWelcomeTime, 1000);
+}
+
+function updateWelcomeTime() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    document.getElementById('welcomeTime').textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+function updateWelcomeGreeting() {
+    const hour = new Date().getHours();
+    let greeting, motivation;
+
+    if (hour >= 5 && hour < 12) {
+        greeting = 'Bonjour !';
+        motivation = 'Excellente journée de travail à vous !';
+    } else if (hour >= 12 && hour < 18) {
+        greeting = 'Bon après-midi !';
+        motivation = 'Bon courage pour la suite de votre journée !';
+    } else if (hour >= 18 && hour < 22) {
+        greeting = 'Bonsoir !';
+        motivation = 'Bonne fin de journée de travail !';
+    } else {
+        greeting = 'Bonne nuit !';
+        motivation = 'Courage pour cette nuit de travail !';
+    }
+
+    document.getElementById('welcomeGreeting').textContent = greeting;
+    document.getElementById('welcomeMotivation').textContent = motivation;
 }
