@@ -16,7 +16,8 @@ client_scripts {
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'server/webhook.lua',  -- DOIT être chargé en premier
+    'server/webhook.lua',    -- DOIT être chargé en premier
+    'server/migration.lua',  -- Migration auto des tables
     'server/employment.lua',
     'server/main.lua'
 }
@@ -34,7 +35,8 @@ files {
 
 dependencies {
     'es_extended',
-    'oxmysql'
+    'oxmysql',
+    'ox_lib'
 }
 
 lua54 'yes'

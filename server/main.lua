@@ -264,7 +264,7 @@ RegisterNetEvent('tablet:resetSales', function()
     local _source = source
     local xPlayer = ESX.GetPlayerFromId(_source)
     if not xPlayer or not IsBoss(xPlayer) then
-        TriggerClientEvent('esx:showNotification', _source, '❌ Seuls les patrons peuvent réinitialiser les ventes')
+        ShowNotification(_source, '❌ Seuls les patrons peuvent réinitialiser les ventes', 'error')
         return
     end
 
@@ -276,7 +276,7 @@ RegisterNetEvent('tablet:resetSales', function()
     -- Supprimer toutes les factures du job
     MySQL.query('DELETE FROM tablet_invoices WHERE job = ?', {job})
 
-    TriggerClientEvent('esx:showNotification', _source, '✅ Toutes les ventes ont été réinitialisées')
+    ShowNotification(_source, '✅ Toutes les ventes ont été réinitialisées', 'success')
 
     -- Webhook
     SendWebhook('SalesReset', {
@@ -400,7 +400,7 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
         local targetPlayer = ESX.GetPlayerFromId(targetId)
 
         if not targetPlayer then
-            TriggerClientEvent('esx:showNotification', _source, '❌ Joueur introuvable (ID: '..targetId..')')
+            ShowNotification(_source, '❌ Joueur introuvable (ID: '..targetId..')', 'error')
             return
         end
 
@@ -410,7 +410,7 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
         targetCompany = invoiceData.targetCompany
 
         if not targetCompany then
-            TriggerClientEvent('esx:showNotification', _source, '❌ Entreprise invalide')
+            ShowNotification(_source, '❌ Entreprise invalide', 'error')
             return
         end
     end
@@ -439,14 +439,14 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
     })
 
     -- Notification au créateur
-    TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' créée: '..total..'€ (En attente de paiement)')
+    ShowNotification(_source, '✅ Facture #'..invoiceId..' créée: '..total..'€ (En attente de paiement)', 'success')
 
     -- Notification à la cible
     if invoiceType == 'citizen' then
         local targetPlayer = ESX.GetPlayerFromIdentifier(targetIdentifier)
         if targetPlayer then
             local jobLabel = ESX.GetJobs()[job] and ESX.GetJobs()[job].label or job
-            TriggerClientEvent('esx:showNotification', targetPlayer.source, '📄 Nouvelle facture reçue: '..total..'€ de '..jobLabel..' • Tapez /facture')
+            ShowNotification(targetPlayer.source, '📄 Nouvelle facture reçue: '..total..'€ de '..jobLabel..' • Tapez /facture', 'info')
         end
     end
 
@@ -515,7 +515,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
     local invoice = MySQL.single.await('SELECT * FROM tablet_invoices WHERE id = ? AND status = \'pending\'', {invoiceId})
 
     if not invoice then
-        TriggerClientEvent('esx:showNotification', _source, '❌ Facture introuvable ou déjà payée')
+        ShowNotification(_source, '❌ Facture introuvable ou déjà payée', 'error')
         return
     end
 
@@ -525,14 +525,14 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
     if invoice.invoice_type == 'citizen' then
         -- Vérifier que c'est bien pour ce joueur
         if invoice.target_identifier ~= xPlayer.identifier then
-            TriggerClientEvent('esx:showNotification', _source, '❌ Cette facture ne vous est pas destinée')
+            ShowNotification(_source, '❌ Cette facture ne vous est pas destinée', 'error')
             return
         end
 
         -- Vérifier l'argent du joueur
         local money = tonumber(xPlayer.getAccount('bank').money) or 0
         if money < total then
-            TriggerClientEvent('esx:showNotification', _source, '❌ Vous n\'avez pas assez d\'argent en banque')
+            ShowNotification(_source, '❌ Vous n\'avez pas assez d\'argent en banque', 'error')
             return
         end
 
@@ -547,25 +547,25 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
         end)
 
         -- Notifications
-        TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' payée: '..total..'€')
+        ShowNotification(_source, '✅ Facture #'..invoiceId..' payée: '..total..'€', 'success')
 
     -- Si facture entreprise
     elseif invoice.invoice_type == 'company' then
         -- Vérifier que le joueur est boss de l'entreprise cible
         if xPlayer.job.name ~= invoice.target_company or not IsBoss(xPlayer) then
-            TriggerClientEvent('esx:showNotification', _source, '❌ Vous devez être patron de '..invoice.target_company..' pour payer cette facture')
+            ShowNotification(_source, '❌ Vous devez être patron de '..invoice.target_company..' pour payer cette facture', 'error')
             return
         end
 
         -- Vérifier l'argent de la société
         TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..invoice.target_company, function(payerAccount)
             if not payerAccount then
-                TriggerClientEvent('esx:showNotification', _source, '❌ Compte entreprise introuvable')
+                ShowNotification(_source, '❌ Compte entreprise introuvable', 'error')
                 return
             end
 
             if tonumber(payerAccount.money) < total then
-                TriggerClientEvent('esx:showNotification', _source, '❌ Votre entreprise n\'a pas assez d\'argent')
+                ShowNotification(_source, '❌ Votre entreprise n\'a pas assez d\'argent', 'error')
                 return
             end
 
@@ -583,12 +583,12 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
             MySQL.update('UPDATE tablet_invoices SET status = \'paid\', paid_at = NOW() WHERE id = ?', {invoiceId})
 
             -- Notifications
-            TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' payée par votre entreprise: '..total..'€')
+            ShowNotification(_source, '✅ Facture #'..invoiceId..' payée par votre entreprise: '..total..'€', 'success')
 
             -- Notifier l'employé créateur
             local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
             if employeePlayer then
-                TriggerClientEvent('esx:showNotification', employeePlayer.source, '💰 Facture #'..invoiceId..' payée par '..invoice.target_company..'! Commission: '..tonumber(invoice.commission_amount)..'€')
+                ShowNotification(employeePlayer.source, '💰 Facture #'..invoiceId..' payée par '..invoice.target_company..'! Commission: '..tonumber(invoice.commission_amount)..'€', 'info')
                 -- Rafraîchir les stats de l'employé dans sa tablette
                 TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
             end
@@ -616,7 +616,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
     -- Notifier l'employé qui a créé la facture s'il est connecté
     local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
     if employeePlayer then
-        TriggerClientEvent('esx:showNotification', employeePlayer.source, '💰 Facture #'..invoiceId..' payée par le client! Commission: '..tonumber(invoice.commission_amount)..'€')
+        ShowNotification(employeePlayer.source, '💰 Facture #'..invoiceId..' payée par le client! Commission: '..tonumber(invoice.commission_amount)..'€', 'info')
         -- Rafraîchir les stats de l'employé dans sa tablette
         TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
     end
@@ -640,7 +640,7 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
     local _source = source
     local xPlayer = ESX.GetPlayerFromId(_source)
     if not xPlayer or not IsBoss(xPlayer) then
-        TriggerClientEvent('esx:showNotification', _source, '❌ Seuls les patrons peuvent annuler des factures')
+        ShowNotification(_source, '❌ Seuls les patrons peuvent annuler des factures', 'error')
         return
     end
 
@@ -650,7 +650,7 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
     local invoice = MySQL.single.await('SELECT * FROM tablet_invoices WHERE id = ? AND job = ?', {invoiceId, job})
 
     if not invoice then
-        TriggerClientEvent('esx:showNotification', _source, '❌ Facture introuvable')
+        ShowNotification(_source, '❌ Facture introuvable', 'error')
         return
     end
 
@@ -669,7 +669,7 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
                     local targetPlayer = ESX.GetPlayerFromIdentifier(invoice.target_identifier)
                     if targetPlayer then
                         targetPlayer.addAccountMoney('bank', total)
-                        TriggerClientEvent('esx:showNotification', targetPlayer.source, '💰 Facture #'..invoiceId..' annulée - Remboursé: '..total..'€')
+                        ShowNotification(targetPlayer.source, '💰 Facture #'..invoiceId..' annulée - Remboursé: '..total..'€', 'info')
                     end
                 elseif invoice.invoice_type == 'company' then
                     -- Rembourser l'entreprise
@@ -682,7 +682,7 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
 
                 -- Mettre à jour le statut
                 MySQL.update('UPDATE tablet_invoices SET status = \'cancelled\' WHERE id = ?', {invoiceId})
-                TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' annulée et remboursée')
+                ShowNotification(_source, '✅ Facture #'..invoiceId..' annulée et remboursée', 'success')
 
                 -- Notifier l'employé
                 local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
@@ -690,13 +690,13 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
                     TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
                 end
             else
-                TriggerClientEvent('esx:showNotification', _source, '❌ Votre société n\'a pas assez d\'argent pour rembourser')
+                ShowNotification(_source, '❌ Votre société n\'a pas assez d\'argent pour rembourser', 'error')
             end
         end)
     else
         -- Si pending, juste annuler
         MySQL.update('UPDATE tablet_invoices SET status = \'cancelled\' WHERE id = ?', {invoiceId})
-        TriggerClientEvent('esx:showNotification', _source, '✅ Facture #'..invoiceId..' annulée')
+        ShowNotification(_source, '✅ Facture #'..invoiceId..' annulée', 'success')
     end
 
     -- Rafraîchir pour tous les employés du job
@@ -742,7 +742,7 @@ RegisterNetEvent('tablet:addProduct', function(data)
         addedBy = xPlayer.getName()
     })
 
-    TriggerClientEvent('esx:showNotification', _source, Config.Translations['product_added'])
+    ShowNotification(_source, Config.Translations['product_added'], 'info')
 end)
 
 -- Supprimer un produit (boss only)
@@ -777,7 +777,7 @@ RegisterNetEvent('tablet:deleteProduct', function(data)
         })
     end
 
-    TriggerClientEvent('esx:showNotification', _source, Config.Translations['product_deleted'])
+    ShowNotification(_source, Config.Translations['product_deleted'], 'info')
 end)
 
 -- Mettre à jour commission employé (boss only)
@@ -816,7 +816,7 @@ RegisterNetEvent('tablet:updateCommission', function(data)
         modifiedBy = xPlayer.getName()
     })
 
-    TriggerClientEvent('esx:showNotification', _source, Config.Translations['commission_updated'])
+    ShowNotification(_source, Config.Translations['commission_updated'], 'info')
 end)
 
 -- Ajouter un partenariat (boss only)
@@ -846,7 +846,7 @@ RegisterNetEvent('tablet:addPartnership', function(data)
         addedBy = xPlayer.getName()
     })
 
-    TriggerClientEvent('esx:showNotification', _source, Config.Translations['partnership_added'])
+    ShowNotification(_source, Config.Translations['partnership_added'], 'info')
 end)
 
 -- Supprimer un partenariat (boss only)
@@ -880,7 +880,7 @@ RegisterNetEvent('tablet:deletePartnership', function(data)
         })
     end
 
-    TriggerClientEvent('esx:showNotification', _source, Config.Translations['partnership_deleted'])
+    ShowNotification(_source, Config.Translations['partnership_deleted'], 'info')
 end)
 
 -- Commande admin pour réinitialiser les données d'un job (optionnel)
@@ -890,13 +890,13 @@ RegisterCommand('tablet:reset', function(source, args)
 
     -- Vérifier permissions admin si besoin
     if xPlayer.getGroup() ~= 'admin' then
-        TriggerClientEvent('esx:showNotification', source, '❌ Accès refusé')
+        ShowNotification(source, '❌ Accès refusé', 'error')
         return
     end
 
     local job = args[1]
     if not job then
-        TriggerClientEvent('esx:showNotification', source, 'Usage: /tablet:reset <job>')
+        ShowNotification(source, 'Usage: /tablet:reset <job>', 'info')
         return
     end
 
@@ -906,7 +906,7 @@ RegisterCommand('tablet:reset', function(source, args)
     MySQL.query('DELETE FROM tablet_partnerships WHERE job = ?', {job})
     MySQL.query('DELETE FROM tablet_company_payments WHERE from_job = ?', {job})
 
-    TriggerClientEvent('esx:showNotification', source, '✅ Données du job '..job..' réinitialisées')
+    ShowNotification(source, '✅ Données du job '..job..' réinitialisées', 'success')
 end, true)
 
 print('^2[TabletManager]^0 Serveur démarré avec succès')

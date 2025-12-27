@@ -104,7 +104,7 @@ AddEventHandler('employment:submitApplication', function(data)
     ]], {data.jobName, identifier})
 
     if existingApp then
-        TriggerClientEvent('employment:showNotification', _source, '❌ Vous avez déjà une candidature en attente pour cette entreprise', 'error')
+        ShowNotification(_source, '❌ Vous avez déjà une candidature en attente pour cette entreprise', 'error')
         return
     end
 
@@ -124,7 +124,7 @@ AddEventHandler('employment:submitApplication', function(data)
         data.motivation or nil
     })
 
-    TriggerClientEvent('employment:showNotification', _source, '✅ Candidature envoyée avec succès !', 'success')
+    ShowNotification(_source, '✅ Candidature envoyée avec succès !', 'success')
 
     -- Webhook
     SendWebhook('JobApplication', {
@@ -159,7 +159,7 @@ AddEventHandler('employment:updateCompanyProfile', function(data)
     if not xPlayer then return end
 
     if not IsBoss(_source) then
-        TriggerClientEvent('employment:showNotification', _source, '❌ Vous n\'êtes pas autorisé', 'error')
+        ShowNotification(_source, '❌ Vous n\'êtes pas autorisé', 'error')
         return
     end
 
@@ -176,7 +176,7 @@ AddEventHandler('employment:updateCompanyProfile', function(data)
         job
     })
 
-    TriggerClientEvent('employment:showNotification', _source, '✅ Profil mis à jour avec succès', 'success')
+    ShowNotification(_source, '✅ Profil mis à jour avec succès', 'success')
 
     -- Webhook
     SendWebhook('CompanyProfileUpdated', {
@@ -201,7 +201,7 @@ AddEventHandler('employment:toggleRecruitment', function()
     if not xPlayer then return end
 
     if not IsBoss(_source) then
-        TriggerClientEvent('employment:showNotification', _source, '❌ Vous n\'êtes pas autorisé', 'error')
+        ShowNotification(_source, '❌ Vous n\'êtes pas autorisé', 'error')
         return
     end
 
@@ -217,7 +217,7 @@ AddEventHandler('employment:toggleRecruitment', function()
     MySQL.update.await('UPDATE company_profiles SET is_recruiting = ? WHERE job_name = ?', {newStatus, job})
 
     local message = newStatus == 1 and '✅ Recrutement ouvert' or '🔒 Recrutement fermé'
-    TriggerClientEvent('employment:showNotification', _source, message, 'success')
+    ShowNotification(_source, message, 'success')
 
     -- Webhook
     SendWebhook('RecruitmentStatusChanged', {
@@ -256,7 +256,7 @@ AddEventHandler('employment:processApplication', function(data)
     if not xPlayer then return end
 
     if not IsBoss(_source) then
-        TriggerClientEvent('employment:showNotification', _source, '❌ Vous n\'êtes pas autorisé', 'error')
+        ShowNotification(_source, '❌ Vous n\'êtes pas autorisé', 'error')
         return
     end
 
@@ -272,7 +272,7 @@ AddEventHandler('employment:processApplication', function(data)
     MySQL.update.await('UPDATE job_applications SET status = ? WHERE id = ?', {newStatus, appId})
 
     local message = newStatus == 'accepted' and '✅ Candidature acceptée' or '❌ Candidature refusée'
-    TriggerClientEvent('employment:showNotification', _source, message, 'success')
+    ShowNotification(_source, message, 'success')
 
     -- Notifier le candidat s'il est en ligne
     local targetPlayer = ESX.GetPlayerFromIdentifier(application.applicant_identifier)
@@ -280,7 +280,8 @@ AddEventHandler('employment:processApplication', function(data)
         local notifMessage = newStatus == 'accepted' and
             '✅ Votre candidature pour ' .. xPlayer.job.label .. ' a été ACCEPTÉE !' or
             '❌ Votre candidature pour ' .. xPlayer.job.label .. ' a été REFUSÉE.'
-        TriggerClientEvent('esx:showNotification', targetPlayer.source, notifMessage)
+        local notifType = newStatus == 'accepted' and 'success' or 'error'
+        ShowNotification(targetPlayer.source, notifMessage, notifType)
     end
 
     -- Webhook

@@ -88,15 +88,15 @@ end)
 
 -- Events du serveur
 RegisterNetEvent('employment:showNotification')
-AddEventHandler('employment:showNotification', function(message, type)
+AddEventHandler('employment:showNotification', function(message, notificationType)
     SendNUIMessage({
         action = 'showNotification',
         message = message,
-        type = type or 'info'
+        type = notificationType or 'info'
     })
 
-    -- Afficher aussi avec ESX
-    ESX.ShowNotification(message)
+    -- Afficher aussi avec ox_lib
+    ShowNotification(message, notificationType or 'info')
 end)
 
 RegisterNetEvent('employment:refreshCompanies')

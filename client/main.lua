@@ -79,12 +79,12 @@ function OpenTablet()
 
     -- Vérification du job
     if not PlayerData.job then
-        ESX.ShowNotification(Config.Translations['no_job'])
+        ShowNotification(Config.Translations['no_job'], 'info')
         return
     end
 
     if PlayerData.job.name == 'unemployed' then
-        ESX.ShowNotification(Config.Translations['no_job'])
+        ShowNotification(Config.Translations['no_job'], 'info')
         return
     end
 
@@ -140,7 +140,7 @@ end, false)
 RegisterCommand('facture', function()
     ESX.TriggerServerCallback('tablet:getPendingInvoices', function(invoices)
         if not invoices or #invoices == 0 then
-            ESX.ShowNotification('📄 Vous n\'avez aucune facture en attente')
+            ShowNotification('📄 Vous n\'avez aucune facture en attente', 'info')
             return
         end
 
