@@ -282,6 +282,67 @@ RegisterNetEvent('tablet:resetSales', function()
     end
 end)
 
+-- Données audit pour DOJ (accès complet à toutes les sociétés)
+ESX.RegisterServerCallback('tablet:getAuditData', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then cb(nil) return end
+
+    -- Vérifier l'accès audit
+    local hasAccess = false
+    for _, job in ipairs(Config.AuditJobs) do
+        if xPlayer.job.name == job then
+            hasAccess = true
+            break
+        end
+    end
+
+    if not hasAccess then
+        cb(nil)
+        return
+    end
+
+    -- Récupérer toutes les sociétés avec leurs stats
+    local societies = {}
+    local jobs = ESX.GetJobs()
+
+    for jobName, jobData in pairs(jobs) do
+        if jobName ~= 'unemployed' then
+            -- Stats du mois
+            local stats = MySQL.single.await([[
+                SELECT
+                    COUNT(*) as total_invoices,
+                    IFNULL(SUM(CASE WHEN status = 'paid' THEN total ELSE 0 END), 0) as revenue,
+                    IFNULL(SUM(CASE WHEN status = 'paid' THEN commission_amount ELSE 0 END), 0) as commissions,
+                    IFNULL(SUM(CASE WHEN status = 'pending' THEN total ELSE 0 END), 0) as pending_amount
+                FROM tablet_invoices
+                WHERE job = ?
+                AND MONTH(created_at) = MONTH(CURRENT_DATE())
+                AND YEAR(created_at) = YEAR(CURRENT_DATE())
+            ]], {jobName})
+
+            -- Argent de la société
+            local societyMoney = 0
+            TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..jobName, function(account)
+                if account then
+                    societyMoney = account.money
+                end
+            end)
+
+            table.insert(societies, {
+                job = jobName,
+                label = jobData.label,
+                total_invoices = stats and stats.total_invoices or 0,
+                revenue = stats and tonumber(stats.revenue) or 0,
+                commissions = stats and tonumber(stats.commissions) or 0,
+                pending_amount = stats and tonumber(stats.pending_amount) or 0,
+                society_money = societyMoney
+            })
+        end
+    end
+
+    cb(societies)
+end)
+
 -- Créer une facture
 RegisterNetEvent('tablet:createInvoice', function(invoiceData)
     local _source = source
