@@ -217,6 +217,9 @@ AddEventHandler('employment:toggleRecruitment', function()
     local message = newStatus == 1 and '✅ Recrutement ouvert' or '🔒 Recrutement fermé'
     ShowNotification(_source, message, 'success')
 
+    -- Envoyer le nouveau statut au client
+    TriggerClientEvent('employment:updateRecruitmentStatus', _source, newStatus == 1)
+
     -- Webhook
     SendWebhook('RecruitmentStatusChanged', {
         jobLabel = xPlayer.job.label,

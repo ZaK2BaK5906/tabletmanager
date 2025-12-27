@@ -429,7 +429,10 @@ function calculateInvoiceSummary() {
     document.getElementById('summaryCommission').textContent = formatCurrency(commission);
 
     // Mettre à jour le label de la VAT avec le taux actuel
-    document.querySelector('#invoiceSummaryList li:nth-child(3) span:first-child').textContent = `VAT (${tabletData.taxRate}%):`;
+    const vatLabel = document.querySelector('#invoiceSummaryList li:nth-child(3) span:first-child');
+    if (vatLabel) {
+        vatLabel.textContent = `VAT (${tabletData.taxRate}%):`;
+    }
 }
 
 // Créer facture
@@ -1097,10 +1100,12 @@ window.addEventListener('message', (event) => {
     } else if (data.action === 'refreshStats') {
         // Rafraîchir les stats après paiement de facture
         loadQuickStats();
-        if (document.querySelector('.nav-item[data-page="stats"]').classList.contains('active')) {
+        const statsNav = document.querySelector('.nav-item[data-page="stats"]');
+        if (statsNav && statsNav.classList.contains('active')) {
             loadStats();
         }
-        if (document.querySelector('.nav-item[data-page="invoices"]').classList.contains('active')) {
+        const invoicesNav = document.querySelector('.nav-item[data-page="invoices"]');
+        if (invoicesNav && invoicesNav.classList.contains('active')) {
             loadInvoiceHistory();
         }
     } else if (data.action === 'receiveAuditData') {

@@ -118,3 +118,13 @@ AddEventHandler('employment:refreshApplications', function(applications)
         })
     end
 end)
+
+RegisterNetEvent('employment:updateRecruitmentStatus')
+AddEventHandler('employment:updateRecruitmentStatus', function(isRecruiting)
+    if isEmploymentOpen then
+        SendNUIMessage({
+            action = 'updateRecruitmentStatus',
+            isRecruiting = isRecruiting
+        })
+    end
+end)

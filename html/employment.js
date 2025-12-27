@@ -394,5 +394,21 @@ window.addEventListener('message', (event) => {
 
     if (data.action === 'receiveCompanyProfile') {
         receiveCompanyProfile(data.profile);
+    } else if (data.action === 'updateRecruitmentStatus') {
+        employmentData.isRecruiting = data.isRecruiting;
+        updateRecruitmentButton();
     }
 });
+
+function updateRecruitmentButton() {
+    const btnText = document.getElementById('recruitmentBtnText');
+    const btn = document.getElementById('toggleRecruitmentBtn');
+
+    if (employmentData.isRecruiting) {
+        btnText.textContent = 'Fermer Recrutement';
+        btn.innerHTML = '<i class="fa-solid fa-door-closed"></i> ' + btnText.outerHTML;
+    } else {
+        btnText.textContent = 'Ouvrir Recrutement';
+        btn.innerHTML = '<i class="fa-solid fa-door-open"></i> ' + btnText.outerHTML;
+    }
+}
