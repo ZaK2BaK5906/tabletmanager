@@ -233,6 +233,32 @@ function CreateWebhookEmbed(webhookType, data)
             { name = '📊 Factures supprimées', value = tostring(data.affectedInvoices or 0), inline = true },
         }
 
+    -- VÉHICULES (DEALERSHIP)
+    elseif webhookType == 'VehicleOrder' then
+        embed.title = '🚗 Commande de Véhicules'
+        embed.color = 3447003 -- Bleu
+        embed.description = string.format('Commande de %dx **%s**', data.quantity, data.vehicleName)
+        embed.fields = {
+            { name = '🏢 Concession', value = data.job, inline = true },
+            { name = '👤 Commandé par', value = data.orderedBy, inline = true },
+            { name = '🚗 Véhicule', value = data.vehicleName, inline = true },
+            { name = '📦 Quantité', value = tostring(data.quantity), inline = true },
+            { name = '💰 Prix unitaire', value = string.format('$%s', data.unitPrice), inline = true },
+            { name = '💳 Coût total', value = string.format('$%s', data.totalCost), inline = true },
+        }
+
+    elseif webhookType == 'VehicleAssigned' then
+        embed.title = '🎉 Véhicule Assigné'
+        embed.color = 5763719 -- Vert
+        embed.description = string.format('**%s** assigné à **%s**', data.vehicleName, data.buyer)
+        embed.fields = {
+            { name = '🏢 Concession', value = data.job, inline = true },
+            { name = '👤 Vendeur', value = data.seller, inline = true },
+            { name = '👤 Acheteur', value = data.buyer, inline = true },
+            { name = '🚗 Véhicule', value = data.vehicleName, inline = true },
+            { name = '🔖 Plaque', value = data.plate, inline = true },
+        }
+
     else
         return nil
     end

@@ -20,6 +20,7 @@ server_scripts {
     'server/notifications.lua', -- Notifications
     'server/migration.lua',     -- Migration auto des tables
     'server/employment.lua',
+    'server/vehicles.lua',      -- Système véhicules dealership
     'server/main.lua'
 }
 
