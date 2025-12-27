@@ -270,10 +270,20 @@ RegisterNetEvent('tablet:resetSales', function()
 
     local job = xPlayer.job.name
 
+    -- Compter le nombre de factures avant suppression
+    local count = MySQL.scalar.await('SELECT COUNT(*) FROM tablet_invoices WHERE job = ?', {job}) or 0
+
     -- Supprimer toutes les factures du job
     MySQL.query('DELETE FROM tablet_invoices WHERE job = ?', {job})
 
     TriggerClientEvent('esx:showNotification', _source, '✅ Toutes les ventes ont été réinitialisées')
+
+    -- Webhook
+    SendWebhook('SalesReset', {
+        job = job,
+        resetBy = xPlayer.getName(),
+        affectedInvoices = count
+    })
 
     -- Rafraîchir les stats pour tous les employés du job
     local xPlayers = ESX.GetExtendedPlayers('job', job)
@@ -440,6 +450,21 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
         end
     end
 
+    -- Webhook
+    local jobLabel = ESX.GetJobs()[job] and ESX.GetJobs()[job].label or job
+    SendWebhook('InvoiceCreated', {
+        invoiceId = invoiceId,
+        job = job,
+        jobLabel = jobLabel,
+        employeeName = playerName,
+        total = total,
+        commissionAmount = commissionAmount,
+        commissionPercent = commissionPercent,
+        invoiceType = invoiceType,
+        targetName = invoiceData.targetName,
+        targetCompany = targetCompany
+    })
+
     -- Reload data
     TriggerClientEvent('tablet:invoiceCreated', _source)
 end)
@@ -568,6 +593,16 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
                 TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
             end
 
+            -- Webhook
+            SendWebhook('InvoicePaid', {
+                invoiceId = invoiceId,
+                job = invoice.job,
+                total = tonumber(total),
+                commissionAmount = tonumber(invoice.commission_amount),
+                societyAmount = tonumber(total),
+                paidBy = invoice.target_company
+            })
+
             -- Refresh
             TriggerClientEvent('tablet:refreshInvoices', _source)
         end)
@@ -585,6 +620,16 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
         -- Rafraîchir les stats de l'employé dans sa tablette
         TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
     end
+
+    -- Webhook
+    SendWebhook('InvoicePaid', {
+        invoiceId = invoiceId,
+        job = invoice.job,
+        total = tonumber(invoice.total),
+        commissionAmount = tonumber(invoice.commission_amount),
+        societyAmount = tonumber(invoice.total) - tonumber(invoice.commission_amount),
+        paidBy = xPlayer.getName()
+    })
 
     -- Refresh la liste
     TriggerClientEvent('tablet:refreshInvoices', _source)
@@ -659,6 +704,15 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
     for _, player in pairs(xPlayers) do
         TriggerClientEvent('tablet:refreshStats', player.source)
     end
+
+    -- Webhook
+    SendWebhook('InvoiceCancelled', {
+        invoiceId = invoiceId,
+        job = job,
+        total = tonumber(invoice.total),
+        previousStatus = invoice.status,
+        cancelledBy = xPlayer.getName()
+    })
 end)
 
 -- Ajouter un produit (boss only)
@@ -680,6 +734,14 @@ RegisterNetEvent('tablet:addProduct', function(data)
         TriggerClientEvent('tablet:updateProducts', player.source, products)
     end
 
+    -- Webhook
+    SendWebhook('ProductAdded', {
+        job = job,
+        productName = data.name,
+        price = tonumber(data.price),
+        addedBy = xPlayer.getName()
+    })
+
     TriggerClientEvent('esx:showNotification', _source, Config.Translations['product_added'])
 end)
 
@@ -691,6 +753,9 @@ RegisterNetEvent('tablet:deleteProduct', function(data)
 
     local job = xPlayer.job.name
 
+    -- Récupérer les infos du produit avant suppression
+    local product = MySQL.single.await('SELECT * FROM tablet_products WHERE id = ? AND job = ?', {data.id, job})
+
     MySQL.query('DELETE FROM tablet_products WHERE id = ? AND job = ?', {
         data.id, job
     })
@@ -700,6 +765,16 @@ RegisterNetEvent('tablet:deleteProduct', function(data)
     local xPlayers = ESX.GetExtendedPlayers('job', job)
     for _, player in pairs(xPlayers) do
         TriggerClientEvent('tablet:updateProducts', player.source, products)
+    end
+
+    -- Webhook
+    if product then
+        SendWebhook('ProductDeleted', {
+            job = job,
+            productName = product.product_name,
+            price = tonumber(product.price),
+            deletedBy = xPlayer.getName()
+        })
     end
 
     TriggerClientEvent('esx:showNotification', _source, Config.Translations['product_deleted'])
@@ -713,6 +788,9 @@ RegisterNetEvent('tablet:updateCommission', function(data)
 
     local job = xPlayer.job.name
 
+    -- Récupérer l'ancienne commission
+    local oldCommission = MySQL.scalar.await('SELECT commission_percent FROM tablet_employee_commissions WHERE job = ? AND identifier = ?', {job, data.identifier}) or Config.DefaultCommission
+
     MySQL.query([[
         INSERT INTO tablet_employee_commissions (job, identifier, commission_percent)
         VALUES (?, ?, ?)
@@ -723,9 +801,20 @@ RegisterNetEvent('tablet:updateCommission', function(data)
 
     -- Notifier l'employé concerné
     local targetPlayer = ESX.GetPlayerFromIdentifier(data.identifier)
+    local employeeName = 'Employé'
     if targetPlayer then
         TriggerClientEvent('tablet:updateCommission', targetPlayer.source, data.commission)
+        employeeName = targetPlayer.getName()
     end
+
+    -- Webhook
+    SendWebhook('CommissionUpdated', {
+        job = job,
+        employeeName = employeeName,
+        oldCommission = tonumber(oldCommission),
+        newCommission = tonumber(data.commission),
+        modifiedBy = xPlayer.getName()
+    })
 
     TriggerClientEvent('esx:showNotification', _source, Config.Translations['commission_updated'])
 end)
@@ -749,6 +838,14 @@ RegisterNetEvent('tablet:addPartnership', function(data)
         TriggerClientEvent('tablet:updatePartnerships', player.source, partnerships)
     end
 
+    -- Webhook
+    SendWebhook('PartnershipAdded', {
+        job = job,
+        companyName = data.name,
+        discount = tonumber(data.discount),
+        addedBy = xPlayer.getName()
+    })
+
     TriggerClientEvent('esx:showNotification', _source, Config.Translations['partnership_added'])
 end)
 
@@ -760,6 +857,9 @@ RegisterNetEvent('tablet:deletePartnership', function(data)
 
     local job = xPlayer.job.name
 
+    -- Récupérer les infos du partenariat avant suppression
+    local partnership = MySQL.single.await('SELECT * FROM tablet_partnerships WHERE id = ? AND job = ?', {data.id, job})
+
     MySQL.query('DELETE FROM tablet_partnerships WHERE id = ? AND job = ?', {
         data.id, job
     })
@@ -769,6 +869,15 @@ RegisterNetEvent('tablet:deletePartnership', function(data)
     local xPlayers = ESX.GetExtendedPlayers('job', job)
     for _, player in pairs(xPlayers) do
         TriggerClientEvent('tablet:updatePartnerships', player.source, partnerships)
+    end
+
+    -- Webhook
+    if partnership then
+        SendWebhook('PartnershipDeleted', {
+            job = job,
+            companyName = partnership.company_name,
+            deletedBy = xPlayer.getName()
+        })
     end
 
     TriggerClientEvent('esx:showNotification', _source, Config.Translations['partnership_deleted'])

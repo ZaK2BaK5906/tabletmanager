@@ -21,9 +21,44 @@ Config.Currency = '€'
 -- Commandes
 Config.Command = 'tablette'
 
--- Logs (optionnel - mettre votre webhook Discord)
-Config.EnableLogs = false
-Config.DiscordWebhook = ''
+-- ============================================
+-- WEBHOOKS DISCORD
+-- ============================================
+Config.Webhooks = {
+    -- Activer/Désactiver tous les webhooks
+    Enabled = true,
+
+    -- Informations du bot
+    BotName = 'Tablet Manager',
+    BotAvatar = 'https://i.imgur.com/AfFp7pu.png',
+    FooterIcon = 'https://i.imgur.com/AfFp7pu.png',
+
+    -- Webhooks par catégorie (mettre vos URLs Discord)
+    -- Laisser vide ('') pour désactiver un webhook spécifique
+
+    -- Factures
+    InvoiceCreated = '',  -- Quand une facture est créée
+    InvoicePaid = '',     -- Quand une facture est payée
+    InvoiceCancelled = '', -- Quand une facture est annulée
+
+    -- Produits
+    ProductAdded = '',    -- Quand un produit est ajouté
+    ProductDeleted = '',  -- Quand un produit est supprimé
+
+    -- Partenariats
+    PartnershipAdded = '',   -- Quand un partenariat est créé
+    PartnershipDeleted = '', -- Quand un partenariat est supprimé
+
+    -- Employés
+    CommissionUpdated = '', -- Quand une commission est modifiée
+    SalesReset = '',        -- Quand les ventes sont réinitialisées
+
+    -- Recrutement
+    JobApplication = '',              -- Nouvelle candidature reçue
+    ApplicationStatusChanged = '',    -- Candidature acceptée/refusée
+    RecruitmentStatusChanged = '',    -- Recrutement ouvert/fermé
+    CompanyProfileUpdated = '',       -- Profil entreprise modifié
+}
 
 -- Taxes (%)
 Config.TaxRate = 16.75 -- VAT 16.75%
