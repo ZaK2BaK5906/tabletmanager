@@ -1,5 +1,5 @@
 -- ============================================
--- SYSTÈME DE NOTIFICATIONS OX_LIB (SERVER)
+-- SYSTÈME DE NOTIFICATIONS ESX (SERVER)
 -- ============================================
 
 function ShowNotification(source, message, type, duration)

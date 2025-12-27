@@ -47,7 +47,7 @@ ESX.RegisterServerCallback('employment:getCompanies', function(source, cb)
                 table.insert(companies, {
                     job_name = jobName,
                     job_label = jobData.label,
-                    photo_url = profile.photo_url,
+                    photo_url = Config.CompanyLogos[jobName] or nil,
                     description = profile.description,
                     salary_info = profile.salary_info,
                     is_recruiting = profile.is_recruiting == 1
@@ -62,7 +62,7 @@ ESX.RegisterServerCallback('employment:getCompanies', function(source, cb)
                 table.insert(companies, {
                     job_name = jobName,
                     job_label = jobData.label,
-                    photo_url = nil,
+                    photo_url = Config.CompanyLogos[jobName] or nil,
                     description = 'Rejoignez notre équipe !',
                     salary_info = nil,
                     is_recruiting = true
@@ -167,10 +167,9 @@ AddEventHandler('employment:updateCompanyProfile', function(data)
 
     MySQL.update.await([[
         UPDATE company_profiles
-        SET photo_url = ?, description = ?, salary_info = ?
+        SET description = ?, salary_info = ?
         WHERE job_name = ?
     ]], {
-        data.photoUrl or nil,
         data.description or nil,
         data.salaryInfo or nil,
         job
@@ -183,7 +182,6 @@ AddEventHandler('employment:updateCompanyProfile', function(data)
         jobLabel = xPlayer.job.label,
         modifiedBy = xPlayer.getName(),
         changes = {
-            photo = data.photoUrl ~= nil and data.photoUrl ~= '',
             description = data.description ~= nil and data.description ~= '',
             salary = data.salaryInfo ~= nil and data.salaryInfo ~= ''
         }
@@ -318,7 +316,7 @@ function BroadcastCompaniesUpdate()
                 table.insert(companies, {
                     job_name = jobName,
                     job_label = jobData.label,
-                    photo_url = profile.photo_url,
+                    photo_url = Config.CompanyLogos[jobName] or nil,
                     description = profile.description,
                     salary_info = profile.salary_info,
                     is_recruiting = profile.is_recruiting == 1

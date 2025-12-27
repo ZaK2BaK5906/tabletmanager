@@ -232,7 +232,6 @@ function loadCurrentProfile() {
 
 window.receiveCompanyProfile = function(profile) {
     if (profile) {
-        document.getElementById('editPhotoUrl').value = profile.photo_url || '';
         document.getElementById('editDescription').value = profile.description || '';
         document.getElementById('editSalaryInfo').value = profile.salary_info || '';
     }
@@ -241,12 +240,10 @@ window.receiveCompanyProfile = function(profile) {
 document.getElementById('editProfileForm').addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const photoUrl = document.getElementById('editPhotoUrl').value.trim();
     const description = document.getElementById('editDescription').value.trim();
     const salaryInfo = document.getElementById('editSalaryInfo').value.trim();
 
     postData('updateCompanyProfile', {
-        photoUrl,
         description,
         salaryInfo
     });

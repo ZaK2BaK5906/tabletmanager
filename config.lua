@@ -63,6 +63,34 @@ Config.Webhooks = {
 -- Taxes (%)
 Config.TaxRate = 16.75 -- VAT 16.75%
 
+-- ============================================
+-- IMAGES DES ENTREPRISES (SYSTEME EMPLOI)
+-- ============================================
+-- Remplacer les URLs par vos images ImgBB
+Config.CompanyLogos = {
+    ['police'] = 'https://i.ibb.co/example/police.png',
+    ['ambulance'] = 'https://i.ibb.co/example/ambulance.png',
+    ['mecano'] = 'https://i.ibb.co/example/mecano.png',
+    ['taxi'] = 'https://i.ibb.co/example/taxi.png',
+    ['cardealer'] = 'https://i.ibb.co/example/cardealer.png',
+    ['journaliste'] = 'https://i.ibb.co/example/journaliste.png',
+    ['avocat'] = 'https://i.ibb.co/example/avocat.png',
+    ['doj'] = 'https://i.ibb.co/example/doj.png',
+    ['government'] = 'https://i.ibb.co/example/government.png',
+    ['realestateagent'] = 'https://i.ibb.co/example/realestateagent.png',
+    ['tabac'] = 'https://i.ibb.co/example/tabac.png',
+    ['vigneron'] = 'https://i.ibb.co/example/vigneron.png',
+    ['banker'] = 'https://i.ibb.co/example/banker.png',
+    ['fueler'] = 'https://i.ibb.co/example/fueler.png',
+    ['slaughterer'] = 'https://i.ibb.co/example/slaughterer.png',
+    ['lumberjack'] = 'https://i.ibb.co/example/lumberjack.png',
+    ['miner'] = 'https://i.ibb.co/example/miner.png',
+    ['tailor'] = 'https://i.ibb.co/example/tailor.png',
+    ['fisherman'] = 'https://i.ibb.co/example/fisherman.png',
+    -- Ajouter tous vos autres jobs ici
+    -- ['nom_du_job'] = 'https://i.ibb.co/votre-image.png',
+}
+
 -- Messages
 Config.Translations = {
     ['tablet_title'] = '📱 Tablette de Gestion',

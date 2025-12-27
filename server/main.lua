@@ -448,6 +448,15 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
             local jobLabel = ESX.GetJobs()[job] and ESX.GetJobs()[job].label or job
             ShowNotification(targetPlayer.source, '📄 Nouvelle facture reçue: '..total..'€ de '..jobLabel..' • Tapez /facture', 'info')
         end
+    elseif invoiceType == 'company' and targetCompany then
+        -- Notifier tous les patrons de l'entreprise cible en ligne
+        local jobLabel = ESX.GetJobs()[job] and ESX.GetJobs()[job].label or job
+        local xPlayers = ESX.GetExtendedPlayers()
+        for _, targetPlayer in ipairs(xPlayers) do
+            if targetPlayer.job.name == targetCompany and IsBoss(targetPlayer) then
+                ShowNotification(targetPlayer.source, '📄 Nouvelle facture entreprise reçue: '..total..'€ de '..jobLabel..' • Tapez /facture', 'warning')
+            end
+        end
     end
 
     -- Webhook
@@ -580,7 +589,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
             end)
 
             -- Mettre à jour le statut
-            MySQL.update('UPDATE tablet_invoices SET status = \'paid\', paid_at = NOW() WHERE id = ?', {invoiceId})
+            MySQL.update.await('UPDATE tablet_invoices SET status = \'paid\', paid_at = NOW() WHERE id = ?', {invoiceId})
 
             -- Notifications
             ShowNotification(_source, '✅ Facture #'..invoiceId..' payée par votre entreprise: '..total..'€', 'success')
@@ -593,6 +602,15 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
                 TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
                 -- Rafraîchir la liste des factures de l'employé
                 TriggerClientEvent('tablet:refreshInvoices', employeePlayer.source)
+            end
+
+            -- Notifier les patrons de l'entreprise créatrice
+            local xPlayers = ESX.GetExtendedPlayers()
+            for _, bossPlayer in ipairs(xPlayers) do
+                if bossPlayer.job.name == invoice.job and IsBoss(bossPlayer) and bossPlayer.identifier ~= invoice.employee_identifier then
+                    ShowNotification(bossPlayer.source, '💰 Facture #'..invoiceId..' payée: '..total..'€ de '..invoice.target_company, 'success')
+                    TriggerClientEvent('tablet:refreshInvoices', bossPlayer.source)
+                end
             end
 
             -- Webhook
@@ -613,7 +631,7 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
     end
 
     -- Mettre à jour le statut de la facture (citoyen uniquement, company géré dans le callback)
-    MySQL.update('UPDATE tablet_invoices SET status = \'paid\', paid_at = NOW() WHERE id = ?', {invoiceId})
+    MySQL.update.await('UPDATE tablet_invoices SET status = \'paid\', paid_at = NOW() WHERE id = ?', {invoiceId})
 
     -- Notifier l'employé qui a créé la facture s'il est connecté
     local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
@@ -623,6 +641,15 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
         TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
         -- Rafraîchir la liste des factures de l'employé
         TriggerClientEvent('tablet:refreshInvoices', employeePlayer.source)
+    end
+
+    -- Notifier les patrons de l'entreprise créatrice
+    local xPlayers = ESX.GetExtendedPlayers()
+    for _, bossPlayer in ipairs(xPlayers) do
+        if bossPlayer.job.name == invoice.job and IsBoss(bossPlayer) and bossPlayer.identifier ~= invoice.employee_identifier then
+            ShowNotification(bossPlayer.source, '💰 Facture #'..invoiceId..' payée: '..total..'€', 'success')
+            TriggerClientEvent('tablet:refreshInvoices', bossPlayer.source)
+        end
     end
 
     -- Webhook
@@ -682,16 +709,26 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
                             targetAccount.addMoney(total)
                         end
                     end)
+
+                    -- Notifier les patrons de l'entreprise remboursée
+                    local xPlayers = ESX.GetExtendedPlayers()
+                    for _, bossPlayer in ipairs(xPlayers) do
+                        if bossPlayer.job.name == invoice.target_company and IsBoss(bossPlayer) then
+                            ShowNotification(bossPlayer.source, '💰 Facture #'..invoiceId..' annulée - Remboursé: '..total..'€', 'info')
+                        end
+                    end
                 end
 
                 -- Mettre à jour le statut
-                MySQL.update('UPDATE tablet_invoices SET status = \'cancelled\' WHERE id = ?', {invoiceId})
+                MySQL.update.await('UPDATE tablet_invoices SET status = \'cancelled\' WHERE id = ?', {invoiceId})
                 ShowNotification(_source, '✅ Facture #'..invoiceId..' annulée et remboursée', 'success')
 
-                -- Notifier l'employé
+                -- Notifier l'employé créateur
                 local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
                 if employeePlayer then
+                    ShowNotification(employeePlayer.source, '❌ Votre facture #'..invoiceId..' a été annulée et remboursée', 'error')
                     TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
+                    TriggerClientEvent('tablet:refreshInvoices', employeePlayer.source)
                 end
             else
                 ShowNotification(_source, '❌ Votre société n\'a pas assez d\'argent pour rembourser', 'error')
@@ -699,8 +736,30 @@ RegisterNetEvent('tablet:cancelInvoice', function(invoiceId)
         end)
     else
         -- Si pending, juste annuler
-        MySQL.update('UPDATE tablet_invoices SET status = \'cancelled\' WHERE id = ?', {invoiceId})
+        MySQL.update.await('UPDATE tablet_invoices SET status = \'cancelled\' WHERE id = ?', {invoiceId})
         ShowNotification(_source, '✅ Facture #'..invoiceId..' annulée', 'success')
+
+        -- Notifier l'employé créateur
+        local employeePlayer = ESX.GetPlayerFromIdentifier(invoice.employee_identifier)
+        if employeePlayer then
+            ShowNotification(employeePlayer.source, '❌ Votre facture #'..invoiceId..' a été annulée', 'warning')
+            TriggerClientEvent('tablet:refreshInvoices', employeePlayer.source)
+        end
+
+        -- Notifier la cible
+        if invoice.invoice_type == 'citizen' then
+            local targetPlayer = ESX.GetPlayerFromIdentifier(invoice.target_identifier)
+            if targetPlayer then
+                ShowNotification(targetPlayer.source, '✅ Facture #'..invoiceId..' annulée', 'info')
+            end
+        elseif invoice.invoice_type == 'company' then
+            local xPlayers = ESX.GetExtendedPlayers()
+            for _, bossPlayer in ipairs(xPlayers) do
+                if bossPlayer.job.name == invoice.target_company and IsBoss(bossPlayer) then
+                    ShowNotification(bossPlayer.source, '✅ Facture #'..invoiceId..' annulée', 'info')
+                end
+            end
+        end
     end
 
     -- Rafraîchir pour tous les employés du job
