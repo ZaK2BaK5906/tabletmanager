@@ -20,11 +20,10 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0.95);
-    width: 92%;
-    max-width: 1600px;
-    height: 92vh;
+    width: 1100px;
+    height: 720px;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    border-radius: 24px;
+    border-radius: 12px;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7);
     opacity: 0;
     visibility: hidden;
@@ -32,6 +31,7 @@ body {
     display: none;
     flex-direction: column;
     overflow: hidden;
+    border: 1px solid #1e293b;
 }
 
 .employment-container.show {
@@ -44,36 +44,36 @@ body {
 /* Header */
 .employment-header {
     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-    padding: 28px 40px;
+    padding: 20px 28px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 3px solid rgba(59, 130, 246, 0.3);
+    border-bottom: 2px solid rgba(59, 130, 246, 0.3);
 }
 
 .header-left {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
 }
 
 .header-icon {
-    font-size: 42px;
+    font-size: 32px;
     color: white;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
 }
 
 .employment-header h1 {
     color: white;
-    font-size: 32px;
+    font-size: 24px;
     font-weight: 700;
-    margin: 0 0 6px 0;
+    margin: 0 0 4px 0;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .employment-header p {
     color: rgba(255, 255, 255, 0.9);
-    font-size: 16px;
+    font-size: 14px;
     margin: 0;
 }
 
@@ -98,12 +98,12 @@ body {
 .boss-controls {
     background: rgba(139, 92, 246, 0.15);
     border-bottom: 2px solid rgba(139, 92, 246, 0.3);
-    padding: 20px 40px;
+    padding: 14px 28px;
 }
 
 .boss-controls-inner {
     display: flex;
-    gap: 16px;
+    gap: 12px;
     align-items: center;
 }
 
@@ -111,15 +111,15 @@ body {
     background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
     color: white;
     border: none;
-    padding: 14px 24px;
-    border-radius: 10px;
-    font-size: 15px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .btn-boss:hover {
@@ -149,9 +149,9 @@ body {
 /* Filters */
 .filters {
     background: rgba(15, 23, 42, 0.6);
-    padding: 24px 40px;
+    padding: 16px 28px;
     display: flex;
-    gap: 20px;
+    gap: 16px;
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -203,41 +203,46 @@ body {
     outline: none;
 }
 
-/* Job List - GRID LAYOUT */
+/* Job List - GRID LAYOUT CARRÉ */
 .job-list {
     flex: 1;
     overflow-y: auto;
-    padding: 32px 40px;
+    padding: 20px 28px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-    gap: 28px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
     align-content: start;
 }
 
-/* JOB CARD - NOUVEAU DESIGN EXPANDABLE */
+/* JOB CARD - DESIGN CARRÉ VERTICAL */
 .job-card {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    border-radius: 16px;
+    border-radius: 20px;
     overflow: hidden;
     border: 2px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    aspect-ratio: 1 / 1.2;
+    display: flex;
+    flex-direction: column;
 }
 
 .job-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3);
-    border-color: rgba(59, 130, 246, 0.6);
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(59, 130, 246, 0.4);
+    border-color: rgba(59, 130, 246, 0.8);
 }
 
-/* Header de la Card - TOUJOURS VISIBLE */
+/* Header de la Card - LAYOUT VERTICAL */
 .job-card-header {
     display: flex;
-    gap: 20px;
-    padding: 24px;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 16px 16px 16px;
     background: rgba(30, 41, 59, 0.6);
     border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-    align-items: center;
+    text-align: center;
 }
 
 .company-logo {
@@ -245,20 +250,19 @@ body {
     height: 100px;
     border-radius: 16px;
     object-fit: cover;
-    border: 3px solid rgba(59, 130, 246, 0.4);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 3px solid rgba(59, 130, 246, 0.5);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
     flex-shrink: 0;
     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
 }
 
 .company-info {
-    flex: 1;
-    min-width: 0;
+    width: 100%;
 }
 
 .company-info h3 {
     color: #60a5fa;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     margin-bottom: 10px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);

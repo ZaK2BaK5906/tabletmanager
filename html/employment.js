@@ -411,4 +411,12 @@ function updateRecruitmentButton() {
         btnText.textContent = 'Ouvrir Recrutement';
         btn.innerHTML = '<i class="fa-solid fa-door-open"></i> ' + btnText.outerHTML;
     }
+
+    // Mettre à jour le statut dans la liste des companies
+    const currentCompany = employmentData.companies.find(c => c.job_name === employmentData.currentJob);
+    if (currentCompany) {
+        currentCompany.is_recruiting = employmentData.isRecruiting;
+        // Re-render pour mettre à jour l'affichage
+        renderCompanies();
+    }
 }
