@@ -384,9 +384,9 @@ RegisterNetEvent('tablet:createInvoice', function(invoiceData)
     local taxAmount = afterDiscount * (Config.TaxRate / 100)
     local total = afterDiscount + taxAmount
 
-    -- Commission
+    -- Commission (calculée sur le HT, pas le TTC)
     local commissionPercent = GetEmployeeCommission(job, identifier)
-    local commissionAmount = total * (commissionPercent / 100)
+    local commissionAmount = afterDiscount * (commissionPercent / 100)
 
     -- Type de facture (citizen ou company)
     local invoiceType = invoiceData.type or 'citizen'

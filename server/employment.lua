@@ -217,14 +217,14 @@ AddEventHandler('employment:toggleRecruitment', function()
     local message = newStatus == 1 and '✅ Recrutement ouvert' or '🔒 Recrutement fermé'
     ShowNotification(_source, message, 'success')
 
-    -- Rafraîchir pour tous les joueurs AVANT d'envoyer le statut au client
+    -- Rafraîchir pour tous les joueurs
     BroadcastCompaniesUpdate()
 
-    -- Petit délai pour s'assurer que le broadcast arrive avant
-    Wait(100)
-
-    -- Envoyer le nouveau statut au client
-    TriggerClientEvent('employment:updateRecruitmentStatus', _source, newStatus == 1)
+    -- Envoyer le nouveau statut au client après un petit délai (async)
+    CreateThread(function()
+        Wait(150)
+        TriggerClientEvent('employment:updateRecruitmentStatus', _source, newStatus == 1)
+    end)
 
     -- Webhook
     SendWebhook('RecruitmentStatusChanged', {
