@@ -2,8 +2,8 @@
 -- SERVER: Système de Recrutement/Emploi
 -- ============================================
 
--- Vérifier si un joueur est patron de son entreprise
-function IsBoss(source)
+-- Vérifier si un joueur est patron de son entreprise (utilise source ID)
+local function IsBossFromSource(source)
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then return false end
 
@@ -21,7 +21,7 @@ ESX.RegisterServerCallback('employment:getCompanies', function(source, cb)
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then cb(nil) return end
 
-    local isBoss = IsBoss(source)
+    local isBoss = IsBossFromSource(source)
     local currentJob = xPlayer.job.name
     local currentJobLabel = xPlayer.job.label
 
@@ -142,7 +142,7 @@ ESX.RegisterServerCallback('employment:getCompanyProfile', function(source, cb)
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then cb(nil) return end
 
-    if not IsBoss(source) then cb(nil) return end
+    if not IsBossFromSource(source) then cb(nil) return end
 
     local job = xPlayer.job.name
 
@@ -158,7 +158,7 @@ AddEventHandler('employment:updateCompanyProfile', function(data)
     local xPlayer = ESX.GetPlayerFromId(_source)
     if not xPlayer then return end
 
-    if not IsBoss(_source) then
+    if not IsBossFromSource(_source) then
         ShowNotification(_source, '❌ Vous n\'êtes pas autorisé', 'error')
         return
     end
@@ -200,7 +200,7 @@ AddEventHandler('employment:toggleRecruitment', function()
     local xPlayer = ESX.GetPlayerFromId(_source)
     if not xPlayer then return end
 
-    if not IsBoss(_source) then
+    if not IsBossFromSource(_source) then
         ShowNotification(_source, '❌ Vous n\'êtes pas autorisé', 'error')
         return
     end
@@ -235,7 +235,7 @@ ESX.RegisterServerCallback('employment:getApplications', function(source, cb)
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then cb(nil) return end
 
-    if not IsBoss(source) then cb(nil) return end
+    if not IsBossFromSource(source) then cb(nil) return end
 
     local job = xPlayer.job.name
 
@@ -255,7 +255,7 @@ AddEventHandler('employment:processApplication', function(data)
     local xPlayer = ESX.GetPlayerFromId(_source)
     if not xPlayer then return end
 
-    if not IsBoss(_source) then
+    if not IsBossFromSource(_source) then
         ShowNotification(_source, '❌ Vous n\'êtes pas autorisé', 'error')
         return
     end
