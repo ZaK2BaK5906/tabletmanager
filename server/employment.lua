@@ -50,7 +50,7 @@ ESX.RegisterServerCallback('employment:getCompanies', function(source, cb)
                     photo_url = Config.CompanyLogos[jobName] or Config.DefaultCompanyLogo,
                     description = profile.description,
                     salary_info = profile.salary_info,
-                    is_recruiting = profile.is_recruiting == 1
+                    is_recruiting = (profile.is_recruiting == 1 or profile.is_recruiting == true)
                 })
             else
                 -- Créer un profil par défaut si non existant (IGNORE si existe déjà)
@@ -90,7 +90,8 @@ ESX.RegisterServerCallback('employment:getCompanies', function(source, cb)
     local isRecruiting = false
     local currentProfile = MySQL.single.await('SELECT is_recruiting FROM company_profiles WHERE job_name = ?', {currentJob})
     if currentProfile then
-        isRecruiting = currentProfile.is_recruiting == 1
+        -- Gérer TINYINT(1) qui peut retourner true/false ou 1/0
+        isRecruiting = (currentProfile.is_recruiting == 1 or currentProfile.is_recruiting == true)
         print('[EMPLOYMENT DEBUG] getCompanies - Job:', currentJob, 'DB value:', currentProfile.is_recruiting, 'Sending isRecruiting:', isRecruiting)
     else
         print('[EMPLOYMENT DEBUG] getCompanies - Job:', currentJob, 'No profile found, sending isRecruiting: false')
@@ -246,8 +247,10 @@ AddEventHandler('employment:toggleRecruitment', function()
         print('[EMPLOYMENT DEBUG] Current is_recruiting value:', profile.is_recruiting)
     end
 
-    local newStatus = profile.is_recruiting == 1 and 0 or 1
-    print('[EMPLOYMENT DEBUG] Toggling from', profile.is_recruiting, 'to', newStatus)
+    -- Convertir en booléen pour gérer TINYINT(1) qui retourne true/false
+    local isCurrentlyOpen = (profile.is_recruiting == 1 or profile.is_recruiting == true)
+    local newStatus = isCurrentlyOpen and 0 or 1
+    print('[EMPLOYMENT DEBUG] Toggling from', profile.is_recruiting, '(isOpen:', isCurrentlyOpen, ') to', newStatus)
 
     MySQL.update.await('UPDATE company_profiles SET is_recruiting = ? WHERE job_name = ?', {newStatus, job})
 
@@ -366,7 +369,7 @@ function BroadcastCompaniesUpdate()
                     photo_url = Config.CompanyLogos[jobName] or Config.DefaultCompanyLogo,
                     description = profile.description,
                     salary_info = profile.salary_info,
-                    is_recruiting = profile.is_recruiting == 1
+                    is_recruiting = (profile.is_recruiting == 1 or profile.is_recruiting == true)
                 })
             end
         end
