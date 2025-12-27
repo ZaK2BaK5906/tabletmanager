@@ -161,9 +161,17 @@ AddEventHandler('dealership:assignVehicle', function(targetId, vehicleModel, pla
         return
     end
 
-    -- Générer une plaque si non fournie ou vide
+    -- Générer une plaque aléatoire si non fournie ou vide
     if not plate or plate == '' or plate == 'nil' then
-        plate = 'DLR' .. math.random(1000, 9999)
+        -- Générer 3 lettres aléatoires + 4 chiffres aléatoires (ex: ABC 1234)
+        local letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        local randomLetters = ''
+        for i = 1, 3 do
+            local randomIndex = math.random(1, #letters)
+            randomLetters = randomLetters .. letters:sub(randomIndex, randomIndex)
+        end
+        local randomNumbers = math.random(1000, 9999)
+        plate = randomLetters .. ' ' .. randomNumbers
     end
 
     -- Réduire le stock
