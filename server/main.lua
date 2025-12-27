@@ -300,81 +300,77 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
     local job = xPlayer.job.name
     local societyAccount = 'society_' .. job
 
-    -- Utiliser le même système que les factures
-    TriggerEvent('esx_addonaccount:getSharedAccount', societyAccount, function(account)
-        local balance = 0
-        local transactions = {}
+    -- Récupérer le solde DIRECTEMENT depuis addon_account_data
+    local accountData = MySQL.single.await('SELECT money FROM addon_account_data WHERE account_name = ? AND owner IS NULL', {societyAccount})
+    local balance = accountData and tonumber(accountData.money) or 0
 
-        if account then
-            balance = tonumber(account.money) or 0
-        end
+    -- Récupérer factures payées (crédits)
+    local paidInvoices = MySQL.query.await([[
+        SELECT
+            total as amount,
+            paid_at as date,
+            CONCAT('Facture #', id, ' - ', customer_name) as label
+        FROM tablet_invoices
+        WHERE job = ? AND status = 'paid'
+        ORDER BY paid_at DESC
+        LIMIT 100
+    ]], {job}) or {}
 
-        -- Récupérer factures payées (crédits)
-        local paidInvoices = MySQL.query.await([[
-            SELECT
-                total as amount,
-                paid_at as date,
-                CONCAT('Facture #', id, ' - ', customer_name) as label
-            FROM tablet_invoices
-            WHERE job = ? AND status = 'paid'
-            ORDER BY paid_at DESC
-            LIMIT 100
-        ]], {job}) or {}
+    local transactions = {}
 
-        for _, invoice in ipairs(paidInvoices) do
-            table.insert(transactions, {
-                type = 'credit',
-                amount = tonumber(invoice.amount),
-                date = invoice.date,
-                label = invoice.label
-            })
-        end
-
-        -- Récupérer commissions payées (débits)
-        local commissions = MySQL.query.await([[
-            SELECT
-                commission_amount as amount,
-                paid_at as date,
-                CONCAT('Commission - ', employee_name) as label
-            FROM tablet_invoices
-            WHERE job = ? AND status = 'paid' AND commission_amount > 0
-            ORDER BY paid_at DESC
-            LIMIT 100
-        ]], {job}) or {}
-
-        for _, comm in ipairs(commissions) do
-            table.insert(transactions, {
-                type = 'debit',
-                amount = tonumber(comm.amount),
-                date = comm.date,
-                label = comm.label
-            })
-        end
-
-        -- Trier par date
-        table.sort(transactions, function(a, b)
-            return (a.date or '') > (b.date or '')
-        end)
-
-        -- Calculer totaux
-        local totalCredits = 0
-        local totalDebits = 0
-
-        for _, trans in ipairs(transactions) do
-            if trans.type == 'credit' then
-                totalCredits = totalCredits + trans.amount
-            else
-                totalDebits = totalDebits + trans.amount
-            end
-        end
-
-        cb({
-            balance = balance,
-            transactions = transactions,
-            totalCredits = totalCredits,
-            totalDebits = totalDebits
+    for _, invoice in ipairs(paidInvoices) do
+        table.insert(transactions, {
+            type = 'credit',
+            amount = tonumber(invoice.amount),
+            date = invoice.date,
+            label = invoice.label
         })
+    end
+
+    -- Récupérer commissions payées (débits)
+    local commissions = MySQL.query.await([[
+        SELECT
+            commission_amount as amount,
+            paid_at as date,
+            CONCAT('Commission - ', employee_name) as label
+        FROM tablet_invoices
+        WHERE job = ? AND status = 'paid' AND commission_amount > 0
+        ORDER BY paid_at DESC
+        LIMIT 100
+    ]], {job}) or {}
+
+    for _, comm in ipairs(commissions) do
+        table.insert(transactions, {
+            type = 'debit',
+            amount = tonumber(comm.amount),
+            date = comm.date,
+            label = comm.label
+        })
+    end
+
+    -- Trier par date
+    table.sort(transactions, function(a, b)
+        return (a.date or '') > (b.date or '')
     end)
+
+    -- Calculer totaux
+    local totalCredits = 0
+    local totalDebits = 0
+
+    for _, trans in ipairs(transactions) do
+        if trans.type == 'credit' then
+            totalCredits = totalCredits + trans.amount
+        else
+            totalDebits = totalDebits + trans.amount
+        end
+    end
+
+    cb({
+        balance = balance,
+        transactions = transactions,
+        totalCredits = totalCredits,
+        totalDebits = totalDebits
+    })
 end)
 
 -- Données audit pour DOJ (accès complet à toutes les sociétés)
