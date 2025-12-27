@@ -81,6 +81,20 @@ AddEventHandler('dealership:orderVehicles', function(vehicleModel, quantity)
         -- Ajouter au stock
         MySQL.query('UPDATE vehicles SET stock = stock + ? WHERE model = ?', {quantity, vehicleModel})
 
+        -- Enregistrer la commande dans l'historique
+        MySQL.insert.await([[
+            INSERT INTO vehicle_orders (job, vehicle_model, vehicle_name, quantity, unit_price, total_cost, ordered_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ]], {
+            'dealership',
+            vehicleModel,
+            vehicle.name,
+            quantity,
+            tonumber(vehicle.price),
+            totalCost,
+            xPlayer.getName()
+        })
+
         ShowNotification(_source, '✅ Commande effectuée: ' .. quantity .. 'x ' .. vehicle.name .. ' ($' .. totalCost .. ')', 'success')
 
         -- Webhook
@@ -95,6 +109,12 @@ AddEventHandler('dealership:orderVehicles', function(vehicleModel, quantity)
 
         -- Rafraîchir la liste pour le joueur
         TriggerClientEvent('dealership:refreshVehicles', _source)
+
+        -- Rafraîchir l'historique pour tous les employés dealership
+        local xPlayers = ESX.GetExtendedPlayers('job', 'dealership')
+        for _, player in pairs(xPlayers) do
+            TriggerClientEvent('tablet:refreshStats', player.source)
+        end
     end)
 end)
 

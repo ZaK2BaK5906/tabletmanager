@@ -402,6 +402,29 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
         })
     end
 
+    -- Récupérer commandes de véhicules (débits) - dealership only
+    if job == 'dealership' then
+        local vehicleOrders = MySQL.query.await([[
+            SELECT
+                total_cost as amount,
+                ordered_at as date,
+                CONCAT('Commande - ', quantity, 'x ', vehicle_name) as label
+            FROM vehicle_orders
+            WHERE job = ?
+            ORDER BY ordered_at DESC
+            LIMIT 100
+        ]], {job}) or {}
+
+        for _, order in ipairs(vehicleOrders) do
+            table.insert(transactions, {
+                type = 'debit',
+                amount = tonumber(order.amount),
+                date = order.date,
+                label = order.label
+            })
+        end
+    end
+
     -- Trier par date
     table.sort(transactions, function(a, b)
         return (a.date or '') > (b.date or '')
