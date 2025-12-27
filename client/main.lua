@@ -136,6 +136,9 @@ RegisterCommand(Config.Command, function()
     OpenTablet()
 end, false)
 
+-- Keymapping pour la tablette (bindable dans paramètres FiveM)
+RegisterKeyMapping(Config.Command, 'Ouvrir la tablette de gestion', 'keyboard', '')
+
 -- Commande /facture
 RegisterCommand('facture', function()
     ESX.TriggerServerCallback('tablet:getPendingInvoices', function(invoices)
@@ -152,6 +155,9 @@ RegisterCommand('facture', function()
         SetNuiFocus(true, true)
     end)
 end, false)
+
+-- Keymapping pour les factures (bindable dans paramètres FiveM)
+RegisterKeyMapping('facture', 'Ouvrir mes factures en attente', 'keyboard', '')
 
 -- NUI Callbacks
 RegisterNUICallback('close', function(data, cb)
