@@ -1,27 +1,30 @@
 # 📦 Installation - Tablet Manager v2.0
 
-## ⚠️ IMPORTANT: Migration SQL
+## ✅ SUPER SIMPLE: Installation Automatique
 
-Avant de redémarrer le serveur, vous DEVEZ exécuter le fichier de migration SQL pour ajouter les nouvelles tables.
+**Plus besoin d'exécuter de migration SQL manuellement!**
 
-### 1️⃣ Exécuter la Migration SQL
+Le système crée automatiquement les tables au démarrage si elles n'existent pas.
 
-Dans votre PhpMyAdmin ou HeidiSQL, exécutez le fichier:
-```
-migration_employment.sql
-```
-
-Ce fichier crée:
-- Table `company_profiles` (profils des entreprises)
-- Table `job_applications` (candidatures)
-- Initialise automatiquement les profils pour vos jobs existants
-
-✅ **Aucune donnée existante ne sera perdue!**
-
-### 2️⃣ Redémarrer la Resource
+### 1️⃣ Redémarrer la Resource
 
 ```bash
 restart tabletmanager
+```
+
+**C'est tout!** Le système va:
+- ✅ Créer automatiquement les tables `company_profiles` et `job_applications`
+- ✅ Initialiser les profils pour tous vos jobs existants
+- ✅ Tout configurer sans toucher à vos données existantes
+
+Vous verrez dans la console:
+```
+[Tablet Manager] Vérification des tables...
+[Tablet Manager] Tables vérifiées ✓
+[Tablet Manager] Profil créé pour: LSPD
+[Tablet Manager] Profil créé pour: EMS
+...
+[Tablet Manager] Migration automatique terminée ✓
 ```
 
 ## 🔧 Configuration des Webhooks Discord
