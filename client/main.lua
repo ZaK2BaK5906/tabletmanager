@@ -372,6 +372,14 @@ AddEventHandler('dealership:refreshVehicles', function()
     })
 end)
 
+-- Refresh historique transactions (appelé depuis le serveur)
+RegisterNetEvent('tablet:refreshHistory')
+AddEventHandler('tablet:refreshHistory', function()
+    SendNUIMessage({
+        action = 'refreshHistory'
+    })
+end)
+
 -- Fermer avec ESC
 RegisterNUICallback('escape', function(data, cb)
     CloseTablet()

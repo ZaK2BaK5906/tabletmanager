@@ -113,7 +113,7 @@ AddEventHandler('dealership:orderVehicles', function(vehicleModel, quantity)
         -- Rafraîchir l'historique pour tous les employés dealership
         local xPlayers = ESX.GetExtendedPlayers('job', 'dealership')
         for _, player in pairs(xPlayers) do
-            TriggerClientEvent('tablet:refreshStats', player.source)
+            TriggerClientEvent('tablet:refreshHistory', player.source)
         end
     end)
 end)

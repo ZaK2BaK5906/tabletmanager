@@ -1220,6 +1220,12 @@ window.addEventListener('message', (event) => {
         if (invoicesNav && invoicesNav.classList.contains('active')) {
             loadInvoiceHistory();
         }
+    } else if (data.action === 'refreshHistory') {
+        // Rafraîchir l'historique des transactions
+        const historyNav = document.querySelector('[data-page="history"]');
+        if (historyNav && historyNav.classList.contains('active')) {
+            loadTransactionHistory();
+        }
     } else if (data.action === 'receiveAuditData') {
         receiveAuditData(data.data);
     } else if (data.action === 'receiveTransactionHistory') {
