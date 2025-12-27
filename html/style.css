@@ -1074,3 +1074,141 @@ h3 {
     font-size: 15px;
     font-weight: 500;
 }
+
+/* Transaction History Styles */
+.transaction-balance-card {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.balance-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+}
+
+.balance-info {
+    flex: 1;
+}
+
+.balance-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.balance-amount {
+    color: white;
+    font-size: 32px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.transaction-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-box {
+    background: #1e293b;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid #334155;
+}
+
+.summary-box i {
+    font-size: 32px;
+}
+
+.summary-income i {
+    color: #10b981;
+}
+
+.summary-expense i {
+    color: #ef4444;
+}
+
+.summary-label {
+    color: #94a3b8;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.summary-value {
+    color: #f1f5f9;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.transactions-list {
+    background: #1e293b;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.transaction-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-item:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.transaction-info {
+    flex: 1;
+}
+
+.transaction-type {
+    color: #f1f5f9;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.transaction-date {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.transaction-amount {
+    font-size: 16px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.transaction-amount.credit {
+    color: #10b981;
+}
+
+.transaction-amount.debit {
+    color: #ef4444;
+}

@@ -773,6 +773,10 @@ document.querySelectorAll('.mgmt-tab').forEach(tab => {
         if (tabName === 'stats') {
             loadEmployeeStats();
         }
+        // Charger l'historique des transactions si on clique sur l'onglet transactions
+        else if (tabName === 'transactions') {
+            loadTransactionHistory();
+        }
     });
 });
 
@@ -1129,5 +1133,62 @@ window.addEventListener('message', (event) => {
         }
     } else if (data.action === 'receiveAuditData') {
         receiveAuditData(data.data);
+    } else if (data.action === 'receiveTransactionHistory') {
+        receiveTransactionHistory(data.data);
     }
 });
+
+// Transaction History Functions
+function loadTransactionHistory() {
+    postData('getTransactionHistory', {});
+}
+
+function receiveTransactionHistory(data) {
+    if (!data) return;
+
+    // Update balance
+    document.getElementById('societyBalance').textContent = formatCurrency(data.balance);
+
+    // Update totals
+    document.getElementById('totalCredits').textContent = formatCurrency(data.totalCredits);
+    document.getElementById('totalDebits').textContent = formatCurrency(data.totalDebits);
+
+    // Render transactions
+    const container = document.getElementById('transactionsList');
+
+    if (!data.transactions || data.transactions.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div class="empty-state-text">Aucune transaction trouvée</div>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    data.transactions.forEach(trans => {
+        const isCredit = trans.type === 'credit';
+        const amountClass = isCredit ? 'credit' : 'debit';
+        const amountPrefix = isCredit ? '+' : '-';
+
+        html += `
+            <div class="transaction-item">
+                <div class="transaction-info">
+                    <div class="transaction-type">
+                        <i class="fa-solid ${isCredit ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                        ${trans.label}
+                    </div>
+                    <div class="transaction-date">${trans.date}</div>
+                </div>
+                <div class="transaction-amount ${amountClass}">
+                    ${amountPrefix}${formatCurrency(trans.amount)}
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}

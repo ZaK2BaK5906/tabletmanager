@@ -195,6 +195,16 @@ RegisterNUICallback('getManagementData', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('getTransactionHistory', function(data, cb)
+    ESX.TriggerServerCallback('tablet:getTransactionHistory', function(transactionData)
+        SendNUIMessage({
+            action = 'receiveTransactionHistory',
+            data = transactionData
+        })
+    end)
+    cb('ok')
+end)
+
 RegisterNUICallback('getEmployeeStats', function(data, cb)
     ESX.TriggerServerCallback('tablet:getEmployeeStats', function(employeeStats)
         SendNUIMessage({

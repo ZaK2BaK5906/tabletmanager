@@ -292,6 +292,94 @@ RegisterNetEvent('tablet:resetSales', function()
     end
 end)
 
+-- Historique des transactions (boss only)
+ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer or not IsBoss(xPlayer) then cb(nil) return end
+
+    local job = xPlayer.job.name
+    local societyAccount = 'society_' .. job
+
+    -- Obtenir le solde de la société
+    local accountData = MySQL.single.await('SELECT money FROM addon_account_data WHERE account_name = ?', {societyAccount})
+    local balance = accountData and tonumber(accountData.money) or 0
+
+    -- Obtenir les factures payées (crédits) du mois en cours
+    local paidInvoices = MySQL.query.await([[
+        SELECT
+            total as amount,
+            paid_at as date,
+            CONCAT('Facture #', id, ' - ', customer_name) as label
+        FROM tablet_invoices
+        WHERE job = ? AND status = 'paid'
+        AND MONTH(paid_at) = MONTH(CURRENT_DATE())
+        AND YEAR(paid_at) = YEAR(CURRENT_DATE())
+        ORDER BY paid_at DESC
+        LIMIT 50
+    ]], {job}) or {}
+
+    -- Obtenir les commissions payées (débits) du mois en cours
+    local commissions = MySQL.query.await([[
+        SELECT
+            commission_amount as amount,
+            paid_at as date,
+            CONCAT('Commission - ', employee_name) as label
+        FROM tablet_invoices
+        WHERE job = ? AND status = 'paid' AND commission_amount > 0
+        AND MONTH(paid_at) = MONTH(CURRENT_DATE())
+        AND YEAR(paid_at) = YEAR(CURRENT_DATE())
+        ORDER BY paid_at DESC
+        LIMIT 50
+    ]], {job}) or {}
+
+    -- Construire la liste des transactions
+    local transactions = {}
+
+    -- Ajouter les crédits (factures payées)
+    for _, invoice in ipairs(paidInvoices) do
+        table.insert(transactions, {
+            type = 'credit',
+            amount = tonumber(invoice.amount),
+            date = invoice.date or 'N/A',
+            label = invoice.label
+        })
+    end
+
+    -- Ajouter les débits (commissions)
+    for _, comm in ipairs(commissions) do
+        table.insert(transactions, {
+            type = 'debit',
+            amount = tonumber(comm.amount),
+            date = comm.date or 'N/A',
+            label = comm.label
+        })
+    end
+
+    -- Trier par date (plus récent en premier)
+    table.sort(transactions, function(a, b)
+        return a.date > b.date
+    end)
+
+    -- Calculer les totaux
+    local totalCredits = 0
+    local totalDebits = 0
+
+    for _, trans in ipairs(transactions) do
+        if trans.type == 'credit' then
+            totalCredits = totalCredits + trans.amount
+        else
+            totalDebits = totalDebits + trans.amount
+        end
+    end
+
+    cb({
+        balance = balance,
+        transactions = transactions,
+        totalCredits = totalCredits,
+        totalDebits = totalDebits
+    })
+end)
+
 -- Données audit pour DOJ (accès complet à toutes les sociétés)
 ESX.RegisterServerCallback('tablet:getAuditData', function(source, cb)
     local xPlayer = ESX.GetPlayerFromId(source)
