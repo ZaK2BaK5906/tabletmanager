@@ -2,19 +2,20 @@
 -- CLIENT DEALERSHIP - OX_TARGET INTERACTIONS
 -- ============================================
 
--- Options ox_target pour les citoyens (quand on est dealership)
+-- Options ox_target pour les citoyens
 exports.ox_target:addGlobalPlayer({
     {
-        name = 'dealership_sell_vehicle',
+        name = 'tablet_create_invoice',
         icon = 'fa-solid fa-file-invoice-dollar',
-        label = 'Vendre un Véhicule',
+        label = 'Créer une Facture',
         canInteract = function(entity, distance, coords, name, bone)
             local playerData = ESX.GetPlayerData()
-            return playerData.job and playerData.job.name == 'dealership'
+            -- Tous les jobs peuvent créer des factures
+            return playerData.job and playerData.job.name ~= 'unemployed'
         end,
         onSelect = function(data)
             local targetId = GetPlayerServerId(data.entity)
-            TriggerServerCallback('dealership:getPlayerInfo', targetId, function(playerInfo)
+            ESX.TriggerServerCallback('tablet:getPlayerInfo', function(playerInfo)
                 if playerInfo then
                     -- Ouvrir la tablette sur la page facture avec infos pré-remplies
                     SendNUIMessage({
@@ -23,7 +24,7 @@ exports.ox_target:addGlobalPlayer({
                         targetName = playerInfo.name
                     })
                 end
-            end)
+            end, targetId)
         end
     },
     {
@@ -32,6 +33,7 @@ exports.ox_target:addGlobalPlayer({
         label = 'Assigner un Véhicule',
         canInteract = function(entity, distance, coords, name, bone)
             local playerData = ESX.GetPlayerData()
+            -- Seulement dealership peut assigner des véhicules
             return playerData.job and playerData.job.name == 'dealership'
         end,
         onSelect = function(data)

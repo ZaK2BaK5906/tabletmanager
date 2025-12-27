@@ -48,6 +48,9 @@ window.addEventListener('message', (event) => {
         closeTablet();
     } else if (data.action === 'updateData') {
         updateTabletData(data);
+    } else if (data.action === 'openForSale') {
+        // Ouvrir tablette et pré-remplir facture
+        openTabletForSale(data);
     }
 });
 
@@ -132,6 +135,51 @@ function closeTablet() {
     // Reset
     resetInvoiceForm();
     switchPage('home');
+}
+
+function openTabletForSale(data) {
+    // D'abord ouvrir la tablette normalement
+    if (!document.getElementById('tablet').classList.contains('show')) {
+        // Simuler l'ouverture normale
+        fetch(`https://${GetParentResourceName()}/getPlayerData`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        })
+        .then(resp => resp.json())
+        .then(response => {
+            if (response) {
+                openTablet(response);
+                // Puis switch vers facture et pré-remplir
+                setTimeout(() => {
+                    switchPage('invoice');
+                    preFillInvoiceData(data);
+                }, 100);
+            }
+        });
+    } else {
+        // Tablette déjà ouverte, juste switch et pré-remplir
+        switchPage('invoice');
+        preFillInvoiceData(data);
+    }
+}
+
+function preFillInvoiceData(data) {
+    // S'assurer qu'on est en mode citoyen
+    tabletData.invoiceType = 'citizen';
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-type="citizen"]')?.classList.add('active');
+
+    // Afficher/masquer les sections appropriées
+    document.getElementById('citizenFields').style.display = 'block';
+    document.getElementById('companyFields').style.display = 'none';
+
+    // Pré-remplir l'ID et le nom
+    const idInput = document.getElementById('citizenId');
+    const nameInput = document.getElementById('citizenName');
+
+    if (idInput) idInput.value = data.targetId || '';
+    if (nameInput) nameInput.value = data.targetName || '';
 }
 
 document.getElementById('closeBtn').addEventListener('click', closeTablet);

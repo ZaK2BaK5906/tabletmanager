@@ -10,6 +10,28 @@ function IsBoss(xPlayer)
     return false
 end
 
+-- Obtenir les infos d'un joueur (pour pré-remplir la facture via ox_target)
+ESX.RegisterServerCallback('tablet:getPlayerInfo', function(source, cb, targetId)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local targetPlayer = ESX.GetPlayerFromId(targetId)
+
+    if not xPlayer then
+        cb(nil)
+        return
+    end
+
+    if not targetPlayer then
+        cb(nil)
+        return
+    end
+
+    cb({
+        id = targetId,
+        name = targetPlayer.getName(),
+        identifier = targetPlayer.identifier
+    })
+end)
+
 -- Obtenir la commission d'un employé
 function GetEmployeeCommission(job, identifier)
     local result = MySQL.scalar.await('SELECT commission_percent FROM tablet_employee_commissions WHERE job = ? AND identifier = ?', {
