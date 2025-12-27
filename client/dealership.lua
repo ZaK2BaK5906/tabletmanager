@@ -20,7 +20,10 @@ CreateThread(function()
             return playerData.job and playerData.job.name ~= 'unemployed'
         end,
         onSelect = function(data)
-            local targetId = GetPlayerServerId(data.entity)
+            local targetPed = data.entity
+            local targetPlayerId = NetworkGetPlayerIndexFromPed(targetPed)
+            local targetId = GetPlayerServerId(targetPlayerId)
+
             ESX.TriggerServerCallback('tablet:getPlayerInfo', function(playerInfo)
                 if playerInfo then
                     -- Ouvrir la tablette sur la page facture avec infos pré-remplies
@@ -43,7 +46,10 @@ CreateThread(function()
             return playerData.job and playerData.job.name == 'dealership'
         end,
         onSelect = function(data)
-            local targetId = GetPlayerServerId(data.entity)
+            local targetPed = data.entity
+            local targetPlayerId = NetworkGetPlayerIndexFromPed(targetPed)
+            local targetId = GetPlayerServerId(targetPlayerId)
+
             -- Ouvrir menu de sélection de véhicule
             ESX.TriggerServerCallback('dealership:getVehicleStock', function(vehicles)
                 if vehicles and #vehicles > 0 then

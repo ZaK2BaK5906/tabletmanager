@@ -880,18 +880,28 @@ window.receiveEmployeeStats = function(data) {
     const totalVehiclePurchases = data.totalVehiclePurchases || 0;
     const totalProfit = data.totalProfit || 0;
 
-    // Mettre à jour les stats de l'entreprise
-    const vehiclePurchasesEl = document.getElementById('totalVehiclePurchases');
-    const profitEl = document.getElementById('totalProfit');
+    // Afficher les stats entreprise uniquement pour dealership
+    const companyStatsGrid = document.getElementById('companyStatsGrid');
+    if (companyStatsGrid) {
+        if (tabletData.job === 'dealership') {
+            companyStatsGrid.style.display = 'grid';
 
-    if (vehiclePurchasesEl) {
-        vehiclePurchasesEl.textContent = formatCurrency(totalVehiclePurchases);
-    }
+            // Mettre à jour les stats de l'entreprise
+            const vehiclePurchasesEl = document.getElementById('totalVehiclePurchases');
+            const profitEl = document.getElementById('totalProfit');
 
-    if (profitEl) {
-        profitEl.textContent = formatCurrency(totalProfit);
-        // Couleur en fonction du profit (vert si positif, rouge si négatif)
-        profitEl.style.color = totalProfit >= 0 ? '#22c55e' : '#ef4444';
+            if (vehiclePurchasesEl) {
+                vehiclePurchasesEl.textContent = formatCurrency(totalVehiclePurchases);
+            }
+
+            if (profitEl) {
+                profitEl.textContent = formatCurrency(totalProfit);
+                // Couleur en fonction du profit (vert si positif, rouge si négatif)
+                profitEl.style.color = totalProfit >= 0 ? '#22c55e' : '#ef4444';
+            }
+        } else {
+            companyStatsGrid.style.display = 'none';
+        }
     }
 
     if (!stats || stats.length === 0) {
