@@ -332,6 +332,13 @@
 
                 <!-- Tab Employés -->
                 <div class="mgmt-content" id="mgmt-employees">
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" id="employeeSearchInput" placeholder="🔍 Rechercher un employé..."
+                               style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; margin-bottom: 10px;">
+                        <button class="btn-primary" onclick="openRecruitMenu()" style="width: 100%;">
+                            <i class="fa-solid fa-user-plus"></i> Recruter un employé
+                        </button>
+                    </div>
                     <div class="employee-list" id="employeeList">
                         <!-- Employés dynamiques -->
                     </div>
@@ -742,6 +749,26 @@
                         <i class="fa-solid fa-check"></i> Confirmer
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Recrutement -->
+    <div id="recruitMenu">
+        <div class="menu-header">
+            <h2><i class="fa-solid fa-user-plus"></i> Recruter un Employé</h2>
+            <p>Sélectionnez un joueur à proximité</p>
+            <button class="close-btn" onclick="closeRecruitMenu()">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div class="menu-content">
+            <div class="search-bar">
+                <input type="text" id="playerSearchInput" placeholder="🔍 Rechercher un joueur...">
+            </div>
+            <div class="vehicle-list" id="playerList">
+                <!-- Joueurs chargés dynamiquement -->
             </div>
         </div>
     </div>

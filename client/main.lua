@@ -330,6 +330,40 @@ RegisterNUICallback('closeInvoiceMenu', function(data, cb)
     cb('ok')
 end)
 
+-- ============================================
+-- GESTION RH - RECRUTEMENT / VIRER / PROMOUVOIR
+-- ============================================
+
+RegisterNUICallback('getNearbyPlayers', function(data, cb)
+    local nearbyPlayers = GetNearbyPlayers()
+
+    if #nearbyPlayers > 0 then
+        SendNUIMessage({
+            action = 'showNearbyPlayers',
+            players = nearbyPlayers
+        })
+    else
+        ShowNotification('❌ Aucun joueur à proximité', 'error')
+    end
+
+    cb('ok')
+end)
+
+RegisterNUICallback('hireEmployee', function(data, cb)
+    TriggerServerEvent('tablet:hireEmployee', data.targetId)
+    cb('ok')
+end)
+
+RegisterNUICallback('fireEmployee', function(data, cb)
+    TriggerServerEvent('tablet:fireEmployee', data.identifier)
+    cb('ok')
+end)
+
+RegisterNUICallback('promoteEmployee', function(data, cb)
+    TriggerServerEvent('tablet:promoteEmployee', data.identifier)
+    cb('ok')
+end)
+
 -- Events serveur -> client
 RegisterNetEvent('tablet:updateProducts')
 AddEventHandler('tablet:updateProducts', function(products)

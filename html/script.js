@@ -1031,11 +1031,19 @@ function deleteProduct(id) {
 }
 
 // Gestion Employés
+let allEmployees = [];
+
 function renderEmployeeList(employees) {
+    allEmployees = employees;
+    displayEmployeeList(employees);
+    setupEmployeeSearch();
+}
+
+function displayEmployeeList(employees) {
     const container = document.getElementById('employeeList');
 
-    if (employees.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">Aucun employé</div></div>';
+    if (!employees || employees.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">Aucun employé trouvé</div></div>';
         return;
     }
 
@@ -1046,16 +1054,33 @@ function renderEmployeeList(employees) {
         div.innerHTML = `
             <div class="item-left">
                 <div class="item-title">${employee.name}</div>
-                <div class="item-subtitle">Commission: ${formatPercent(employee.commission_percent)}</div>
+                <div class="item-subtitle">Grade: ${employee.grade_name || 'Employé'} • Commission: ${formatPercent(employee.commission_percent)}</div>
             </div>
-            <div class="item-actions">
+            <div class="item-actions" style="display: flex; gap: 5px; flex-wrap: wrap;">
                 <input type="number" class="commission-input" id="commission-${employee.identifier}" value="${employee.commission_percent}" min="0" max="100" step="0.5">
-                <button class="btn-save" onclick="updateCommission('${employee.identifier}')">Sauver</button>
-                <button class="btn-secondary" onclick="resetCommission('${employee.identifier}')">Reset</button>
+                <button class="btn-save" onclick="updateCommission('${employee.identifier}')"><i class="fa-solid fa-check"></i></button>
+                <button class="btn-secondary" onclick="promoteEmployee('${employee.identifier}', '${employee.name}')"><i class="fa-solid fa-arrow-up"></i> Promouvoir</button>
+                <button class="btn-danger" onclick="fireEmployee('${employee.identifier}', '${employee.name}')"><i class="fa-solid fa-user-slash"></i> Virer</button>
             </div>
         `;
         container.appendChild(div);
     });
+}
+
+function setupEmployeeSearch() {
+    const searchInput = document.getElementById('employeeSearchInput');
+    if (searchInput && !searchInput.dataset.initialized) {
+        searchInput.dataset.initialized = 'true';
+        searchInput.value = '';
+        searchInput.oninput = function() {
+            const query = this.value.toLowerCase();
+            const filtered = allEmployees.filter(emp =>
+                emp.name.toLowerCase().includes(query) ||
+                (emp.grade_name && emp.grade_name.toLowerCase().includes(query))
+            );
+            displayEmployeeList(filtered);
+        };
+    }
 }
 
 function updateCommission(identifier) {
@@ -1069,6 +1094,95 @@ function updateCommission(identifier) {
 
 function resetCommission(identifier) {
     postData('resetCommission', { identifier });
+}
+
+// ============================================
+// GESTION RH - RECRUTEMENT / VIRER / PROMOUVOIR
+// ============================================
+
+let allPlayers = [];
+
+function openRecruitMenu() {
+    // Demander la liste des joueurs à proximité
+    postData('getNearbyPlayers', {});
+}
+
+// Réception de la liste des joueurs
+window.addEventListener('message', (event) => {
+    const data = event.data;
+
+    if (data.action === 'showNearbyPlayers') {
+        allPlayers = data.players;
+        displayRecruitMenu(data.players);
+    }
+});
+
+function displayRecruitMenu(players) {
+    if (!players || players.length === 0) {
+        // Afficher notification au lieu d'ouvrir le menu vide
+        return;
+    }
+
+    document.getElementById('recruitMenu').style.display = 'block';
+    displayPlayerList(players);
+    setupPlayerSearch();
+}
+
+function displayPlayerList(players) {
+    const list = document.getElementById('playerList');
+    list.innerHTML = '';
+
+    if (!players || players.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 30px; color: #64748b;"><i class="fa-solid fa-user-slash" style="font-size: 40px; margin-bottom: 10px;"></i><p>Aucun joueur à proximité</p></div>';
+        return;
+    }
+
+    players.forEach(player => {
+        const item = document.createElement('div');
+        item.className = 'vehicle-item';
+        item.innerHTML = `
+            <div class="vehicle-name">${player.name}</div>
+            <div class="vehicle-info">
+                <span class="vehicle-price">ID: ${player.id}</span>
+            </div>
+        `;
+        item.onclick = () => selectPlayerToRecruit(player);
+        list.appendChild(item);
+    });
+}
+
+function setupPlayerSearch() {
+    const searchInput = document.getElementById('playerSearchInput');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.oninput = function() {
+            const query = this.value.toLowerCase();
+            const filtered = allPlayers.filter(p =>
+                p.name.toLowerCase().includes(query)
+            );
+            displayPlayerList(filtered);
+        };
+    }
+}
+
+function selectPlayerToRecruit(player) {
+    postData('hireEmployee', { targetId: player.id });
+    closeRecruitMenu();
+}
+
+function closeRecruitMenu() {
+    document.getElementById('recruitMenu').style.display = 'none';
+    document.getElementById('playerList').innerHTML = '';
+    document.getElementById('playerSearchInput').value = '';
+    allPlayers = [];
+}
+
+function fireEmployee(identifier, name) {
+    postData('fireEmployee', { identifier });
+}
+
+function promoteEmployee(identifier, name) {
+    postData('promoteEmployee', { identifier });
 }
 
 // Gestion Partenariats

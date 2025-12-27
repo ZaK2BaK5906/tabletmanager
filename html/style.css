@@ -1992,3 +1992,159 @@ h3 {
 #assignVehicleMenu .search-bar input::placeholder {
     color: #64748b;
 }
+
+/* ============================================ */
+/* MENU RECRUTEMENT */
+/* ============================================ */
+
+#recruitMenu {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    width: 450px;
+    max-height: 85vh;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 2px solid #22c55e;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    animation: slideInLeft 0.3s ease;
+    z-index: 10000;
+}
+
+#recruitMenu .menu-header {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    padding: 20px;
+    color: white;
+    position: relative;
+}
+
+#recruitMenu .menu-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+#recruitMenu .menu-header p {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+#recruitMenu .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+#recruitMenu .close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+#recruitMenu .menu-content {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+#recruitMenu .vehicle-list {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+#recruitMenu .vehicle-item {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 2px solid #334155;
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#recruitMenu .vehicle-item:hover {
+    border-color: #22c55e;
+    transform: translateX(5px);
+}
+
+#recruitMenu .vehicle-item.selected {
+    border-color: #22c55e;
+    background: linear-gradient(135deg, #1e3a2f 0%, #0f1e1a 100%);
+}
+
+#recruitMenu .vehicle-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 8px;
+}
+
+#recruitMenu .vehicle-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+#recruitMenu .vehicle-price {
+    font-size: 14px;
+    color: #22c55e;
+    font-weight: 600;
+}
+
+#recruitMenu .menu-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+#recruitMenu .menu-content::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 10px;
+}
+
+#recruitMenu .menu-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border-radius: 10px;
+    border: 2px solid #0f172a;
+}
+
+#recruitMenu .menu-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+}
+
+#recruitMenu .search-bar {
+    margin-bottom: 15px;
+}
+
+#recruitMenu .search-bar input {
+    width: 100%;
+    padding: 12px 15px;
+    background: #0f172a;
+    border: 2px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+#recruitMenu .search-bar input:focus {
+    outline: none;
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+#recruitMenu .search-bar input::placeholder {
+    color: #64748b;
+}

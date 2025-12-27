@@ -52,6 +52,9 @@ Config.Webhooks = {
     -- Employés
     CommissionUpdated = '', -- Quand une commission est modifiée
     SalesReset = '',        -- Quand les ventes sont réinitialisées
+    EmployeeHired = '',     -- Quand un employé est recruté
+    EmployeeFired = '',     -- Quand un employé est viré
+    EmployeePromoted = '',  -- Quand un employé est promu
 
     -- Recrutement
     JobApplication = '',              -- Nouvelle candidature reçue

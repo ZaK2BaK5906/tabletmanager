@@ -1262,6 +1262,156 @@ RegisterNetEvent('tablet:resetCommission', function(data)
     BroadcastUpdate(_source, job, 'employees')
 end)
 
+-- ============================================
+-- GESTION RH - RECRUTEMENT / VIRER / PROMOUVOIR
+-- ============================================
+
+-- Helper function to get max grade for a job
+local function GetJobMaxGrade(jobName)
+    local result = MySQL.query.await('SELECT MAX(grade) as max_grade FROM job_grades WHERE job_name = ?', {jobName})
+    if result and result[1] then
+        return result[1].max_grade or 0
+    end
+    return 0
+end
+
+-- Recruter un employé (boss only)
+RegisterNetEvent('tablet:hireEmployee', function(targetId)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer or not IsBoss(xPlayer) then return end
+
+    local job = xPlayer.job.name
+    local targetPlayer = ESX.GetPlayerFromId(targetId)
+
+    if not targetPlayer then
+        ShowNotification(_source, '❌ Joueur introuvable', 'error')
+        return
+    end
+
+    -- Définir le job du joueur au grade 0
+    targetPlayer.setJob(job, 0)
+
+    -- Webhook
+    SendWebhook('EmployeeHired', {
+        job = job,
+        employeeName = targetPlayer.getName(),
+        hiredBy = xPlayer.getName()
+    })
+
+    ShowNotification(_source, '✅ '..targetPlayer.getName()..' a été recruté(e)', 'success')
+    ShowNotification(targetId, '🎉 Vous avez été recruté(e) chez '..targetPlayer.job.label, 'success')
+
+    -- Rafraîchir les données
+    BroadcastUpdate(_source, job, 'employees')
+end)
+
+-- Virer un employé (boss only)
+RegisterNetEvent('tablet:fireEmployee', function(identifier)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer or not IsBoss(xPlayer) then return end
+
+    local job = xPlayer.job.name
+
+    -- Vérifier que l'employé n'est pas le boss lui-même
+    if identifier == xPlayer.identifier then
+        ShowNotification(_source, '❌ Vous ne pouvez pas vous virer vous-même', 'error')
+        return
+    end
+
+    -- Récupérer le joueur cible
+    local targetPlayer = ESX.GetPlayerFromIdentifier(identifier)
+    local employeeName = 'Employé'
+
+    if targetPlayer then
+        -- Vérifier que le joueur est bien employé dans cette entreprise
+        if targetPlayer.job.name ~= job then
+            ShowNotification(_source, '❌ Ce joueur ne travaille pas dans votre entreprise', 'error')
+            return
+        end
+
+        employeeName = targetPlayer.getName()
+
+        -- Sauvegarder le label du job avant de virer
+        local jobLabel = targetPlayer.job.label
+
+        -- Virer le joueur (le mettre au chômage)
+        targetPlayer.setJob('unemployed', 0)
+
+        ShowNotification(targetPlayer.source, '❌ Vous avez été viré(e) de '..jobLabel, 'error')
+    else
+        -- Le joueur est hors ligne, modifier la base de données
+        MySQL.update('UPDATE users SET job = ?, job_grade = ? WHERE identifier = ?', {
+            'unemployed', 0, identifier
+        })
+    end
+
+    -- Supprimer la commission personnalisée de l'employé
+    MySQL.query('DELETE FROM tablet_employee_commissions WHERE job = ? AND identifier = ?', {job, identifier})
+
+    -- Webhook
+    SendWebhook('EmployeeFired', {
+        job = job,
+        employeeName = employeeName,
+        firedBy = xPlayer.getName()
+    })
+
+    ShowNotification(_source, '✅ '..employeeName..' a été viré(e)', 'success')
+
+    -- Rafraîchir les données
+    BroadcastUpdate(_source, job, 'employees')
+end)
+
+-- Promouvoir un employé (boss only)
+RegisterNetEvent('tablet:promoteEmployee', function(identifier)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer or not IsBoss(xPlayer) then return end
+
+    local job = xPlayer.job.name
+    local targetPlayer = ESX.GetPlayerFromIdentifier(identifier)
+
+    if not targetPlayer then
+        ShowNotification(_source, '❌ Le joueur doit être en ligne pour être promu', 'error')
+        return
+    end
+
+    -- Vérifier que le joueur est bien employé dans cette entreprise
+    if targetPlayer.job.name ~= job then
+        ShowNotification(_source, '❌ Ce joueur ne travaille pas dans votre entreprise', 'error')
+        return
+    end
+
+    local currentGrade = targetPlayer.job.grade
+    local maxGrade = GetJobMaxGrade(job)
+
+    -- Vérifier s'il y a un grade supérieur disponible
+    if currentGrade >= maxGrade then
+        ShowNotification(_source, '❌ '..targetPlayer.getName()..' est déjà au grade maximum', 'error')
+        return
+    end
+
+    -- Promouvoir
+    local newGrade = currentGrade + 1
+    targetPlayer.setJob(job, newGrade)
+
+    -- Webhook
+    SendWebhook('EmployeePromoted', {
+        job = job,
+        employeeName = targetPlayer.getName(),
+        oldGrade = currentGrade,
+        newGrade = newGrade,
+        promotedBy = xPlayer.getName()
+    })
+
+    ShowNotification(_source, '✅ '..targetPlayer.getName()..' a été promu(e)', 'success')
+    ShowNotification(targetPlayer.source, '🎉 Vous avez été promu(e) !', 'success')
+
+    -- Rafraîchir les données
+    BroadcastUpdate(_source, job, 'employees')
+end)
+
 -- Ajouter un partenariat (boss only)
 RegisterNetEvent('tablet:addPartnership', function(data)
     local _source = source
