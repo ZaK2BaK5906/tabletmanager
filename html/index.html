@@ -253,7 +253,7 @@
                 <!-- Stats Summary -->
                 <div class="stats-grid">
                     <div class="stat-box">
-                        <div class="stat-title">CA du Mois</div>
+                        <div class="stat-title">CA Période en Cours</div>
                         <div class="stat-big-value" id="statRevenue">0€</div>
                     </div>
                     <div class="stat-box">
@@ -342,7 +342,7 @@
                 <!-- Tab Stats Employés -->
                 <div class="mgmt-content" id="mgmt-stats">
                     <div class="stats-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="color: #e2e8f0; font-size: 18px; margin: 0;">Statistiques des Employés - Mois en Cours</h2>
+                        <h2 style="color: #e2e8f0; font-size: 18px; margin: 0;">Statistiques des Employés - Période en Cours</h2>
                         <button class="btn-danger" id="resetSalesBtn" style="
                             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
                             color: white;
@@ -384,7 +384,7 @@
                     </div>
 
                     <h3 style="color: #e2e8f0; font-size: 16px; margin: 20px 0 10px 0;">
-                        <i class="fa-solid fa-coins"></i> Estimations Financières
+                        <i class="fa-solid fa-coins"></i> Période en Cours
                     </h3>
                     <div class="financial-estimates">
                         <div class="estimate-card">
@@ -397,9 +397,6 @@
                                     <div class="estimate-value" id="pendingCommissions">$0.00</div>
                                 </div>
                             </div>
-                            <button class="btn-reset-estimate" onclick="resetCommissions()">
-                                <i class="fa-solid fa-rotate-right"></i> Reset
-                            </button>
                         </div>
                         <div class="estimate-card">
                             <div class="estimate-header">
@@ -411,9 +408,6 @@
                                     <div class="estimate-value" id="pendingVAT">$0.00</div>
                                 </div>
                             </div>
-                            <button class="btn-reset-estimate" onclick="resetVAT()">
-                                <i class="fa-solid fa-rotate-right"></i> Reset
-                            </button>
                         </div>
                     </div>
 
@@ -425,6 +419,9 @@
                             <div class="projected-label">Solde Prévisionnel (après primes & TVA)</div>
                             <div class="projected-value" id="projectedBalance">$0.00</div>
                         </div>
+                        <button class="btn-reset-estimate" onclick="resetAllInvoices()" style="margin-left: auto;">
+                            <i class="fa-solid fa-trash"></i> Reset Période
+                        </button>
                     </div>
 
                     <h3 style="color: #e2e8f0; font-size: 16px; margin: 20px 0 10px 0;">

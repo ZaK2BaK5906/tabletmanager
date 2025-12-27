@@ -1172,22 +1172,13 @@ function loadTransactionHistory() {
     postData('getTransactionHistory', {});
 }
 
-function resetCommissions() {
-    console.log('[DEBUG] Reset Commissions clicked');
+// Fonction unique pour reset toutes les factures (bouton unique dans Historique)
+function resetAllInvoices() {
+    console.log('[DEBUG] Reset ALL invoices clicked');
     postData('resetCommissions', {});
-    // Attendre 1.5s pour que le serveur update la DB
+    // Attendre 1.5s pour que le serveur supprime les factures
     setTimeout(() => {
-        console.log('[DEBUG] Reloading transaction history after commission reset');
-        loadTransactionHistory();
-    }, 1500);
-}
-
-function resetVAT() {
-    console.log('[DEBUG] Reset VAT clicked');
-    postData('resetVAT', {});
-    // Attendre 1.5s pour que le serveur update la DB
-    setTimeout(() => {
-        console.log('[DEBUG] Reloading transaction history after VAT reset');
+        console.log('[DEBUG] Reloading transaction history after reset');
         loadTransactionHistory();
     }, 1500);
 }
