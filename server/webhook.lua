@@ -201,33 +201,36 @@ function CreateWebhookEmbed(webhookType, data)
             end
         end
 
-    -- RESET FINANCIER
+    -- RESET FINANCIER (SUPPRESSION FACTURES)
     elseif webhookType == 'CommissionReset' then
-        embed.title = '🔄 Compteur Commissions Réinitialisé'
-        embed.color = 10181046 -- Violet
-        embed.description = 'Le compteur de commissions a été réinitialisé'
+        embed.title = '🗑️ Toutes les Factures Supprimées'
+        embed.color = 15158332 -- Rouge
+        embed.description = 'Toutes les factures de l\'entreprise ont été supprimées'
         embed.fields = {
             { name = '🏢 Entreprise', value = data.job, inline = true },
-            { name = '👤 Réinitialisé par', value = data.resetBy, inline = true },
+            { name = '👤 Supprimé par', value = data.resetBy, inline = true },
+            { name = '📊 Factures supprimées', value = tostring(data.affectedInvoices or 0), inline = true },
         }
 
     elseif webhookType == 'VATReset' then
-        embed.title = '🔄 Compteur TVA Réinitialisé'
-        embed.color = 10181046 -- Violet
-        embed.description = 'Le compteur de TVA a été réinitialisé'
+        embed.title = '🗑️ Toutes les Factures Supprimées'
+        embed.color = 15158332 -- Rouge
+        embed.description = 'Toutes les factures de l\'entreprise ont été supprimées'
         embed.fields = {
             { name = '🏢 Entreprise', value = data.job, inline = true },
-            { name = '👤 Réinitialisé par', value = data.resetBy, inline = true },
+            { name = '👤 Supprimé par', value = data.resetBy, inline = true },
+            { name = '📊 Factures supprimées', value = tostring(data.affectedInvoices or 0), inline = true },
         }
 
     elseif webhookType == 'EmployeeCommissionReset' then
-        embed.title = '🔄 Commission Employé Réinitialisée'
-        embed.color = 10181046 -- Violet
-        embed.description = 'Commission individuelle d\'un employé réinitialisée'
+        embed.title = '🗑️ Factures Employé Supprimées'
+        embed.color = 10038562 -- Orange
+        embed.description = 'Toutes les factures d\'un employé ont été supprimées'
         embed.fields = {
             { name = '🏢 Entreprise', value = data.job, inline = true },
             { name = '👤 Employé', value = data.employee, inline = true },
-            { name = '👤 Réinitialisé par', value = data.resetBy, inline = true },
+            { name = '👤 Supprimé par', value = data.resetBy, inline = true },
+            { name = '📊 Factures supprimées', value = tostring(data.affectedInvoices or 0), inline = true },
         }
 
     else

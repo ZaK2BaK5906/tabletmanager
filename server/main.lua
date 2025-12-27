@@ -450,39 +450,45 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
     })
 end)
 
--- Reset compteur commissions (boss only)
+-- Reset TOUTES les factures de l'entreprise (boss only) - utilisé par les boutons dans Historique
 RegisterNetEvent('tablet:resetCommissions')
 AddEventHandler('tablet:resetCommissions', function()
     local _source = source
-    print('[TABLET DEBUG] Reset commissions event received from source:', _source)
+    print('[TABLET DEBUG] Reset ALL invoices event received from source:', _source)
 
     local xPlayer = ESX.GetPlayerFromId(_source)
     if not xPlayer or not IsBoss(xPlayer) then
-        print('[TABLET DEBUG] Reset commissions rejected - not boss')
+        print('[TABLET DEBUG] Reset rejected - not boss')
         return
     end
 
     local job = xPlayer.job.name
-    print('[TABLET DEBUG] Resetting commissions for job:', job)
+    print('[TABLET DEBUG] Deleting ALL invoices for job:', job)
 
-    -- Mettre à jour la date de reset
-    MySQL.update.await([[
-        UPDATE company_profiles
-        SET commission_reset_date = NOW()
-        WHERE job_name = ?
-    ]], {job})
+    -- Compter le nombre de factures avant suppression
+    local count = MySQL.scalar.await('SELECT COUNT(*) FROM tablet_invoices WHERE job = ?', {job}) or 0
 
-    print('[TABLET DEBUG] Commission reset date updated in DB')
-    ShowNotification(_source, '✅ Compteur commissions réinitialisé', 'success')
+    -- Supprimer TOUTES les factures du job
+    MySQL.query('DELETE FROM tablet_invoices WHERE job = ?', {job})
+
+    print('[TABLET DEBUG] Deleted', count, 'invoices')
+    ShowNotification(_source, '✅ Toutes les factures ont été supprimées (' .. count .. ')', 'success')
 
     -- Webhook
     SendWebhook('CommissionReset', {
         job = job,
-        resetBy = xPlayer.getName()
+        resetBy = xPlayer.getName(),
+        affectedInvoices = count
     })
+
+    -- Rafraîchir les stats pour tous les employés du job
+    local xPlayers = ESX.GetExtendedPlayers('job', job)
+    for _, player in pairs(xPlayers) do
+        TriggerClientEvent('tablet:refreshStats', player.source)
+    end
 end)
 
--- Reset compteur VAT (boss only)
+-- Reset VAT = même chose que reset commissions (supprime toutes les factures)
 RegisterNetEvent('tablet:resetVAT')
 AddEventHandler('tablet:resetVAT', function()
     local _source = source
@@ -491,23 +497,29 @@ AddEventHandler('tablet:resetVAT', function()
 
     local job = xPlayer.job.name
 
-    -- Mettre à jour la date de reset
-    MySQL.update.await([[
-        UPDATE company_profiles
-        SET vat_reset_date = NOW()
-        WHERE job_name = ?
-    ]], {job})
+    -- Compter le nombre de factures avant suppression
+    local count = MySQL.scalar.await('SELECT COUNT(*) FROM tablet_invoices WHERE job = ?', {job}) or 0
 
-    ShowNotification(_source, '✅ Compteur TVA réinitialisé', 'success')
+    -- Supprimer TOUTES les factures du job
+    MySQL.query('DELETE FROM tablet_invoices WHERE job = ?', {job})
+
+    ShowNotification(_source, '✅ Toutes les factures ont été supprimées (' .. count .. ')', 'success')
 
     -- Webhook
     SendWebhook('VATReset', {
         job = job,
-        resetBy = xPlayer.getName()
+        resetBy = xPlayer.getName(),
+        affectedInvoices = count
     })
+
+    -- Rafraîchir les stats pour tous les employés du job
+    local xPlayers = ESX.GetExtendedPlayers('job', job)
+    for _, player in pairs(xPlayers) do
+        TriggerClientEvent('tablet:refreshStats', player.source)
+    end
 end)
 
--- Reset commission individuelle d'un employé (boss only)
+-- Reset factures individuelles d'un employé (boss only) - supprime ses factures
 RegisterNetEvent('tablet:resetEmployeeCommission')
 AddEventHandler('tablet:resetEmployeeCommission', function(employeeIdentifier)
     local _source = source
@@ -516,23 +528,36 @@ AddEventHandler('tablet:resetEmployeeCommission', function(employeeIdentifier)
 
     local job = xPlayer.job.name
 
-    print('[TABLET DEBUG] Resetting commission for employee:', employeeIdentifier, 'in job:', job)
+    print('[TABLET DEBUG] Deleting invoices for employee:', employeeIdentifier, 'in job:', job)
 
-    -- Insérer ou mettre à jour le tracking
-    MySQL.query.await([[
-        INSERT INTO employee_financial_tracking (job, employee_identifier, commission_reset_date)
-        VALUES (?, ?, NOW())
-        ON DUPLICATE KEY UPDATE commission_reset_date = NOW()
+    -- Compter le nombre de factures avant suppression
+    local count = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM tablet_invoices
+        WHERE job = ? AND employee_identifier = ?
+    ]], {job, employeeIdentifier}) or 0
+
+    -- Supprimer TOUTES les factures de cet employé
+    MySQL.query([[
+        DELETE FROM tablet_invoices
+        WHERE job = ? AND employee_identifier = ?
     ]], {job, employeeIdentifier})
 
-    ShowNotification(_source, '✅ Commission employé réinitialisée', 'success')
+    print('[TABLET DEBUG] Deleted', count, 'invoices for employee')
+    ShowNotification(_source, '✅ Factures de l\'employé supprimées (' .. count .. ')', 'success')
 
     -- Webhook
     SendWebhook('EmployeeCommissionReset', {
         job = job,
         employee = employeeIdentifier,
-        resetBy = xPlayer.getName()
+        resetBy = xPlayer.getName(),
+        affectedInvoices = count
     })
+
+    -- Rafraîchir les stats pour tous les employés du job
+    local xPlayers = ESX.GetExtendedPlayers('job', job)
+    for _, player in pairs(xPlayers) do
+        TriggerClientEvent('tablet:refreshStats', player.source)
+    end
 end)
 
 -- Données audit pour DOJ (accès complet à toutes les sociétés)
