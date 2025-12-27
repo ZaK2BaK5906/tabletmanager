@@ -2,6 +2,7 @@ let tabletData = {
     job: '',
     userName: '',
     isBoss: false,
+    hasAuditAccess: false,
     commission: 0,
     products: [],
     partnerships: [],
@@ -10,7 +11,8 @@ let tabletData = {
     currentDiscount: 0,
     currentPartnership: null,
     invoiceType: 'citizen', // 'citizen' or 'company'
-    taxRate: 16.75 // Default, sera mis à jour par le serveur
+    taxRate: 16.75, // Default, sera mis à jour par le serveur
+    nearbyPlayers: [] // Joueurs proches
 };
 
 // Utilitaires
@@ -59,11 +61,13 @@ function openTablet(data) {
     tabletData.job = data.job;
     tabletData.userName = data.userName;
     tabletData.isBoss = data.isBoss;
+    tabletData.hasAuditAccess = data.hasAuditAccess || false;
     tabletData.commission = data.commission || 0;
     tabletData.products = data.products || [];
     tabletData.partnerships = data.partnerships || [];
     tabletData.companies = data.companies || [];
     tabletData.taxRate = data.taxRate || 20.0;
+    tabletData.nearbyPlayers = data.nearbyPlayers || [];
 
     document.getElementById('companyName').textContent = data.jobLabel || data.job;
     document.getElementById('userName').textContent = data.userName;
@@ -81,6 +85,7 @@ function openTablet(data) {
     loadProductsSelect();
     loadPartnershipsSelect();
     loadCompaniesSelect();
+    loadNearbyPlayersSelect();
 
     // Setup invoice type selector
     setupInvoiceTypeSelector();
@@ -194,6 +199,32 @@ function loadCompaniesSelect() {
         select.appendChild(option);
     });
 }
+
+function loadNearbyPlayersSelect() {
+    const select = document.getElementById('nearbyPlayerSelect');
+    select.innerHTML = '<option value="">Sélectionner un joueur proche...</option>';
+
+    tabletData.nearbyPlayers.forEach(player => {
+        const option = document.createElement('option');
+        option.value = player.id;
+        option.textContent = `${player.name} (ID: ${player.id})`;
+        option.dataset.id = player.id;
+        option.dataset.name = player.name;
+        select.appendChild(option);
+    });
+}
+
+// Event listener pour sélection joueur proche
+document.getElementById('nearbyPlayerSelect').addEventListener('change', (e) => {
+    const selectedId = e.target.value;
+    const selectedOption = e.target.options[e.target.selectedIndex];
+
+    if (selectedId) {
+        // Auto-remplir l'ID et le nom
+        document.getElementById('citizenId').value = selectedId;
+        document.getElementById('citizenName').value = selectedOption.dataset.name || '';
+    }
+});
 
 function setupInvoiceTypeSelector() {
     const typeBtns = document.querySelectorAll('.type-btn');
@@ -394,7 +425,10 @@ function calculateInvoiceSummary() {
 // Créer facture
 document.getElementById('createInvoiceBtn').addEventListener('click', () => {
     if (tabletData.invoiceItems.length === 0) {
-        alert('Veuillez ajouter au moins un article');
+        // Validation visuelle sans bloquer
+        const itemsContainer = document.getElementById('invoiceItems');
+        itemsContainer.style.border = '2px solid #ef4444';
+        setTimeout(() => { itemsContainer.style.border = ''; }, 2000);
         return;
     }
 
@@ -412,7 +446,17 @@ document.getElementById('createInvoiceBtn').addEventListener('click', () => {
         const citizenName = document.getElementById('citizenName').value || '';
 
         if (!citizenId) {
-            alert('Veuillez entrer l\'ID du joueur');
+            // Validation visuelle
+            const idInput = document.getElementById('citizenId');
+            const selectInput = document.getElementById('nearbyPlayerSelect');
+            idInput.style.border = '2px solid #ef4444';
+            selectInput.style.border = '2px solid #ef4444';
+            idInput.placeholder = '⚠️ ID requis ou sélectionner un joueur proche';
+            setTimeout(() => {
+                idInput.style.border = '';
+                selectInput.style.border = '';
+                idInput.placeholder = 'Ex: 12';
+            }, 2000);
             return;
         }
 
@@ -422,7 +466,10 @@ document.getElementById('createInvoiceBtn').addEventListener('click', () => {
         const companyName = document.getElementById('companySelect').value;
 
         if (!companyName) {
-            alert('Veuillez sélectionner une entreprise');
+            // Validation visuelle
+            const companySelect = document.getElementById('companySelect');
+            companySelect.style.border = '2px solid #ef4444';
+            setTimeout(() => { companySelect.style.border = ''; }, 2000);
             return;
         }
 

@@ -31,6 +31,46 @@ function IsBoss()
     return false
 end
 
+-- Vérifier si le joueur a accès audit (DOJ)
+function HasAuditAccess()
+    local PlayerData = ESX.GetPlayerData()
+    if not PlayerData.job then return false end
+
+    for _, job in ipairs(Config.AuditJobs) do
+        if PlayerData.job.name == job then
+            return true
+        end
+    end
+    return false
+end
+
+-- Récupérer les joueurs proches
+function GetNearbyPlayers()
+    local playerPed = PlayerPedId()
+    local playerCoords = GetEntityCoords(playerPed)
+    local nearbyPlayers = {}
+
+    local players = GetActivePlayers()
+    for _, playerId in ipairs(players) do
+        if playerId ~= PlayerId() then
+            local targetPed = GetPlayerPed(playerId)
+            local targetCoords = GetEntityCoords(targetPed)
+            local distance = #(playerCoords - targetCoords)
+
+            if distance <= Config.NearbyPlayerRadius then
+                local serverID = GetPlayerServerId(playerId)
+                local playerName = GetPlayerName(playerId)
+                table.insert(nearbyPlayers, {
+                    id = serverID,
+                    name = playerName
+                })
+            end
+        end
+    end
+
+    return nearbyPlayers
+end
+
 -- Ouvrir la tablette
 function OpenTablet()
     if isTabletOpen then return end
@@ -50,6 +90,8 @@ function OpenTablet()
 
     isTabletOpen = true
     local isBoss = IsBoss()
+    local hasAudit = HasAuditAccess()
+    local nearbyPlayers = GetNearbyPlayers()
 
     -- Récupérer les données du joueur
     ESX.TriggerServerCallback('tablet:getPlayerData', function(playerData)
@@ -64,11 +106,13 @@ function OpenTablet()
             jobLabel = PlayerData.job.label,
             userName = GetPlayerName(PlayerId()),
             isBoss = isBoss,
+            hasAuditAccess = hasAudit,
             commission = playerData.commission or Config.DefaultCommission,
             products = playerData.products or {},
             partnerships = playerData.partnerships or {},
             companies = playerData.companies or {},
-            taxRate = Config.TaxRate
+            taxRate = Config.TaxRate,
+            nearbyPlayers = nearbyPlayers
         })
 
         SetNuiFocus(true, true)

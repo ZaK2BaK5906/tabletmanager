@@ -6,6 +6,12 @@ Config.Locale = 'fr'
 -- Permissions
 Config.BossGrades = { 'boss', 'patron', 'chief' } -- Grades considérés comme patron
 
+-- Jobs avec accès audit complet (DOJ, etc.)
+Config.AuditJobs = { 'doj', 'government' } -- Jobs qui peuvent voir toutes les sociétés
+
+-- Rayon de détection des joueurs proches (en mètres)
+Config.NearbyPlayerRadius = 5.0
+
 -- Commission par défaut pour les nouveaux employés (%)
 Config.DefaultCommission = 5.0
 
