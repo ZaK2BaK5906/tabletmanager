@@ -244,6 +244,32 @@ RegisterNUICallback('resetEmployeeCommission', function(data, cb)
     cb('ok')
 end)
 
+-- Notes de l'entreprise
+RegisterNUICallback('getCompanyNotes', function(data, cb)
+    ESX.TriggerServerCallback('tablet:getCompanyNotes', function(notes)
+        SendNUIMessage({
+            action = 'receiveCompanyNotes',
+            notes = notes
+        })
+    end)
+    cb('ok')
+end)
+
+RegisterNUICallback('addCompanyNote', function(data, cb)
+    TriggerServerEvent('tablet:addCompanyNote', data.title, data.content)
+    cb('ok')
+end)
+
+RegisterNUICallback('updateCompanyNote', function(data, cb)
+    TriggerServerEvent('tablet:updateCompanyNote', data.noteId, data.title, data.content)
+    cb('ok')
+end)
+
+RegisterNUICallback('deleteCompanyNote', function(data, cb)
+    TriggerServerEvent('tablet:deleteCompanyNote', data.noteId)
+    cb('ok')
+end)
+
 RegisterNUICallback('getAuditData', function(data, cb)
     ESX.TriggerServerCallback('tablet:getAuditData', function(auditData)
         SendNUIMessage({

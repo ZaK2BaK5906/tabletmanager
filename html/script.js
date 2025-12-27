@@ -107,6 +107,7 @@ function openTablet(data) {
     loadPartnershipsSelect();
     loadCompaniesSelect();
     loadNearbyPlayersSelect();
+    loadCompanyNotes();
 
     // Setup invoice type selector
     setupInvoiceTypeSelector();
@@ -1248,6 +1249,11 @@ window.addEventListener('message', (event) => {
         if (adminNav && adminNav.classList.contains('active')) {
             loadEmployeeStats();
         }
+    } else if (data.action === 'refreshNotes') {
+        // Rafraîchir les notes de l'entreprise
+        loadCompanyNotes();
+    } else if (data.action === 'receiveCompanyNotes') {
+        receiveCompanyNotes(data.notes);
     } else if (data.action === 'refreshInvoices') {
         // Rafraîchir uniquement les factures sans fermer la tablette
         loadQuickStats();

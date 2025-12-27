@@ -31,6 +31,7 @@ files {
     'html/style.css',
     'html/script.js',
     'html/vehicles.js',
+    'html/notes.js',
     'html/employment.html',
     'html/employment-style.css',
     'html/employment.js'
