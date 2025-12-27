@@ -40,6 +40,12 @@ RegisterNUICallback('closeEmployment', function(data, cb)
     cb('ok')
 end)
 
+-- Ouvrir le menu emploi depuis la tablette (bouton Indood)
+RegisterNUICallback('openEmployment', function(data, cb)
+    cb('ok')
+    OpenEmploymentMenu()
+end)
+
 -- Soumettre une candidature
 RegisterNUICallback('submitApplication', function(data, cb)
     TriggerServerEvent('employment:submitApplication', data)
