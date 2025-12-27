@@ -346,6 +346,34 @@ AddEventHandler('employment:processApplication', function(data)
     end, _source)
 end)
 
+-- Supprimer une candidature (Boss)
+RegisterNetEvent('employment:deleteApplication')
+AddEventHandler('employment:deleteApplication', function(applicationId)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer then return end
+
+    if not IsBossFromSource(_source) then
+        ShowNotification(_source, '❌ Vous n\'êtes pas autorisé', 'error')
+        return
+    end
+
+    -- Récupérer les infos avant suppression
+    local application = MySQL.single.await('SELECT * FROM job_applications WHERE id = ?', {applicationId})
+
+    if not application then return end
+
+    -- Supprimer la candidature
+    MySQL.query('DELETE FROM job_applications WHERE id = ?', {applicationId})
+
+    ShowNotification(_source, '✅ Candidature supprimée', 'success')
+
+    -- Rafraîchir les candidatures pour le patron
+    ESX.TriggerServerCallback('employment:getApplications', function(applications)
+        TriggerClientEvent('employment:refreshApplications', _source, applications)
+    end, _source)
+end)
+
 -- Broadcast update des entreprises à tous les joueurs
 function BroadcastCompaniesUpdate()
     local jobs = ESX.GetJobs()

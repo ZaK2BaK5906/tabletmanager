@@ -384,16 +384,19 @@ function renderApplications() {
                     <i class="fa-solid fa-calendar"></i> ${formatDate(app.created_at)}
                 </div>
             </div>
-            ${app.status === 'pending' ? `
-                <div class="application-actions">
+            <div class="application-actions">
+                ${app.status === 'pending' ? `
                     <button class="btn-accept" onclick="processApplication(${app.id}, 'accepted')">
                         <i class="fa-solid fa-check"></i> Accepter
                     </button>
                     <button class="btn-reject" onclick="processApplication(${app.id}, 'rejected')">
                         <i class="fa-solid fa-times"></i> Refuser
                     </button>
-                </div>
-            ` : ''}
+                ` : ''}
+                <button class="btn-delete" onclick="deleteApplication(${app.id})" style="background: #ef4444;">
+                    <i class="fa-solid fa-trash"></i> Supprimer
+                </button>
+            </div>
         `;
 
         container.appendChild(card);
@@ -402,6 +405,10 @@ function renderApplications() {
 
 function processApplication(appId, status) {
     postData('processApplication', { applicationId: appId, status });
+}
+
+function deleteApplication(appId) {
+    postData('deleteApplication', { applicationId: appId });
 }
 
 // Application status filter

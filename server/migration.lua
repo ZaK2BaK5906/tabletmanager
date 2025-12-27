@@ -78,6 +78,26 @@ CreateThread(function()
         print("^2[Tablet Manager]^7 Colonnes de reset financier ajoutées ✓")
     end
 
+    -- Ajouter colonne stock à vehicles si elle n'existe pas
+    local hasVehicleStock = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'vehicles'
+        AND COLUMN_NAME = 'stock'
+    ]])
+
+    if hasVehicleStock == 0 then
+        MySQL.query([[
+            ALTER TABLE vehicles
+            ADD COLUMN stock INT DEFAULT 5
+        ]])
+        -- Stock à 50 pour véhicules gratuits
+        MySQL.query([[
+            UPDATE vehicles SET stock = 50 WHERE model IN ('club', 'panto', 'issi2')
+        ]])
+        print("^2[Tablet Manager]^7 Colonne stock ajoutée à vehicles ✓")
+    end
+
     print("^2[Tablet Manager]^7 Tables vérifiées ✓")
 
     -- Initialiser les profils pour les jobs existants
