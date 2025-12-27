@@ -232,6 +232,12 @@ RegisterNUICallback('resetVAT', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('resetEmployeeCommission', function(data, cb)
+    print('[TABLET DEBUG] NUI Callback resetEmployeeCommission received for:', data.identifier)
+    TriggerServerEvent('tablet:resetEmployeeCommission', data.identifier)
+    cb('ok')
+end)
+
 RegisterNUICallback('getAuditData', function(data, cb)
     ESX.TriggerServerCallback('tablet:getAuditData', function(auditData)
         SendNUIMessage({

@@ -826,24 +826,22 @@ window.receiveEmployeeStats = function(stats) {
             <thead>
                 <tr style="background: #1e293b; border-bottom: 2px solid #334155;">
                     <th style="padding: 12px; text-align: left; font-weight: 600;">Employé</th>
-                    <th style="padding: 12px; text-align: center; font-weight: 600;">Commission</th>
-                    <th style="padding: 12px; text-align: center; font-weight: 600;">Factures</th>
-                    <th style="padding: 12px; text-align: right; font-weight: 600;">Total HT</th>
-                    <th style="padding: 12px; text-align: right; font-weight: 600;">Total TTC</th>
-                    <th style="padding: 12px; text-align: right; font-weight: 600;">Commission Gagnée</th>
+                    <th style="padding: 12px; text-align: center; font-weight: 600;">Taux</th>
+                    <th style="padding: 12px; text-align: center; font-weight: 600;">Factures (mois)</th>
+                    <th style="padding: 12px; text-align: right; font-weight: 600;">Total HT (mois)</th>
+                    <th style="padding: 12px; text-align: right; font-weight: 600;">Comm. en attente</th>
+                    <th style="padding: 12px; text-align: center; font-weight: 600;">Action</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
     let totalHT = 0;
-    let totalTTC = 0;
-    let totalCommission = 0;
+    let totalPending = 0;
 
     stats.forEach((employee, index) => {
         totalHT += employee.total_ht;
-        totalTTC += employee.total_ttc;
-        totalCommission += employee.total_commission;
+        totalPending += employee.pending_commission;
 
         const bgColor = index % 2 === 0 ? '#0f172a' : '#1e293b';
         html += `
@@ -852,8 +850,13 @@ window.receiveEmployeeStats = function(stats) {
                 <td style="padding: 12px; text-align: center;">${formatPercent(employee.commission_percent)}</td>
                 <td style="padding: 12px; text-align: center;">${employee.invoice_count}</td>
                 <td style="padding: 12px; text-align: right;">${formatCurrency(employee.total_ht)}</td>
-                <td style="padding: 12px; text-align: right;">${formatCurrency(employee.total_ttc)}</td>
-                <td style="padding: 12px; text-align: right; color: #10b981; font-weight: 600;">${formatCurrency(employee.total_commission)}</td>
+                <td style="padding: 12px; text-align: right; color: #f59e0b; font-weight: 600;">${formatCurrency(employee.pending_commission)}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <button onclick="resetEmployeeCommission('${employee.identifier}')"
+                            style="background: #475569; border: 1px solid #64748b; color: #e2e8f0; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                        <i class="fa-solid fa-rotate-right"></i> Reset
+                    </button>
+                </td>
             </tr>
         `;
     });
@@ -863,14 +866,25 @@ window.receiveEmployeeStats = function(stats) {
             <tr style="background: #334155; border-top: 2px solid #475569; font-weight: 700;">
                 <td style="padding: 12px;" colspan="3">TOTAL</td>
                 <td style="padding: 12px; text-align: right;">${formatCurrency(totalHT)}</td>
-                <td style="padding: 12px; text-align: right;">${formatCurrency(totalTTC)}</td>
-                <td style="padding: 12px; text-align: right; color: #10b981;">${formatCurrency(totalCommission)}</td>
+                <td style="padding: 12px; text-align: right; color: #f59e0b;">${formatCurrency(totalPending)}</td>
+                <td style="padding: 12px;"></td>
             </tr>
         </tbody>
         </table>
     `;
 
     container.innerHTML = html;
+};
+
+// Reset commission individuelle d'un employé
+window.resetEmployeeCommission = function(identifier) {
+    console.log('[DEBUG] Reset employee commission for:', identifier);
+    postData('resetEmployeeCommission', { identifier: identifier });
+
+    // Rafraîchir après 1.5s
+    setTimeout(() => {
+        loadEmployeeStats();
+    }, 1500);
 };
 
 // Reset sales

@@ -245,6 +245,24 @@ ESX.RegisterServerCallback('tablet:getEmployeeStats', function(source, cb)
         -- Commission actuelle
         local commission = GetEmployeeCommission(job, identifier)
 
+        -- Récupérer la date de dernier reset pour cet employé
+        local resetData = MySQL.single.await([[
+            SELECT commission_reset_date
+            FROM employee_financial_tracking
+            WHERE job = ? AND employee_identifier = ?
+        ]], {job, identifier})
+
+        local resetDate = (resetData and resetData.commission_reset_date) or '1970-01-01'
+
+        -- Commissions en attente depuis le dernier reset
+        local pendingCommission = MySQL.scalar.await([[
+            SELECT COALESCE(SUM(commission_amount), 0)
+            FROM tablet_invoices
+            WHERE job = ? AND employee_identifier = ? AND status = 'paid'
+            AND commission_amount > 0
+            AND paid_at > ?
+        ]], {job, identifier, resetDate}) or 0
+
         table.insert(employeeStats, {
             identifier = identifier,
             name = name,
@@ -252,7 +270,8 @@ ESX.RegisterServerCallback('tablet:getEmployeeStats', function(source, cb)
             invoice_count = monthStats and monthStats.invoice_count or 0,
             total_ht = monthStats and tonumber(monthStats.total_ht) or 0,
             total_ttc = monthStats and tonumber(monthStats.total_ttc) or 0,
-            total_commission = monthStats and tonumber(monthStats.total_commission) or 0
+            total_commission = monthStats and tonumber(monthStats.total_commission) or 0,
+            pending_commission = tonumber(pendingCommission)
         })
     end
 
@@ -484,6 +503,34 @@ AddEventHandler('tablet:resetVAT', function()
     -- Webhook
     SendWebhook('VATReset', {
         job = job,
+        resetBy = xPlayer.getName()
+    })
+end)
+
+-- Reset commission individuelle d'un employé (boss only)
+RegisterNetEvent('tablet:resetEmployeeCommission')
+AddEventHandler('tablet:resetEmployeeCommission', function(employeeIdentifier)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer or not IsBoss(xPlayer) then return end
+
+    local job = xPlayer.job.name
+
+    print('[TABLET DEBUG] Resetting commission for employee:', employeeIdentifier, 'in job:', job)
+
+    -- Insérer ou mettre à jour le tracking
+    MySQL.query.await([[
+        INSERT INTO employee_financial_tracking (job, employee_identifier, commission_reset_date)
+        VALUES (?, ?, NOW())
+        ON DUPLICATE KEY UPDATE commission_reset_date = NOW()
+    ]], {job, employeeIdentifier})
+
+    ShowNotification(_source, '✅ Commission employé réinitialisée', 'success')
+
+    -- Webhook
+    SendWebhook('EmployeeCommissionReset', {
+        job = job,
+        employee = employeeIdentifier,
         resetBy = xPlayer.getName()
     })
 end)
