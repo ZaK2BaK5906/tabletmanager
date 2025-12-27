@@ -646,6 +646,9 @@ window.receiveStats = function(stats) {
     document.getElementById('statInvoicesCount').textContent = stats.invoiceCount || 0;
     document.getElementById('statCommission').textContent = formatCurrency(stats.commission || 0);
     document.getElementById('statCommissionRate').textContent = formatPercent(tabletData.commission);
+
+    // Create charts
+    createStatsCharts(stats);
 };
 
 // Audit (DOJ)
@@ -1250,4 +1253,131 @@ function updateWelcomeGreeting() {
 
     document.getElementById('welcomeGreeting').textContent = greeting;
     document.getElementById('welcomeMotivation').textContent = motivation;
+}
+
+// Charts Functions
+let revenueChartInstance = null;
+let performanceChartInstance = null;
+
+function createStatsCharts(stats) {
+    // Destroy existing charts
+    if (revenueChartInstance) {
+        revenueChartInstance.destroy();
+    }
+    if (performanceChartInstance) {
+        performanceChartInstance.destroy();
+    }
+
+    const revenue = stats.revenue || 0;
+    const commission = stats.commission || 0;
+    const netRevenue = revenue - commission;
+
+    // Revenue Pie Chart (Camembert)
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    revenueChartInstance = new Chart(revenueCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Revenu Net', 'Commissions'],
+            datasets: [{
+                data: [netRevenue, commission],
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',  // Blue
+                    'rgba(168, 85, 247, 0.8)'   // Purple
+                ],
+                borderColor: [
+                    'rgba(59, 130, 246, 1)',
+                    'rgba(168, 85, 247, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#e2e8f0',
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            return label + ': ' + formatCurrency(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Performance Bar Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    performanceChartInstance = new Chart(performanceCtx, {
+        type: 'bar',
+        data: {
+            labels: ['CA Total', 'Commissions', 'Factures'],
+            datasets: [{
+                label: 'Performance',
+                data: [revenue, commission, stats.invoiceCount || 0],
+                backgroundColor: [
+                    'rgba(34, 197, 94, 0.8)',   // Green
+                    'rgba(251, 191, 36, 0.8)',  // Yellow
+                    'rgba(59, 130, 246, 0.8)'   // Blue
+                ],
+                borderColor: [
+                    'rgba(34, 197, 94, 1)',
+                    'rgba(251, 191, 36, 1)',
+                    'rgba(59, 130, 246, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#94a3b8'
+                    },
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#94a3b8'
+                    },
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y;
+                            if (context.dataIndex === 2) {
+                                return 'Factures: ' + value;
+                            }
+                            return context.label + ': ' + formatCurrency(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
 }

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="employment-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <!-- Menu Factures -->
@@ -262,6 +263,8 @@
                     <h1>Statistiques</h1>
                     <p>Analyse de vos performances mensuelles</p>
                 </div>
+
+                <!-- Stats Summary -->
                 <div class="stats-grid">
                     <div class="stat-box">
                         <div class="stat-title">CA du Mois</div>
@@ -278,6 +281,26 @@
                     <div class="stat-box">
                         <div class="stat-title">Taux Commission</div>
                         <div class="stat-big-value" id="statCommissionRate">0%</div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <i class="fa-solid fa-chart-pie"></i> Répartition des Revenus
+                        </h3>
+                        <div class="chart-wrapper">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <i class="fa-solid fa-chart-bar"></i> Performance Mensuelle
+                        </h3>
+                        <div class="chart-wrapper">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
