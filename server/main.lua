@@ -591,6 +591,8 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
                 ShowNotification(employeePlayer.source, '💰 Facture #'..invoiceId..' payée par '..invoice.target_company..'! Commission: '..tonumber(invoice.commission_amount)..'€', 'info')
                 -- Rafraîchir les stats de l'employé dans sa tablette
                 TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
+                -- Rafraîchir la liste des factures de l'employé
+                TriggerClientEvent('tablet:refreshInvoices', employeePlayer.source)
             end
 
             -- Webhook
@@ -619,6 +621,8 @@ RegisterNetEvent('tablet:payInvoice', function(invoiceId)
         ShowNotification(employeePlayer.source, '💰 Facture #'..invoiceId..' payée par le client! Commission: '..tonumber(invoice.commission_amount)..'€', 'info')
         -- Rafraîchir les stats de l'employé dans sa tablette
         TriggerClientEvent('tablet:refreshStats', employeePlayer.source)
+        -- Rafraîchir la liste des factures de l'employé
+        TriggerClientEvent('tablet:refreshInvoices', employeePlayer.source)
     end
 
     -- Webhook

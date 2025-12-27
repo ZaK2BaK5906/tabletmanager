@@ -149,6 +149,20 @@ function renderCompanies() {
             </div>
         `;
 
+        // Add click event to toggle card expansion
+        const header = card.querySelector('.job-card-header');
+        header.addEventListener('click', (e) => {
+            card.classList.toggle('expanded');
+        });
+
+        // Prevent button clicks from toggling the card
+        const applyBtn = card.querySelector('.btn-apply');
+        if (applyBtn) {
+            applyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
         container.appendChild(card);
     });
 }
