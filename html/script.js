@@ -1108,6 +1108,13 @@ window.addEventListener('message', (event) => {
         if (invoicesNav && invoicesNav.classList.contains('active')) {
             loadInvoiceHistory();
         }
+    } else if (data.action === 'refreshInvoices') {
+        // Rafraîchir uniquement les factures sans fermer la tablette
+        loadQuickStats();
+        const invoicesNav = document.querySelector('.nav-item[data-page="invoices"]');
+        if (invoicesNav && invoicesNav.classList.contains('active')) {
+            loadInvoiceHistory();
+        }
     } else if (data.action === 'receiveAuditData') {
         receiveAuditData(data.data);
     }

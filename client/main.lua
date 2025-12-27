@@ -299,10 +299,9 @@ end)
 
 RegisterNetEvent('tablet:refreshInvoices')
 AddEventHandler('tablet:refreshInvoices', function()
-    -- Refermer le menu et notifier
-    SetNuiFocus(false, false)
+    -- Rafraîchir uniquement les factures sans fermer la tablette
     SendNUIMessage({
-        action = 'closeInvoiceMenu'
+        action = 'refreshInvoices'
     })
 end)
 
