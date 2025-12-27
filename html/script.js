@@ -17,7 +17,7 @@ let tabletData = {
 
 // Utilitaires
 function formatCurrency(amount) {
-    return parseFloat(amount).toFixed(2) + '€';
+    return '$' + parseFloat(amount).toFixed(2);
 }
 
 function formatPercent(value) {
@@ -1235,24 +1235,19 @@ function updateWelcomeTime() {
 
 function updateWelcomeGreeting() {
     const hour = new Date().getHours();
-    let greeting, motivation;
+    let greeting;
 
     if (hour >= 5 && hour < 12) {
         greeting = 'Bonjour !';
-        motivation = 'Excellente journée de travail à vous !';
     } else if (hour >= 12 && hour < 18) {
         greeting = 'Bon après-midi !';
-        motivation = 'Bon courage pour la suite de votre journée !';
     } else if (hour >= 18 && hour < 22) {
         greeting = 'Bonsoir !';
-        motivation = 'Bonne fin de journée de travail !';
     } else {
         greeting = 'Bonne nuit !';
-        motivation = 'Courage pour cette nuit de travail !';
     }
 
     document.getElementById('welcomeGreeting').textContent = greeting;
-    document.getElementById('welcomeMotivation').textContent = motivation;
 }
 
 // Charts Functions

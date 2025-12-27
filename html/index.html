@@ -76,42 +76,28 @@
             <div class="page active" id="page-home">
                 <div class="welcome-container">
                     <div class="welcome-header">
-                        <div class="welcome-icon">
-                            <i class="fa-solid fa-hand-wave"></i>
-                        </div>
-                        <h1 class="welcome-title">Bienvenue</h1>
+                        <h1 class="welcome-title">
+                            <i class="fa-solid fa-user-circle"></i>
+                            <span id="welcomeName">-</span>
+                        </h1>
                         <p class="welcome-subtitle" id="welcomeGreeting">Bonne journée !</p>
                     </div>
 
-                    <div class="welcome-card">
-                        <div class="welcome-info">
-                            <div class="info-row">
-                                <i class="fa-solid fa-user"></i>
-                                <div class="info-content">
-                                    <span class="info-label">Nom Complet</span>
-                                    <span class="info-value" id="welcomeName">-</span>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <i class="fa-solid fa-briefcase"></i>
-                                <div class="info-content">
-                                    <span class="info-label">Poste</span>
-                                    <span class="info-value" id="welcomeJob">-</span>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <i class="fa-solid fa-clock"></i>
-                                <div class="info-content">
-                                    <span class="info-label">Heure Actuelle</span>
-                                    <span class="info-value" id="welcomeTime">--:--</span>
-                                </div>
+                    <div class="welcome-grid">
+                        <div class="welcome-stat">
+                            <i class="fa-solid fa-briefcase"></i>
+                            <div>
+                                <span class="stat-label">Poste</span>
+                                <span class="stat-value" id="welcomeJob">-</span>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="welcome-message">
-                        <i class="fa-solid fa-lightbulb"></i>
-                        <p id="welcomeMotivation">Bon courage pour votre journée de travail !</p>
+                        <div class="welcome-stat">
+                            <i class="fa-solid fa-clock"></i>
+                            <div>
+                                <span class="stat-label">Heure</span>
+                                <span class="stat-value" id="welcomeTime">--:--</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

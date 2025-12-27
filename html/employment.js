@@ -40,6 +40,16 @@ window.addEventListener('message', (event) => {
         closeEmployment();
     } else if (data.action === 'updateCompanies') {
         employmentData.companies = data.companies || [];
+
+        // Mettre à jour isRecruiting si on est boss
+        if (employmentData.isBoss && employmentData.currentJob) {
+            const currentCompany = employmentData.companies.find(c => c.job_name === employmentData.currentJob);
+            if (currentCompany) {
+                employmentData.isRecruiting = currentCompany.is_recruiting;
+                updateRecruitmentButton();
+            }
+        }
+
         renderCompanies();
     } else if (data.action === 'updateApplications') {
         employmentData.applications = data.applications || [];
