@@ -1161,19 +1161,21 @@ function loadTransactionHistory() {
 function resetCommissions() {
     console.log('[DEBUG] Reset Commissions clicked');
     postData('resetCommissions', {});
+    // Attendre 1.5s pour que le serveur update la DB
     setTimeout(() => {
         console.log('[DEBUG] Reloading transaction history after commission reset');
         loadTransactionHistory();
-    }, 500);
+    }, 1500);
 }
 
 function resetVAT() {
     console.log('[DEBUG] Reset VAT clicked');
     postData('resetVAT', {});
+    // Attendre 1.5s pour que le serveur update la DB
     setTimeout(() => {
         console.log('[DEBUG] Reloading transaction history after VAT reset');
         loadTransactionHistory();
-    }, 500);
+    }, 1500);
 }
 
 function receiveTransactionHistory(data) {

@@ -383,6 +383,10 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
     local pendingVAT = 0
     local projectedBalance = balance
 
+    print('[TABLET DEBUG] hasResetColumns:', hasResetColumns)
+    print('[TABLET DEBUG] commission_reset_date:', commissionResetDate)
+    print('[TABLET DEBUG] vat_reset_date:', vatResetDate)
+
     if hasResetColumns then
         -- Total commissions depuis reset
         pendingCommissions = MySQL.scalar.await([[
@@ -393,6 +397,8 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
             AND paid_at > ?
         ]], {job, commissionResetDate}) or 0
 
+        print('[TABLET DEBUG] pendingCommissions calculated:', pendingCommissions)
+
         -- Total VAT (16.75%) depuis reset
         local allInvoicesForVAT = MySQL.query.await([[
             SELECT total
@@ -401,12 +407,17 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
             AND paid_at > ?
         ]], {job, vatResetDate}) or {}
 
+        print('[TABLET DEBUG] Invoices for VAT count:', #allInvoicesForVAT)
+
         for _, inv in ipairs(allInvoicesForVAT) do
             pendingVAT = pendingVAT + (tonumber(inv.total) * 0.1675)
         end
 
+        print('[TABLET DEBUG] pendingVAT calculated:', pendingVAT)
+
         -- Solde prévisionnel après primes et VAT
         projectedBalance = balance - pendingCommissions - pendingVAT
+        print('[TABLET DEBUG] projectedBalance:', projectedBalance)
     end
 
     cb({
