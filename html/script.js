@@ -1159,15 +1159,19 @@ function loadTransactionHistory() {
 }
 
 function resetCommissions() {
+    console.log('[DEBUG] Reset Commissions clicked');
     postData('resetCommissions', {});
     setTimeout(() => {
+        console.log('[DEBUG] Reloading transaction history after commission reset');
         loadTransactionHistory();
     }, 500);
 }
 
 function resetVAT() {
+    console.log('[DEBUG] Reset VAT clicked');
     postData('resetVAT', {});
     setTimeout(() => {
+        console.log('[DEBUG] Reloading transaction history after VAT reset');
         loadTransactionHistory();
     }, 500);
 }

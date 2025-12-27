@@ -424,10 +424,16 @@ end)
 RegisterNetEvent('tablet:resetCommissions')
 AddEventHandler('tablet:resetCommissions', function()
     local _source = source
+    print('[TABLET DEBUG] Reset commissions event received from source:', _source)
+
     local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not IsBoss(xPlayer) then return end
+    if not xPlayer or not IsBoss(xPlayer) then
+        print('[TABLET DEBUG] Reset commissions rejected - not boss')
+        return
+    end
 
     local job = xPlayer.job.name
+    print('[TABLET DEBUG] Resetting commissions for job:', job)
 
     -- Mettre à jour la date de reset
     MySQL.update.await([[
@@ -436,6 +442,7 @@ AddEventHandler('tablet:resetCommissions', function()
         WHERE job_name = ?
     ]], {job})
 
+    print('[TABLET DEBUG] Commission reset date updated in DB')
     ShowNotification(_source, '✅ Compteur commissions réinitialisé', 'success')
 
     -- Webhook

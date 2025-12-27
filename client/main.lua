@@ -221,11 +221,13 @@ RegisterNUICallback('resetSales', function(data, cb)
 end)
 
 RegisterNUICallback('resetCommissions', function(data, cb)
+    print('[TABLET DEBUG] NUI Callback resetCommissions received')
     TriggerServerEvent('tablet:resetCommissions')
     cb('ok')
 end)
 
 RegisterNUICallback('resetVAT', function(data, cb)
+    print('[TABLET DEBUG] NUI Callback resetVAT received')
     TriggerServerEvent('tablet:resetVAT')
     cb('ok')
 end)
