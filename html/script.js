@@ -749,7 +749,16 @@ window.receiveAuditData = function(societies) {
 // Management Tabs
 document.querySelectorAll('.mgmt-tab').forEach(tab => {
     tab.addEventListener('click', () => {
+        // Si c'est le bouton Indeed, ouvrir le menu emploi
+        if (tab.id === 'indeedBtn') {
+            postData('openEmployment', {});
+            return;
+        }
+
         const tabName = tab.dataset.tab;
+
+        // Si pas de tab name, ignorer
+        if (!tabName) return;
 
         document.querySelectorAll('.mgmt-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');

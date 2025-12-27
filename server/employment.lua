@@ -217,6 +217,12 @@ AddEventHandler('employment:toggleRecruitment', function()
     local message = newStatus == 1 and '✅ Recrutement ouvert' or '🔒 Recrutement fermé'
     ShowNotification(_source, message, 'success')
 
+    -- Rafraîchir pour tous les joueurs AVANT d'envoyer le statut au client
+    BroadcastCompaniesUpdate()
+
+    -- Petit délai pour s'assurer que le broadcast arrive avant
+    Wait(100)
+
     -- Envoyer le nouveau statut au client
     TriggerClientEvent('employment:updateRecruitmentStatus', _source, newStatus == 1)
 
@@ -226,9 +232,6 @@ AddEventHandler('employment:toggleRecruitment', function()
         isRecruiting = newStatus == 1,
         modifiedBy = xPlayer.getName()
     })
-
-    -- Rafraîchir pour tous les joueurs
-    BroadcastCompaniesUpdate()
 end)
 
 -- Obtenir les candidatures (Boss)
