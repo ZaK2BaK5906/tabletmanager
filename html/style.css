@@ -1118,10 +1118,14 @@ h3 {
 }
 
 .transaction-summary {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    display: flex;
+    justify-content: center;
     margin-bottom: 24px;
+}
+
+.transaction-summary .summary-box {
+    max-width: 400px;
+    width: 100%;
 }
 
 .summary-box {
