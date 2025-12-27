@@ -76,6 +76,9 @@ ESX.RegisterServerCallback('employment:getCompanies', function(source, cb)
     local currentProfile = MySQL.single.await('SELECT is_recruiting FROM company_profiles WHERE job_name = ?', {currentJob})
     if currentProfile then
         isRecruiting = currentProfile.is_recruiting == 1
+        print('[EMPLOYMENT DEBUG] getCompanies - Job:', currentJob, 'DB value:', currentProfile.is_recruiting, 'Sending isRecruiting:', isRecruiting)
+    else
+        print('[EMPLOYMENT DEBUG] getCompanies - Job:', currentJob, 'No profile found, sending isRecruiting: false')
     end
 
     cb({
@@ -209,6 +212,8 @@ AddEventHandler('employment:toggleRecruitment', function()
     -- Obtenir le statut actuel ou créer le profile
     local profile = MySQL.single.await('SELECT is_recruiting FROM company_profiles WHERE job_name = ?', {job})
 
+    print('[EMPLOYMENT DEBUG] Job:', job, 'Profile exists:', profile ~= nil)
+
     if not profile then
         -- Créer le profile par défaut
         MySQL.insert.await([[
@@ -216,11 +221,19 @@ AddEventHandler('employment:toggleRecruitment', function()
             VALUES (?, ?, ?, 1)
         ]], {job, jobLabel, 'Rejoignez notre équipe !'})
         profile = { is_recruiting = 1 }
+        print('[EMPLOYMENT DEBUG] Created new profile with is_recruiting = 1')
+    else
+        print('[EMPLOYMENT DEBUG] Current is_recruiting value:', profile.is_recruiting)
     end
 
     local newStatus = profile.is_recruiting == 1 and 0 or 1
+    print('[EMPLOYMENT DEBUG] Toggling from', profile.is_recruiting, 'to', newStatus)
 
     MySQL.update.await('UPDATE company_profiles SET is_recruiting = ? WHERE job_name = ?', {newStatus, job})
+
+    -- Verify the update
+    local verify = MySQL.single.await('SELECT is_recruiting FROM company_profiles WHERE job_name = ?', {job})
+    print('[EMPLOYMENT DEBUG] After UPDATE, database has is_recruiting =', verify and verify.is_recruiting or 'NULL')
 
     local message = newStatus == 1 and '✅ Recrutement ouvert' or '🔒 Recrutement fermé'
     ShowNotification(_source, message, 'success')
