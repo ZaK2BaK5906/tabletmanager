@@ -749,9 +749,12 @@ window.receiveAuditData = function(societies) {
 // Management Tabs
 document.querySelectorAll('.mgmt-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-        // Si c'est le bouton Indeed, ouvrir le menu emploi
+        // Si c'est le bouton Indood, fermer la tablette et ouvrir le menu emploi
         if (tab.id === 'indeedBtn') {
-            postData('openEmployment', {});
+            closeTablet();
+            setTimeout(() => {
+                postData('openEmployment', {});
+            }, 100);
             return;
         }
 
