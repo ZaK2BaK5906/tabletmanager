@@ -947,6 +947,7 @@ function renderEmployeeList(employees) {
             <div class="item-actions">
                 <input type="number" class="commission-input" id="commission-${employee.identifier}" value="${employee.commission_percent}" min="0" max="100" step="0.5">
                 <button class="btn-save" onclick="updateCommission('${employee.identifier}')">Sauver</button>
+                <button class="btn-secondary" onclick="resetCommission('${employee.identifier}')">Reset</button>
             </div>
         `;
         container.appendChild(div);
@@ -960,6 +961,10 @@ function updateCommission(identifier) {
     if (commission < 0 || commission > 100) return;
 
     postData('updateCommission', { identifier, commission });
+}
+
+function resetCommission(identifier) {
+    postData('resetCommission', { identifier });
 }
 
 // Gestion Partenariats

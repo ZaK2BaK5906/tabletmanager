@@ -299,68 +299,96 @@ ESX.RegisterServerCallback('tablet:getTransactionHistory', function(source, cb)
 
     local job = xPlayer.job.name
     local societyAccount = 'society_' .. job
-
-    -- Obtenir le solde de la société
-    local accountData = MySQL.single.await('SELECT money FROM addon_account_data WHERE account_name = ?', {societyAccount})
-    local balance = accountData and tonumber(accountData.money) or 0
-
-    -- Obtenir les factures payées (crédits) du mois en cours
-    local paidInvoices = MySQL.query.await([[
-        SELECT
-            total as amount,
-            paid_at as date,
-            CONCAT('Facture #', id, ' - ', customer_name) as label
-        FROM tablet_invoices
-        WHERE job = ? AND status = 'paid'
-        AND MONTH(paid_at) = MONTH(CURRENT_DATE())
-        AND YEAR(paid_at) = YEAR(CURRENT_DATE())
-        ORDER BY paid_at DESC
-        LIMIT 50
-    ]], {job}) or {}
-
-    -- Obtenir les commissions payées (débits) du mois en cours
-    local commissions = MySQL.query.await([[
-        SELECT
-            commission_amount as amount,
-            paid_at as date,
-            CONCAT('Commission - ', employee_name) as label
-        FROM tablet_invoices
-        WHERE job = ? AND status = 'paid' AND commission_amount > 0
-        AND MONTH(paid_at) = MONTH(CURRENT_DATE())
-        AND YEAR(paid_at) = YEAR(CURRENT_DATE())
-        ORDER BY paid_at DESC
-        LIMIT 50
-    ]], {job}) or {}
-
-    -- Construire la liste des transactions
+    local balance = 0
     local transactions = {}
 
-    -- Ajouter les crédits (factures payées)
-    for _, invoice in ipairs(paidInvoices) do
-        table.insert(transactions, {
-            type = 'credit',
-            amount = tonumber(invoice.amount),
-            date = invoice.date or 'N/A',
-            label = invoice.label
-        })
+    -- Essayer d'obtenir le solde via okokBanking
+    local okokAccount = MySQL.single.await('SELECT value FROM okokBanking_societies WHERE society = ?', {societyAccount})
+    if okokAccount then
+        balance = tonumber(okokAccount.value) or 0
+
+        -- Récupérer transactions okokBanking
+        local okokTransactions = MySQL.query.await([[
+            SELECT
+                amount,
+                type,
+                date,
+                receiver,
+                sender,
+                label
+            FROM okokBanking_transactions
+            WHERE receiver LIKE ? OR sender LIKE ?
+            ORDER BY date DESC
+            LIMIT 100
+        ]], {'%'..societyAccount..'%', '%'..societyAccount..'%'}) or {}
+
+        for _, trans in ipairs(okokTransactions) do
+            local isCredit = trans.receiver and trans.receiver:find(societyAccount) ~= nil
+            table.insert(transactions, {
+                type = isCredit and 'credit' or 'debit',
+                amount = tonumber(trans.amount) or 0,
+                date = trans.date or '',
+                label = trans.label or (isCredit and 'Crédit reçu' or 'Débit effectué')
+            })
+        end
+    else
+        -- Fallback ESX addon_account_data
+        local accountData = MySQL.single.await('SELECT money FROM addon_account_data WHERE account_name = ?', {societyAccount})
+        balance = accountData and tonumber(accountData.money) or 0
+
+        -- Récupérer factures payées du mois (crédits)
+        local paidInvoices = MySQL.query.await([[
+            SELECT
+                total as amount,
+                paid_at as date,
+                CONCAT('Facture #', id, ' - ', customer_name) as label
+            FROM tablet_invoices
+            WHERE job = ? AND status = 'paid'
+            AND MONTH(paid_at) = MONTH(CURRENT_DATE())
+            AND YEAR(paid_at) = YEAR(CURRENT_DATE())
+            ORDER BY paid_at DESC
+            LIMIT 50
+        ]], {job}) or {}
+
+        for _, invoice in ipairs(paidInvoices) do
+            table.insert(transactions, {
+                type = 'credit',
+                amount = tonumber(invoice.amount),
+                date = invoice.date,
+                label = invoice.label
+            })
+        end
+
+        -- Récupérer commissions payées (débits)
+        local commissions = MySQL.query.await([[
+            SELECT
+                commission_amount as amount,
+                paid_at as date,
+                CONCAT('Commission - ', employee_name) as label
+            FROM tablet_invoices
+            WHERE job = ? AND status = 'paid' AND commission_amount > 0
+            AND MONTH(paid_at) = MONTH(CURRENT_DATE())
+            AND YEAR(paid_at) = YEAR(CURRENT_DATE())
+            ORDER BY paid_at DESC
+            LIMIT 50
+        ]], {job}) or {}
+
+        for _, comm in ipairs(commissions) do
+            table.insert(transactions, {
+                type = 'debit',
+                amount = tonumber(comm.amount),
+                date = comm.date,
+                label = comm.label
+            })
+        end
     end
 
-    -- Ajouter les débits (commissions)
-    for _, comm in ipairs(commissions) do
-        table.insert(transactions, {
-            type = 'debit',
-            amount = tonumber(comm.amount),
-            date = comm.date or 'N/A',
-            label = comm.label
-        })
-    end
-
-    -- Trier par date (plus récent en premier)
+    -- Trier par date
     table.sort(transactions, function(a, b)
-        return a.date > b.date
+        return (a.date or '') > (b.date or '')
     end)
 
-    -- Calculer les totaux
+    -- Calculer totaux
     local totalCredits = 0
     local totalDebits = 0
 
@@ -968,6 +996,43 @@ RegisterNetEvent('tablet:updateCommission', function(data)
     })
 
     ShowNotification(_source, Config.Translations['commission_updated'], 'info')
+end)
+
+-- Réinitialiser commission employé (boss only)
+RegisterNetEvent('tablet:resetCommission', function(data)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+    if not xPlayer or not IsBoss(xPlayer) then return end
+
+    local job = xPlayer.job.name
+
+    -- Récupérer l'ancienne commission
+    local oldCommission = MySQL.scalar.await('SELECT commission_percent FROM tablet_employee_commissions WHERE job = ? AND identifier = ?', {job, data.identifier}) or Config.DefaultCommission
+
+    -- Supprimer l'entrée pour forcer le retour à la valeur par défaut
+    MySQL.query('DELETE FROM tablet_employee_commissions WHERE job = ? AND identifier = ?', {job, data.identifier})
+
+    -- Notifier l'employé concerné
+    local targetPlayer = ESX.GetPlayerFromIdentifier(data.identifier)
+    local employeeName = 'Employé'
+    if targetPlayer then
+        TriggerClientEvent('tablet:updateCommission', targetPlayer.source, Config.DefaultCommission)
+        employeeName = targetPlayer.getName()
+    end
+
+    -- Webhook
+    SendWebhook('CommissionReset', {
+        job = job,
+        employeeName = employeeName,
+        oldCommission = tonumber(oldCommission),
+        newCommission = Config.DefaultCommission,
+        resetBy = xPlayer.getName()
+    })
+
+    ShowNotification(_source, '✅ Commission réinitialisée à '..Config.DefaultCommission..'%', 'success')
+
+    -- Rafraîchir les données
+    BroadcastUpdate(_source, job, 'employees')
 end)
 
 -- Ajouter un partenariat (boss only)

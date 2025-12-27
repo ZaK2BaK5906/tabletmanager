@@ -250,6 +250,11 @@ RegisterNUICallback('updateCommission', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('resetCommission', function(data, cb)
+    TriggerServerEvent('tablet:resetCommission', data)
+    cb('ok')
+end)
+
 RegisterNUICallback('addPartnership', function(data, cb)
     TriggerServerEvent('tablet:addPartnership', data)
     cb('ok')
