@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assigner un Véhicule</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        #assignVehicleMenu {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            max-height: 80vh;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .menu-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 20px;
+            color: white;
+            position: relative;
+        }
+
+        .menu-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .menu-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .menu-content {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .vehicle-list {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .vehicle-item {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .vehicle-item:hover {
+            border-color: #3b82f6;
+            transform: translateX(5px);
+        }
+
+        .vehicle-item.selected {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f1e3a 100%);
+        }
+
+        .vehicle-item.no-stock {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .vehicle-item.no-stock:hover {
+            border-color: #334155;
+            transform: none;
+        }
+
+        .vehicle-name {
+            color: #e2e8f0;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .vehicle-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .vehicle-price {
+            color: #22c55e;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .vehicle-stock {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .vehicle-stock.low {
+            color: #f59e0b;
+        }
+
+        .vehicle-stock.out {
+            color: #ef4444;
+        }
+
+        .form-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .form-group input::placeholder {
+            color: #64748b;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .selected-vehicle-info {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f1e3a 100%);
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .selected-vehicle-info h4 {
+            color: #3b82f6;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .selected-vehicle-info p {
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        /* Scrollbar */
+        .menu-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .menu-content::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        .menu-content::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        .menu-content::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div id="assignVehicleMenu">
+        <div class="menu-header">
+            <h2><i class="fa-solid fa-car"></i> Assigner un Véhicule</h2>
+            <p id="targetPlayerName">Sélectionnez un véhicule à assigner</p>
+            <button class="close-btn" onclick="closeMenu()">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div class="menu-content">
+            <div class="vehicle-list" id="vehicleList">
+                <!-- Véhicules chargés dynamiquement -->
+            </div>
+
+            <div class="form-section" id="plateSection">
+                <div class="selected-vehicle-info" id="selectedVehicleInfo"></div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-id-card"></i> Plaque d'immatriculation (optionnel)</label>
+                    <input type="text" id="plateInput" placeholder="Laissez vide pour auto-générer" maxlength="8">
+                    <p style="color: #64748b; font-size: 12px; margin-top: 5px;">
+                        <i class="fa-solid fa-info-circle"></i> Vide = plaque auto (DLR####)
+                    </p>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="backToVehicleList()">
+                        <i class="fa-solid fa-arrow-left"></i> Retour
+                    </button>
+                    <button class="btn btn-primary" onclick="confirmAssignment()">
+                        <i class="fa-solid fa-check"></i> Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedVehicle = null;
+        let targetPlayerId = null;
+        let targetPlayerName = '';
+
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+
+            if (data.action === 'openAssignVehicle') {
+                targetPlayerId = data.targetId;
+                targetPlayerName = data.targetName;
+                openMenu(data.vehicles);
+            } else if (data.action === 'closeAssignVehicle') {
+                closeMenu();
+            }
+        });
+
+        function openMenu(vehicles) {
+            document.getElementById('targetPlayerName').textContent = `Vendre à: ${targetPlayerName}`;
+
+            const list = document.getElementById('vehicleList');
+            list.innerHTML = '';
+
+            vehicles.forEach(vehicle => {
+                const stock = parseInt(vehicle.stock);
+                const hasStock = stock > 0;
+
+                let stockClass = '';
+                let stockText = '';
+
+                if (stock === 0) {
+                    stockClass = 'out';
+                    stockText = 'Rupture de stock';
+                } else if (stock <= 3) {
+                    stockClass = 'low';
+                    stockText = `Stock: ${stock}`;
+                } else {
+                    stockText = `Stock: ${stock}`;
+                }
+
+                const item = document.createElement('div');
+                item.className = `vehicle-item ${!hasStock ? 'no-stock' : ''}`;
+                item.innerHTML = `
+                    <div class="vehicle-name">${vehicle.name}</div>
+                    <div class="vehicle-info">
+                        <span class="vehicle-price">$${formatNumber(vehicle.price)}</span>
+                        <span class="vehicle-stock ${stockClass}">${stockText}</span>
+                    </div>
+                `;
+
+                if (hasStock) {
+                    item.onclick = () => selectVehicle(vehicle, item);
+                }
+
+                list.appendChild(item);
+            });
+
+            document.getElementById('assignVehicleMenu').style.display = 'block';
+        }
+
+        function selectVehicle(vehicle, element) {
+            selectedVehicle = vehicle;
+
+            // Enlever la sélection des autres
+            document.querySelectorAll('.vehicle-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+
+            element.classList.add('selected');
+
+            // Afficher le formulaire
+            document.getElementById('selectedVehicleInfo').innerHTML = `
+                <h4><i class="fa-solid fa-car"></i> ${vehicle.name}</h4>
+                <p>Prix: <strong style="color: #22c55e;">$${formatNumber(vehicle.price)}</strong></p>
+            `;
+
+            document.querySelector('.vehicle-list').style.display = 'none';
+            document.getElementById('plateSection').classList.add('active');
+        }
+
+        function backToVehicleList() {
+            document.querySelector('.vehicle-list').style.display = 'grid';
+            document.getElementById('plateSection').classList.remove('active');
+            document.getElementById('plateInput').value = '';
+        }
+
+        function confirmAssignment() {
+            if (!selectedVehicle) return;
+
+            const plate = document.getElementById('plateInput').value.trim();
+
+            fetch(`https://${GetParentResourceName()}/assignVehicleConfirm`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetId: targetPlayerId,
+                    vehicleModel: selectedVehicle.model,
+                    plate: plate || null
+                })
+            });
+
+            closeMenu();
+        }
+
+        function closeMenu() {
+            document.getElementById('assignVehicleMenu').style.display = 'none';
+            document.querySelector('.vehicle-list').style.display = 'grid';
+            document.getElementById('plateSection').classList.remove('active');
+            document.getElementById('plateInput').value = '';
+            selectedVehicle = null;
+
+            fetch(`https://${GetParentResourceName()}/closeAssignMenu`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function GetParentResourceName() {
+            return window.location.hostname === 'nui-' ? window.location.pathname.split('/')[1] : 'tabletmanager';
+        }
+
+        // ESC pour fermer
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeMenu();
+            }
+        });
+    </script>
+</body>
+</html>

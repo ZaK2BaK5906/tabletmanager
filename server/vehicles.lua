@@ -161,8 +161,8 @@ AddEventHandler('dealership:assignVehicle', function(targetId, vehicleModel, pla
         return
     end
 
-    -- Générer une plaque si non fournie
-    if not plate or plate == '' then
+    -- Générer une plaque si non fournie ou vide
+    if not plate or plate == '' or plate == 'nil' then
         plate = 'DLR' .. math.random(1000, 9999)
     end
 

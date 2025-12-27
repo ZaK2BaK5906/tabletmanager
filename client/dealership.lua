@@ -50,69 +50,44 @@ CreateThread(function()
             local targetPlayerId = NetworkGetPlayerIndexFromPed(targetPed)
             local targetId = GetPlayerServerId(targetPlayerId)
 
-            -- Ouvrir menu de sélection de véhicule
-            ESX.TriggerServerCallback('dealership:getVehicleStock', function(vehicles)
-                if vehicles and #vehicles > 0 then
-                    openVehicleAssignMenu(targetId, vehicles)
-                else
-                    ESX.ShowNotification('❌ Aucun véhicule en stock')
+            -- Récupérer le nom du joueur
+            ESX.TriggerServerCallback('tablet:getPlayerInfo', function(playerInfo)
+                if not playerInfo then
+                    ESX.ShowNotification('❌ Joueur introuvable')
+                    return
                 end
-            end)
+
+                -- Ouvrir menu de sélection de véhicule
+                ESX.TriggerServerCallback('dealership:getVehicleStock', function(vehicles)
+                    if vehicles and #vehicles > 0 then
+                        -- Ouvrir le menu NUI custom
+                        SendNUIMessage({
+                            action = 'openAssignVehicle',
+                            targetId = targetId,
+                            targetName = playerInfo.name,
+                            vehicles = vehicles
+                        })
+                        SetNuiFocus(true, true)
+                    else
+                        ESX.ShowNotification('❌ Aucun véhicule en stock')
+                    end
+                end)
+            end, targetId)
         end
     }
     })
 end)
 
--- Menu pour assigner un véhicule
-function openVehicleAssignMenu(targetId, vehicles)
-    local elements = {}
+-- Callbacks NUI pour le menu d'assignation
+RegisterNUICallback('assignVehicleConfirm', function(data, cb)
+    TriggerServerEvent('dealership:assignVehicle', data.targetId, data.vehicleModel, data.plate)
+    SetNuiFocus(false, false)
+    cb('ok')
+end)
 
-    for _, vehicle in ipairs(vehicles) do
-        table.insert(elements, {
-            label = string.format('%s ($%s) - Stock: %d', vehicle.name, vehicle.price, vehicle.stock),
-            value = vehicle.model,
-            vehicleName = vehicle.name
-        })
-    end
-
-    ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'assign_vehicle', {
-        title = 'Assigner un Véhicule',
-        align = 'top-left',
-        elements = elements
-    }, function(data, menu)
-        local vehicleModel = data.current.value
-        local vehicleName = data.current.vehicleName
-
-        -- Demander la plaque
-        ESX.UI.Menu.Open('dialog', GetCurrentResourceName(), 'vehicle_plate', {
-            title = 'Plaque du véhicule (optionnel)'
-        }, function(data2, menu2)
-            local plate = data2.value or ''
-            menu2.close()
-            menu.close()
-
-            -- Confirmer
-            ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'confirm_assign', {
-                title = 'Confirmer l\'assignation ?',
-                align = 'top-left',
-                elements = {
-                    {label = '✅ Oui', value = 'yes'},
-                    {label = '❌ Non', value = 'no'}
-                }
-            }, function(data3, menu3)
-                if data3.current.value == 'yes' then
-                    TriggerServerEvent('dealership:assignVehicle', targetId, vehicleModel, plate)
-                end
-                menu3.close()
-            end, function(data3, menu3)
-                menu3.close()
-            end)
-        end, function(data2, menu2)
-            menu2.close()
-        end)
-    end, function(data, menu)
-        menu.close()
-    end)
-end
+RegisterNUICallback('closeAssignMenu', function(data, cb)
+    SetNuiFocus(false, false)
+    cb('ok')
+end)
 
 print('^2[Dealership]^0 Client chargé')
