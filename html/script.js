@@ -1180,7 +1180,6 @@ function receiveTransactionHistory(data) {
 
     // Update totals
     document.getElementById('totalCredits').textContent = formatCurrency(data.totalCredits);
-    document.getElementById('totalDebits').textContent = formatCurrency(data.totalDebits);
 
     // Update financial estimates
     document.getElementById('pendingCommissions').textContent = formatCurrency(data.pendingCommissions || 0);
