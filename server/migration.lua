@@ -115,6 +115,21 @@ CreateThread(function()
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ]])
 
+    -- Créer table company_notes si elle n'existe pas (notes pour employés)
+    MySQL.query([[
+        CREATE TABLE IF NOT EXISTS `company_notes` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `job` VARCHAR(50) NOT NULL,
+            `title` VARCHAR(200) NOT NULL,
+            `content` TEXT NOT NULL,
+            `created_by` VARCHAR(100) NOT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX `idx_job` (`job`),
+            INDEX `idx_created` (`created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ]])
+
     print("^2[Tablet Manager]^7 Tables vérifiées ✓")
 
     -- Initialiser les profils pour les jobs existants

@@ -104,6 +104,11 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Notes de l'entreprise -->
+                <div id="companyNotesContainer" style="margin-top: 20px;">
+                    <!-- Notes chargées dynamiquement -->
+                </div>
             </div>
 
             <!-- Page Facture -->
@@ -305,6 +310,7 @@
                     <button class="mgmt-tab active" data-tab="products">Produits</button>
                     <button class="mgmt-tab" data-tab="employees">Employés</button>
                     <button class="mgmt-tab" data-tab="partnerships">Partenariats</button>
+                    <button class="mgmt-tab" data-tab="notes">Notes</button>
                     <button class="mgmt-tab" data-tab="stats">Stats Employés</button>
                     <button class="mgmt-tab" data-tab="transactions">Historique</button>
                     <button class="mgmt-tab" id="indeedBtn">
@@ -340,6 +346,23 @@
                     </div>
                     <div class="partner-list" id="partnerList">
                         <!-- Partenariats dynamiques -->
+                    </div>
+                </div>
+
+                <!-- Tab Notes -->
+                <div class="mgmt-content" id="mgmt-notes">
+                    <div style="margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 8px;">
+                        <p style="color: #94a3b8; margin-bottom: 10px;"><i class="fa-solid fa-info-circle"></i> Les notes sont visibles par tous les employés sur leur dashboard (max 3)</p>
+                    </div>
+                    <div class="add-section" style="display: grid; gap: 10px;">
+                        <input type="text" id="newNoteTitle" placeholder="Titre de la note" maxlength="200">
+                        <textarea id="newNoteContent" placeholder="Contenu de la note" rows="4" style="padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-family: inherit; resize: vertical;"></textarea>
+                        <button class="btn-primary" id="addNoteBtn">
+                            <i class="fa-solid fa-plus"></i> Ajouter une Note
+                        </button>
+                    </div>
+                    <div style="margin-top: 20px;" id="notesList">
+                        <!-- Notes dynamiques -->
                     </div>
                 </div>
 

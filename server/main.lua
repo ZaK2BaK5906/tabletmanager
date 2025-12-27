@@ -1352,4 +1352,105 @@ RegisterCommand('tablet:reset', function(source, args)
     ShowNotification(source, '✅ Données du job '..job..' réinitialisées', 'success')
 end, true)
 
+-- ============================================
+-- SYSTÈME DE NOTES EMPLOYÉS
+-- ============================================
+
+-- Récupérer les notes de l'entreprise
+ESX.RegisterServerCallback('tablet:getCompanyNotes', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then cb(nil) return end
+
+    local job = xPlayer.job.name
+
+    local notes = MySQL.query.await([[
+        SELECT id, title, content, created_by, created_at
+        FROM company_notes
+        WHERE job = ?
+        ORDER BY created_at DESC
+        LIMIT 3
+    ]], {job})
+
+    cb(notes or {})
+end)
+
+-- Ajouter une note (boss only)
+RegisterNetEvent('tablet:addCompanyNote')
+AddEventHandler('tablet:addCompanyNote', function(title, content)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+
+    if not xPlayer or not IsBoss(xPlayer) then
+        ShowNotification(_source, '❌ Seuls les patrons peuvent ajouter des notes', 'error')
+        return
+    end
+
+    local job = xPlayer.job.name
+
+    MySQL.insert.await([[
+        INSERT INTO company_notes (job, title, content, created_by)
+        VALUES (?, ?, ?, ?)
+    ]], {job, title, content, xPlayer.getName()})
+
+    ShowNotification(_source, '✅ Note ajoutée', 'success')
+
+    -- Rafraîchir les notes pour tous les employés du job
+    local xPlayers = ESX.GetExtendedPlayers('job', job)
+    for _, player in pairs(xPlayers) do
+        TriggerClientEvent('tablet:refreshNotes', player.source)
+    end
+end)
+
+-- Modifier une note (boss only)
+RegisterNetEvent('tablet:updateCompanyNote')
+AddEventHandler('tablet:updateCompanyNote', function(noteId, title, content)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+
+    if not xPlayer or not IsBoss(xPlayer) then
+        ShowNotification(_source, '❌ Seuls les patrons peuvent modifier des notes', 'error')
+        return
+    end
+
+    local job = xPlayer.job.name
+
+    MySQL.query([[
+        UPDATE company_notes
+        SET title = ?, content = ?
+        WHERE id = ? AND job = ?
+    ]], {title, content, noteId, job})
+
+    ShowNotification(_source, '✅ Note modifiée', 'success')
+
+    -- Rafraîchir les notes pour tous les employés du job
+    local xPlayers = ESX.GetExtendedPlayers('job', job)
+    for _, player in pairs(xPlayers) do
+        TriggerClientEvent('tablet:refreshNotes', player.source)
+    end
+end)
+
+-- Supprimer une note (boss only)
+RegisterNetEvent('tablet:deleteCompanyNote')
+AddEventHandler('tablet:deleteCompanyNote', function(noteId)
+    local _source = source
+    local xPlayer = ESX.GetPlayerFromId(_source)
+
+    if not xPlayer or not IsBoss(xPlayer) then
+        ShowNotification(_source, '❌ Seuls les patrons peuvent supprimer des notes', 'error')
+        return
+    end
+
+    local job = xPlayer.job.name
+
+    MySQL.query('DELETE FROM company_notes WHERE id = ? AND job = ?', {noteId, job})
+
+    ShowNotification(_source, '✅ Note supprimée', 'success')
+
+    -- Rafraîchir les notes pour tous les employés du job
+    local xPlayers = ESX.GetExtendedPlayers('job', job)
+    for _, player in pairs(xPlayers) do
+        TriggerClientEvent('tablet:refreshNotes', player.source)
+    end
+end)
+
 print('^2[TabletManager]^0 Serveur démarré avec succès')

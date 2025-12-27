@@ -360,6 +360,14 @@ AddEventHandler('tablet:refreshEmployeeStats', function()
     })
 end)
 
+RegisterNetEvent('tablet:refreshNotes')
+AddEventHandler('tablet:refreshNotes', function()
+    -- Rafraîchir les notes de l'entreprise
+    SendNUIMessage({
+        action = 'refreshNotes'
+    })
+end)
+
 -- VÉHICULES (DEALERSHIP)
 RegisterNUICallback('getVehicles', function(data, cb)
     ESX.TriggerServerCallback('dealership:getVehicles', function(vehicles)
