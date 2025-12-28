@@ -177,6 +177,46 @@ body {
     box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
 }
 
+/* Différenciation factures personnelles vs entreprise */
+.pending-invoice-card.personal-invoice {
+    border-left: 4px solid #3b82f6;
+}
+
+.pending-invoice-card.company-invoice {
+    border-left: 4px solid #f59e0b;
+}
+
+.invoice-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.invoice-badge.badge-personal {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.invoice-badge.badge-company {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.btn-pay-company {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.btn-pay-company:hover {
+    box-shadow: 0 6px 15px rgba(245, 158, 11, 0.4);
+}
+
 /* Container Principal */
 .tablet-container {
     display: none;

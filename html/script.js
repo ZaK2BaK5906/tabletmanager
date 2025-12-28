@@ -1238,11 +1238,20 @@ function openInvoiceMenu(invoices) {
         const items = JSON.parse(invoice.items);
         const itemsList = items.map(item => `${item.name} x${item.quantity}`).join(', ');
 
+        // Déterminer le type de facture
+        const isCompany = invoice.invoice_type === 'company';
+        const badgeClass = isCompany ? 'badge-company' : 'badge-personal';
+        const badgeText = isCompany ? '🏢 Entreprise' : '👤 Personnel';
+        const cardClass = isCompany ? 'pending-invoice-card company-invoice' : 'pending-invoice-card personal-invoice';
+
         const card = document.createElement('div');
-        card.className = 'pending-invoice-card';
+        card.className = cardClass;
         card.innerHTML = `
             <div class="pending-invoice-header">
-                <div class="pending-invoice-id">Facture #${invoice.id}</div>
+                <div class="pending-invoice-id">
+                    Facture #${invoice.id}
+                    <span class="invoice-badge ${badgeClass}">${badgeText}</span>
+                </div>
                 <div class="pending-invoice-company">${invoice.employee_name}</div>
             </div>
             <div class="pending-invoice-body">
@@ -1259,13 +1268,13 @@ function openInvoiceMenu(invoices) {
                     <div class="pending-detail-value total">${formatCurrency(invoice.total)}</div>
                 </div>
                 <div class="pending-detail">
-                    <div class="pending-detail-label">Entreprise</div>
-                    <div class="pending-detail-value">${invoice.partnership_name || 'N/A'}</div>
+                    <div class="pending-detail-label">${isCompany ? 'Payé par' : 'Entreprise'}</div>
+                    <div class="pending-detail-value">${isCompany ? invoice.target_company : (invoice.partnership_name || 'N/A')}</div>
                 </div>
             </div>
             <div class="pending-invoice-actions">
-                <button class="btn-pay" onclick="payInvoice(${invoice.id})">
-                    <i class="fa-solid fa-credit-card"></i> Payer ${formatCurrency(invoice.total)}
+                <button class="btn-pay ${isCompany ? 'btn-pay-company' : ''}" onclick="payInvoice(${invoice.id})">
+                    <i class="fa-solid fa-credit-card"></i> Payer ${formatCurrency(invoice.total)}${isCompany ? ' (Entreprise)' : ''}
                 </button>
             </div>
         `;
