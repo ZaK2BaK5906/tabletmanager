@@ -444,6 +444,300 @@
         </div>
     </div>
 
+    <!-- Modal: Create Arrest (Police) -->
+    <div class="modal" id="createArrestModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-handcuffs"></i> Nouvelle Arrestation</h2>
+                <button class="modal-close" onclick="closeModal('createArrestModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createArrestForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Suspect</label>
+                            <select id="arrestSuspect" required>
+                                <option value="">Sélectionner un suspect proche...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Localisation</label>
+                            <input type="text" id="arrestLocation" placeholder="Lieu de l'arrestation" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Charges (Sélection multiple)</label>
+                        <button type="button" class="btn-secondary" onclick="openChargesSelector()">
+                            <i class="fa-solid fa-plus"></i> Ajouter des Charges
+                        </button>
+                        <div id="selectedCharges" class="charges-list"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="arrestMiranda"> Miranda Rights Read
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes Additionnelles</label>
+                        <textarea id="arrestNotes" rows="4" placeholder="Détails de l'arrestation..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-large">
+                        <i class="fa-solid fa-check"></i> Enregistrer l'Arrestation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Citation (Police) -->
+    <div class="modal" id="createCitationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-file-invoice-dollar"></i> Nouvelle Citation/Amende</h2>
+                <button class="modal-close" onclick="closeModal('createCitationModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createCitationForm">
+                    <div class="form-group">
+                        <label>Citoyen</label>
+                        <select id="citationTarget" required>
+                            <option value="">Sélectionner un citoyen proche...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Type de Violation</label>
+                        <select id="citationViolationType" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="VC-22350">VC-22350 - Excès de vitesse</option>
+                            <option value="VC-23152">VC-23152 - DUI</option>
+                            <option value="VC-2800">VC-2800 - Refus d'obtempérer</option>
+                            <option value="VC-21461">VC-21461 - Feu rouge</option>
+                            <option value="INF-001">INF-001 - Stationnement interdit</option>
+                            <option value="INF-003">INF-003 - Téléphone au volant</option>
+                            <option value="other">Autre...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="citationDescription" placeholder="Description de la violation" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Montant ($)</label>
+                            <input type="number" id="citationAmount" min="0" step="50" placeholder="500" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Points Permis</label>
+                            <input type="number" id="citationPoints" min="0" max="12" placeholder="2">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Localisation</label>
+                        <input type="text" id="citationLocation" placeholder="Lieu de l'infraction" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-large">
+                        <i class="fa-solid fa-check"></i> Émettre la Citation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Evidence (Police) -->
+    <div class="modal" id="createEvidenceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-box"></i> Enregistrer une Preuve</h2>
+                <button class="modal-close" onclick="closeModal('createEvidenceModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createEvidenceForm">
+                    <div class="form-group">
+                        <label>Type de Preuve</label>
+                        <select id="evidenceType" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="weapon">Arme</option>
+                            <option value="drugs">Drogues</option>
+                            <option value="documents">Documents</option>
+                            <option value="money">Argent</option>
+                            <option value="electronics">Électronique</option>
+                            <option value="other">Autre</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="evidenceDescription" rows="4" placeholder="Description détaillée de la preuve..." required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantité</label>
+                            <input type="number" id="evidenceQuantity" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Saisi De</label>
+                            <input type="text" id="evidenceSeizedFrom" placeholder="Nom ou ID">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Lieu de Saisie</label>
+                        <input type="text" id="evidenceLocation" placeholder="Localisation" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Stockage</label>
+                        <select id="evidenceStorage">
+                            <option value="Evidence Locker">Evidence Locker</option>
+                            <option value="Crime Lab">Crime Lab</option>
+                            <option value="Vault">Vault</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-large">
+                        <i class="fa-solid fa-check"></i> Enregistrer la Preuve
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Citizen Profile (Police) -->
+    <div class="modal" id="citizenProfileModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-user"></i> Profil Citoyen</h2>
+                <button class="modal-close" onclick="closeModal('citizenProfileModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Informations de base -->
+                <div class="profile-header">
+                    <div class="profile-info">
+                        <h3 id="profileName"></h3>
+                        <p id="profileDOB"></p>
+                        <p id="profilePhone"></p>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="btn-secondary" onclick="addCitizenNote()">
+                            <i class="fa-solid fa-note-sticky"></i> Ajouter Note
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabs dans le profil -->
+                <div class="profile-tabs">
+                    <button class="profile-tab-btn active" data-profile-tab="info">Infos</button>
+                    <button class="profile-tab-btn" data-profile-tab="criminal">Casier</button>
+                    <button class="profile-tab-btn" data-profile-tab="citations">Citations</button>
+                    <button class="profile-tab-btn" data-profile-tab="notes">Notes</button>
+                    <button class="profile-tab-btn" data-profile-tab="vehicles">Véhicules</button>
+                    <button class="profile-tab-btn" data-profile-tab="licenses">Licences</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="profile-tab-content">
+                    <div class="profile-tab-panel active" id="profile-info">
+                        <div id="profileInfoContent"></div>
+                    </div>
+                    <div class="profile-tab-panel" id="profile-criminal">
+                        <div id="profileCriminalContent"></div>
+                    </div>
+                    <div class="profile-tab-panel" id="profile-citations">
+                        <div id="profileCitationsContent"></div>
+                    </div>
+                    <div class="profile-tab-panel" id="profile-notes">
+                        <div id="profileNotesContent"></div>
+                    </div>
+                    <div class="profile-tab-panel" id="profile-vehicles">
+                        <div id="profileVehiclesContent"></div>
+                    </div>
+                    <div class="profile-tab-panel" id="profile-licenses">
+                        <div id="profileLicensesContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Charges Selector -->
+    <div class="modal" id="chargesSelectorModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-gavel"></i> Sélectionner des Charges</h2>
+                <button class="modal-close" onclick="closeModal('chargesSelectorModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="search-container">
+                    <input type="text" id="chargesSearch" placeholder="Rechercher une charge..." onkeyup="filterCharges()">
+                </div>
+
+                <div class="charges-tabs">
+                    <button class="charges-tab-btn active" data-class="all">Toutes</button>
+                    <button class="charges-tab-btn" data-class="felony">Felonies</button>
+                    <button class="charges-tab-btn" data-class="misdemeanor">Misdemeanors</button>
+                    <button class="charges-tab-btn" data-class="traffic">Traffic</button>
+                    <button class="charges-tab-btn" data-class="infraction">Infractions</button>
+                </div>
+
+                <div id="chargesListContainer" class="charges-container"></div>
+
+                <div class="modal-footer">
+                    <button class="btn-primary" onclick="confirmChargesSelection()">
+                        <i class="fa-solid fa-check"></i> Confirmer la Sélection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Citizen Note -->
+    <div class="modal" id="addNoteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-note-sticky"></i> Ajouter une Note</h2>
+                <button class="modal-close" onclick="closeModal('addNoteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addNoteForm">
+                    <div class="form-group">
+                        <label>Type de Note</label>
+                        <select id="noteType" required>
+                            <option value="info">Info - Information générale</option>
+                            <option value="caution">Caution - Approcher avec prudence</option>
+                            <option value="warning">Warning - Comportement dangereux</option>
+                            <option value="threat">Threat - Menace sérieuse</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Note</label>
+                        <textarea id="noteText" rows="5" placeholder="Détails de la note..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="noteFlagged"> Note Flaggée (Prioritaire)
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-large">
+                        <i class="fa-solid fa-check"></i> Ajouter la Note
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="js/main.js"></script>
 </body>
 </html>
