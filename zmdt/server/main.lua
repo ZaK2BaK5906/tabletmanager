@@ -104,7 +104,7 @@ ESX.RegisterServerCallback('zmdt:getInitialData', function(source, cb, service)
         data.activeBOLO = MySQL.query.await([[
             SELECT * FROM mdt_bolo
             WHERE status = 'active'
-            ORDER BY priority DESC, created_at DESC
+            ORDER BY priority DESC, issued_at DESC
             LIMIT 20
         ]]) or {}
 

@@ -184,7 +184,7 @@ ESX.RegisterServerCallback('zmdt:police:getBOLO', function(source, cb)
         return
     end
 
-    local bolos = MySQL.query.await('SELECT * FROM mdt_bolo WHERE status = ? ORDER BY created_at DESC', {'active'})
+    local bolos = MySQL.query.await('SELECT * FROM mdt_bolo WHERE status = ? ORDER BY issued_at DESC', {'active'})
     cb(bolos or {})
 end)
 
