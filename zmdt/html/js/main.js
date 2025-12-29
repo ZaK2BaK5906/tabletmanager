@@ -159,8 +159,7 @@ function addCallToList(call) {
 }
 
 function createCall() {
-    // TODO: Open call creation modal
-    alert('Création d\'appel - À implémenter');
+    openModal('createCallModal');
 }
 
 // ============================================
@@ -193,7 +192,7 @@ function searchWeapon() {
 // ============================================
 
 function createReport() {
-    alert('Création de rapport - À implémenter');
+    openModal('createReportModal');
 }
 
 // ============================================
@@ -228,7 +227,7 @@ function addBOLOToList(bolo) {
 }
 
 function createBOLO() {
-    alert('Création de BOLO - À implémenter');
+    openModal('createBOLOModal');
 }
 
 // ============================================
@@ -321,5 +320,98 @@ document.addEventListener('keydown', (e) => {
 function GetParentResourceName() {
     return 'zmdt';
 }
+
+// ============================================
+// MODAL FUNCTIONS
+// ============================================
+
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('show');
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+        // Reset form if exists
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+        }
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.classList.remove('show');
+    }
+});
+
+// ============================================
+// FORM SUBMISSIONS
+// ============================================
+
+// Create Call Form
+document.addEventListener('DOMContentLoaded', () => {
+    const createCallForm = document.getElementById('createCallForm');
+    if (createCallForm) {
+        createCallForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const data = {
+                call_type: document.getElementById('callType').value,
+                priority: document.getElementById('callPriority').value,
+                location: document.getElementById('callLocation').value,
+                description: document.getElementById('callDescription').value
+            };
+
+            postData('police_createCall', data);
+            closeModal('createCallModal');
+        });
+    }
+
+    // Create Report Form
+    const createReportForm = document.getElementById('createReportForm');
+    if (createReportForm) {
+        createReportForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const data = {
+                report_type: document.getElementById('reportType').value,
+                title: document.getElementById('reportTitle').value,
+                suspect: document.getElementById('reportSuspect').value,
+                location: document.getElementById('reportLocation').value,
+                description: document.getElementById('reportDescription').value,
+                confidentiality: document.getElementById('reportConfidentiality').value
+            };
+
+            postData('police_createReport', data);
+            closeModal('createReportModal');
+        });
+    }
+
+    // Create BOLO Form
+    const createBOLOForm = document.getElementById('createBOLOForm');
+    if (createBOLOForm) {
+        createBOLOForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const data = {
+                bolo_type: document.getElementById('boloType').value,
+                subject: document.getElementById('boloSubject').value,
+                priority: document.getElementById('boloPriority').value,
+                description: document.getElementById('boloDescription').value,
+                is_armed: document.getElementById('boloArmed').checked
+            };
+
+            postData('police_createBOLO', data);
+            closeModal('createBOLOModal');
+        });
+    }
+});
 
 console.log('[ZMDT] UI loaded');

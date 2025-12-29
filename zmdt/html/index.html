@@ -176,6 +176,153 @@
         </div>
     </div>
 
+    <!-- MODALS -->
+
+    <!-- Modal: Create Call (Police/EMS) -->
+    <div class="modal" id="createCallModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-phone"></i> Créer un Appel</h2>
+                <button class="modal-close" onclick="closeModal('createCallModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createCallForm">
+                    <div class="form-group">
+                        <label>Type d'Appel</label>
+                        <select id="callType" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="10-31">10-31 - Burglary</option>
+                            <option value="10-32">10-32 - Person with gun</option>
+                            <option value="10-50">10-50 - Traffic accident</option>
+                            <option value="10-66">10-66 - Suspicious person</option>
+                            <option value="10-90">10-90 - Alarm</option>
+                            <option value="10-99">10-99 - Officer needs help</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Priorité</label>
+                        <select id="callPriority" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Localisation</label>
+                        <input type="text" id="callLocation" placeholder="Ex: Legion Square" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="callDescription" rows="4" placeholder="Détails de l'appel..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary btn-large">
+                        <i class="fa-solid fa-check"></i> Créer l'Appel
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Report (Police) -->
+    <div class="modal" id="createReportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-file-lines"></i> Créer un Rapport</h2>
+                <button class="modal-close" onclick="closeModal('createReportModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createReportForm">
+                    <div class="form-group">
+                        <label>Type de Rapport</label>
+                        <select id="reportType" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="incident">Incident Report</option>
+                            <option value="arrest">Arrest Report</option>
+                            <option value="traffic">Traffic Stop</option>
+                            <option value="investigation">Investigation</option>
+                            <option value="use_of_force">Use of Force</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Titre</label>
+                        <input type="text" id="reportTitle" placeholder="Titre du rapport" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Suspect / Personne Impliquée (Optionnel)</label>
+                        <input type="text" id="reportSuspect" placeholder="Nom ou ID">
+                    </div>
+                    <div class="form-group">
+                        <label>Localisation</label>
+                        <input type="text" id="reportLocation" placeholder="Lieu de l'incident" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="reportDescription" rows="6" placeholder="Description détaillée des faits..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Niveau de Confidentialité</label>
+                        <select id="reportConfidentiality">
+                            <option value="public">Public</option>
+                            <option value="restricted">Restricted</option>
+                            <option value="confidential">Confidential</option>
+                            <option value="top_secret">Top Secret</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary btn-large">
+                        <i class="fa-solid fa-check"></i> Créer le Rapport
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create BOLO (Police) -->
+    <div class="modal" id="createBOLOModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-triangle-exclamation"></i> Créer un BOLO</h2>
+                <button class="modal-close" onclick="closeModal('createBOLOModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createBOLOForm">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="boloType" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="person">Person</option>
+                            <option value="vehicle">Vehicle</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Sujet</label>
+                        <input type="text" id="boloSubject" placeholder="Ex: John Doe, Black SUV" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Priorité</label>
+                        <select id="boloPriority" required>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="boloDescription" rows="5" placeholder="Description détaillée (apparence, plaque, raison, etc.)" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="boloArmed"> Suspect Armé
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-primary btn-large">
+                        <i class="fa-solid fa-check"></i> Créer le BOLO
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="js/main.js"></script>
 </body>
 </html>
