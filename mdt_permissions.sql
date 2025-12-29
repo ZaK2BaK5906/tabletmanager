@@ -339,10 +339,10 @@ SELECT DISTINCT
     END as permission_source
 FROM users u
 CROSS JOIN mdt_permissions_list p
-LEFT JOIN mdt_user_permissions up ON up.user_identifier = u.identifier
+LEFT JOIN mdt_user_permissions up ON up.user_identifier COLLATE utf8mb4_general_ci = u.identifier
     AND up.permission_id = p.id
     AND (up.expires_at IS NULL OR up.expires_at > NOW())
-LEFT JOIN mdt_job_permissions jp ON jp.job_name = u.job
+LEFT JOIN mdt_job_permissions jp ON jp.job_name COLLATE utf8mb4_general_ci = u.job
     AND (jp.job_grade IS NULL OR jp.job_grade = u.job_grade)
     AND jp.permission_id = p.id
 WHERE u.job IN ('police', 'sheriff', 'doj', 'ambulance', 'fire')
