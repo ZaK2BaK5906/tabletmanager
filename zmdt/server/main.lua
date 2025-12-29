@@ -259,4 +259,166 @@ function LogAccess(source, recordType, recordId, action, granted, denialReason)
     ]], {xPlayer.identifier, xPlayer.job.name, recordType, recordId, action, granted and 1 or 0, denialReason, ip})
 end
 
+-- ============================================
+-- BROADCAST FUNCTIONS
+-- ============================================
+
+function BroadcastToPolice(eventName, data)
+    local xPlayers = ESX.GetExtendedPlayers()
+    for _, player in ipairs(xPlayers) do
+        for _, job in ipairs(Config.PoliceJobs) do
+            if player.job.name == job then
+                TriggerClientEvent(eventName, player.source, data)
+            end
+        end
+    end
+end
+
+function BroadcastToDOJ(eventName, data)
+    local xPlayers = ESX.GetExtendedPlayers()
+    for _, player in ipairs(xPlayers) do
+        for _, job in ipairs(Config.DOJJobs) do
+            if player.job.name == job then
+                TriggerClientEvent(eventName, player.source, data)
+            end
+        end
+    end
+end
+
+function BroadcastToEMS(eventName, data)
+    local xPlayers = ESX.GetExtendedPlayers()
+    for _, player in ipairs(xPlayers) do
+        for _, job in ipairs(Config.EMSJobs) do
+            if player.job.name == job then
+                TriggerClientEvent(eventName, player.source, data)
+            end
+        end
+    end
+end
+
+-- ============================================
+-- NEARBY PLAYER INFO
+-- ============================================
+
+ESX.RegisterServerCallback('zmdt:getNearbyPlayerInfo', function(source, cb, targetId)
+    local targetPlayer = ESX.GetPlayerFromId(targetId)
+
+    if not targetPlayer then
+        cb(nil)
+        return
+    end
+
+    cb({
+        name = targetPlayer.getName(),
+        identifier = targetPlayer.identifier,
+        job = targetPlayer.job.name,
+        job_label = targetPlayer.job.label
+    })
+end)
+
+-- ============================================
+-- STATS & DASHBOARD
+-- ============================================
+
+ESX.RegisterServerCallback('zmdt:police:getStats', function(source, cb)
+    if not HasPermission(source, 'police.stats.view') then
+        cb(nil)
+        return
+    end
+
+    local stats = {}
+
+    -- Today stats
+    stats.arrests_today = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_arrests
+        WHERE DATE(arrest_date) = CURDATE()
+    ]]) or 0
+
+    stats.reports_today = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_reports
+        WHERE DATE(created_at) = CURDATE()
+    ]]) or 0
+
+    stats.citations_today = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_citations
+        WHERE DATE(created_at) = CURDATE()
+    ]]) or 0
+
+    stats.active_calls = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_calls
+        WHERE status IN ('pending', 'dispatched', 'on_scene')
+    ]]) or 0
+
+    stats.active_bolo = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_bolo
+        WHERE status = 'active'
+    ]]) or 0
+
+    stats.active_warrants = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_warrants
+        WHERE status = 'active'
+    ]]) or 0
+
+    -- Week stats
+    stats.arrests_week = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_arrests
+        WHERE arrest_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    ]]) or 0
+
+    stats.reports_week = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_reports
+        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    ]]) or 0
+
+    cb(stats)
+end)
+
+-- ============================================
+-- PANIC BUTTON
+-- ============================================
+
+ESX.RegisterServerCallback('zmdt:police:sendPanic', function(source, cb, data)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then
+        cb(false)
+        return
+    end
+
+    -- Check si c'est un policier
+    local isPolice = false
+    for _, job in ipairs(Config.PoliceJobs) do
+        if xPlayer.job.name == job then
+            isPolice = true
+            break
+        end
+    end
+
+    if not isPolice then
+        cb(false)
+        return
+    end
+
+    -- Broadcast panic à tous les policiers
+    BroadcastToPolice('zmdt:police:panicReceived', {
+        officer = xPlayer.getName(),
+        location = data.location,
+        coords = data.coords
+    })
+
+    SendWebhook('PoliceReports', {
+        title = '🚨 PANIC BUTTON',
+        officer = xPlayer.getName(),
+        location = data.location,
+        coords = data.coords
+    })
+
+    cb(true)
+end)
+
+-- Recevoir panic côté client
+RegisterNetEvent('zmdt:police:panicReceived')
+AddEventHandler('zmdt:police:panicReceived', function(data)
+    -- Handled in client
+end)
+
 print('^2[ZMDT]^0 Server loaded successfully')
