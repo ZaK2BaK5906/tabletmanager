@@ -1191,9 +1191,7 @@ GROUP BY c.id;
 CREATE OR REPLACE VIEW `mdt_active_calls` AS
 SELECT
     c.*,
-    COUNT(DISTINCT u.id) as units_responding
+    IFNULL(JSON_LENGTH(c.units_assigned), 0) as units_responding
 FROM mdt_calls c
-LEFT JOIN mdt_units u ON JSON_CONTAINS(c.units_assigned, CAST(u.id AS JSON))
 WHERE c.status IN ('pending','dispatched','on_scene')
-GROUP BY c.id
 ORDER BY c.priority DESC, c.created_at ASC;
