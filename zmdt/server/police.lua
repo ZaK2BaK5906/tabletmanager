@@ -68,7 +68,7 @@ ESX.RegisterServerCallback('zmdt:police:searchCitizen', function(source, cb, que
     end
 
     -- Chercher directement dans la table users (ESX)
-    local results = MySQL.query.await([[
+    local citizens = MySQL.query.await([[
         SELECT
             identifier,
             firstname,
@@ -87,7 +87,29 @@ ESX.RegisterServerCallback('zmdt:police:searchCitizen', function(source, cb, que
         LIMIT 20
     ]], {'%'..query:lower()..'%', '%'..query:lower()..'%', '%'..query..'%', '%'..query..'%'})
 
-    cb(results or {})
+    -- Enrichir avec données MDT pour chaque citoyen
+    if citizens then
+        for i, citizen in ipairs(citizens) do
+            -- Casier criminel
+            local charges = MySQL.scalar.await('SELECT COUNT(*) FROM mdt_criminal_history WHERE citizen_identifier = ?', {citizen.identifier}) or 0
+            citizen.criminal_charges = charges
+
+            -- Citations impayées
+            local citations = MySQL.query.await('SELECT COUNT(*) as total, SUM(fine_amount) as total_fines FROM mdt_citations WHERE citizen_identifier = ? AND status = "pending"', {citizen.identifier})
+            citizen.pending_citations = (citations and citations[1]) and citations[1].total or 0
+            citizen.total_unpaid_fines = (citations and citations[1]) and citations[1].total_fines or 0
+
+            -- Notes flaggées
+            local notes = MySQL.scalar.await('SELECT COUNT(*) FROM mdt_citizen_notes WHERE citizen_identifier = ? AND is_flagged = 1', {citizen.identifier}) or 0
+            citizen.flagged_notes = notes
+
+            -- Véhicules possédés
+            local vehicles = MySQL.scalar.await('SELECT COUNT(*) FROM owned_vehicles WHERE owner = ?', {citizen.identifier}) or 0
+            citizen.owned_vehicles = vehicles
+        end
+    end
+
+    cb(citizens or {})
 end)
 
 -- Search vehicle
