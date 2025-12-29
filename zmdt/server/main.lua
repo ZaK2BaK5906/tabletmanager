@@ -46,6 +46,40 @@ end
 -- SYNCHRONISATION ESX
 -- ============================================
 
+-- Sync ALL players au démarrage de la ressource
+CreateThread(function()
+    Wait(2000) -- Attendre que ESX soit chargé
+
+    if Config.SyncWithESX.citizens then
+        local xPlayers = ESX.GetExtendedPlayers()
+        local syncCount = 0
+
+        for _, xPlayer in ipairs(xPlayers) do
+            local identifier = xPlayer.identifier
+            local firstname = xPlayer.get('firstName') or 'Unknown'
+            local lastname = xPlayer.get('lastName') or 'Unknown'
+            local dob = xPlayer.get('dateofbirth') or '2000-01-01'
+            local sex = xPlayer.get('sex') or 'M'
+            local height = xPlayer.get('height') or 175
+
+            MySQL.insert([[
+                INSERT INTO mdt_citizens (identifier, firstname, lastname, dateofbirth, sex, height)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    firstname = VALUES(firstname),
+                    lastname = VALUES(lastname),
+                    dateofbirth = VALUES(dateofbirth),
+                    sex = VALUES(sex),
+                    height = VALUES(height)
+            ]], {identifier, firstname, lastname, dob, sex, height})
+
+            syncCount = syncCount + 1
+        end
+
+        print('^2[ZMDT]^0 Synchronized '..syncCount..' players to mdt_citizens')
+    end
+end)
+
 -- Sync user → mdt_citizens au login
 RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(playerId, xPlayer)
