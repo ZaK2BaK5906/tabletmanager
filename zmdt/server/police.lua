@@ -174,23 +174,24 @@ ESX.RegisterServerCallback('zmdt:police:searchCitizen', function(source, cb, que
         return
     end
 
-    -- Recherche dans la table users (ESX)
+    -- Recherche dans mdt_citizens (synchronisé depuis users)
     local citizens = MySQL.query.await([[
         SELECT
-            identifier,
-            firstname,
-            lastname,
-            dateofbirth,
-            sex,
-            height,
-            phone_number,
-            job,
-            job_grade
-        FROM users
-        WHERE LOWER(firstname) LIKE ?
-           OR LOWER(lastname) LIKE ?
-           OR identifier LIKE ?
-           OR phone_number LIKE ?
+            c.identifier,
+            c.firstname,
+            c.lastname,
+            c.dateofbirth,
+            c.sex,
+            c.height,
+            c.phone_number,
+            u.job,
+            u.job_grade
+        FROM mdt_citizens c
+        LEFT JOIN users u ON u.identifier = c.identifier
+        WHERE LOWER(c.firstname) LIKE ?
+           OR LOWER(c.lastname) LIKE ?
+           OR c.identifier LIKE ?
+           OR c.phone_number LIKE ?
         LIMIT 20
     ]], {
         '%'..query:lower()..'%',
@@ -285,9 +286,13 @@ ESX.RegisterServerCallback('zmdt:police:getCitizenProfile', function(source, cb,
         return
     end
 
-    -- Info de base
+    -- Info de base depuis mdt_citizens + users
     local citizen = MySQL.query.await([[
-        SELECT * FROM users WHERE identifier = ? LIMIT 1
+        SELECT c.*, u.job, u.job_grade
+        FROM mdt_citizens c
+        LEFT JOIN users u ON u.identifier = c.identifier
+        WHERE c.identifier = ?
+        LIMIT 1
     ]], {identifier})
 
     if not citizen or #citizen == 0 then

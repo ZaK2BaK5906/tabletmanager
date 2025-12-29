@@ -251,12 +251,11 @@ function LogAccess(source, recordType, recordId, action, granted, denialReason)
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then return end
 
-    local ip = GetPlayerEndpoint(source)
-
+    -- IP is optional (NULL) - no Steam required
     MySQL.insert([[
         INSERT INTO mdt_access_logs (user_identifier, user_job, record_type, record_id, action, access_granted, denial_reason, ip_address)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ]], {xPlayer.identifier, xPlayer.job.name, recordType, recordId, action, granted and 1 or 0, denialReason, ip})
+        VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+    ]], {xPlayer.identifier, xPlayer.job.name, recordType, recordId, action, granted and 1 or 0, denialReason})
 end
 
 -- ============================================
