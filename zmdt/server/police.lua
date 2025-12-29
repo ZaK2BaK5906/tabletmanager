@@ -67,11 +67,25 @@ ESX.RegisterServerCallback('zmdt:police:searchCitizen', function(source, cb, que
         return
     end
 
+    -- Chercher directement dans la table users (ESX)
     local results = MySQL.query.await([[
-        SELECT * FROM mdt_citizens
-        WHERE LOWER(firstname) LIKE ? OR LOWER(lastname) LIKE ? OR identifier LIKE ?
+        SELECT
+            identifier,
+            firstname,
+            lastname,
+            dateofbirth,
+            sex,
+            height,
+            phone_number,
+            job,
+            job_grade
+        FROM users
+        WHERE LOWER(firstname) LIKE ?
+           OR LOWER(lastname) LIKE ?
+           OR identifier LIKE ?
+           OR phone_number LIKE ?
         LIMIT 20
-    ]], {'%'..query:lower()..'%', '%'..query:lower()..'%', '%'..query..'%'})
+    ]], {'%'..query:lower()..'%', '%'..query:lower()..'%', '%'..query..'%', '%'..query..'%'})
 
     cb(results or {})
 end)
@@ -83,11 +97,24 @@ ESX.RegisterServerCallback('zmdt:police:searchVehicle', function(source, cb, que
         return
     end
 
+    -- Chercher directement dans owned_vehicles (ESX)
     local results = MySQL.query.await([[
-        SELECT * FROM mdt_vehicles
-        WHERE LOWER(plate) LIKE ? OR LOWER(model) LIKE ?
+        SELECT
+            v.plate,
+            v.vehicle,
+            v.stored,
+            v.parking,
+            u.firstname,
+            u.lastname,
+            u.identifier
+        FROM owned_vehicles v
+        LEFT JOIN users u ON u.identifier = v.owner
+        WHERE LOWER(v.plate) LIKE ?
+           OR LOWER(v.vehicle) LIKE ?
+           OR LOWER(u.firstname) LIKE ?
+           OR LOWER(u.lastname) LIKE ?
         LIMIT 20
-    ]], {'%'..query:lower()..'%', '%'..query:lower()..'%'})
+    ]], {'%'..query:lower()..'%', '%'..query:lower()..'%', '%'..query:lower()..'%', '%'..query:lower()..'%'})
 
     cb(results or {})
 end)

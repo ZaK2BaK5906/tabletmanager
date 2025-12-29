@@ -46,6 +46,18 @@
                     <button class="tab-btn" data-tab="bolo">
                         <i class="fa-solid fa-bullhorn"></i> BOLO
                     </button>
+                    <button class="tab-btn" data-tab="arrests">
+                        <i class="fa-solid fa-handcuffs"></i> Arrestations
+                    </button>
+                    <button class="tab-btn" data-tab="vehicles">
+                        <i class="fa-solid fa-car"></i> Véhicules
+                    </button>
+                    <button class="tab-btn" data-tab="evidence">
+                        <i class="fa-solid fa-box"></i> Preuves
+                    </button>
+                    <button class="tab-btn" data-tab="personnel">
+                        <i class="fa-solid fa-users"></i> Personnel
+                    </button>
                 </div>
 
                 <!-- DOJ Tabs -->
@@ -116,6 +128,115 @@
                         <i class="fa-solid fa-plus"></i> Nouveau BOLO
                     </button>
                     <div id="boloList"></div>
+                </div>
+
+                <!-- Arrests Tab (Police) -->
+                <div class="tab-panel" id="tab-arrests">
+                    <h2>Arrestations</h2>
+                    <button class="btn-primary" onclick="createArrest()">
+                        <i class="fa-solid fa-plus"></i> Nouvelle Arrestation
+                    </button>
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <i class="fa-solid fa-handcuffs"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Aujourd'hui</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-calendar-week"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Cette Semaine</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="arrestsList"></div>
+                </div>
+
+                <!-- Vehicles Tab (Police) -->
+                <div class="tab-panel" id="tab-vehicles">
+                    <h2>Véhicules</h2>
+                    <div class="search-container">
+                        <input type="text" id="vehicleQuickSearch" placeholder="Recherche rapide par plaque...">
+                        <button onclick="quickSearchVehicle()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <i class="fa-solid fa-ban"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Véhicules Volés</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-warehouse"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Fourrières Actives</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="vehiclesList"></div>
+                </div>
+
+                <!-- Evidence Tab (Police) -->
+                <div class="tab-panel" id="tab-evidence">
+                    <h2>Preuves & Scènes de Crime</h2>
+                    <button class="btn-primary" onclick="logEvidence()">
+                        <i class="fa-solid fa-plus"></i> Nouvelle Preuve
+                    </button>
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <i class="fa-solid fa-box"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Preuves en Stock</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-flask"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">En Analyse</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="evidenceList"></div>
+                </div>
+
+                <!-- Personnel Tab (Police) -->
+                <div class="tab-panel" id="tab-personnel">
+                    <h2>Personnel Police</h2>
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">En Service</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-car-side"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Unités Actives</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-phone-volume"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Appels en Cours</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="personnelList">
+                        <p style="color: #94a3b8; text-align: center; padding: 20px;">
+                            <i class="fa-solid fa-info-circle"></i> Liste du personnel en service
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Cases Tab (DOJ) -->
