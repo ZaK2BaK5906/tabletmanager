@@ -9,6 +9,9 @@ Config.BossGrades = { 'boss', 'patron', 'chief' } -- Grades considérés comme p
 -- Jobs avec accès audit complet (DOJ, etc.)
 Config.AuditJobs = { 'doj', 'government' } -- Jobs qui peuvent voir toutes les sociétés
 
+-- Jobs avec accès MDT (Police, DOJ, EMS)
+Config.MDTJobs = { 'police', 'sheriff', 'state_police', 'doj', 'government', 'ambulance', 'fire' }
+
 -- Rayon de détection des joueurs proches (en mètres)
 Config.NearbyPlayerRadius = 5.0
 

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <!-- MDT Container -->
+    <div id="mdtContainer" style="display: none;">
+        <!-- Header -->
+        <div id="mdtHeader">
+            <div class="header-left">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span id="serviceLabel">MDT</span>
+            </div>
+            <div class="header-center">
+                <span id="userName"></span>
+                <span class="separator">|</span>
+                <span id="userJob"></span>
+            </div>
+            <div class="header-right">
+                <button class="btn-close" onclick="closeMDT()">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="mdtContent">
+            <!-- Tabs Navigation -->
+            <div id="tabsNav">
+                <!-- Police Tabs -->
+                <div class="tabs-group" id="policeTabs" style="display: none;">
+                    <button class="tab-btn active" data-tab="cad">
+                        <i class="fa-solid fa-phone"></i> CAD
+                    </button>
+                    <button class="tab-btn" data-tab="search">
+                        <i class="fa-solid fa-magnifying-glass"></i> Recherche
+                    </button>
+                    <button class="tab-btn" data-tab="reports">
+                        <i class="fa-solid fa-file-lines"></i> Rapports
+                    </button>
+                    <button class="tab-btn" data-tab="bolo">
+                        <i class="fa-solid fa-bullhorn"></i> BOLO
+                    </button>
+                </div>
+
+                <!-- DOJ Tabs -->
+                <div class="tabs-group" id="dojTabs" style="display: none;">
+                    <button class="tab-btn active" data-tab="cases">
+                        <i class="fa-solid fa-folder"></i> Dossiers
+                    </button>
+                    <button class="tab-btn" data-tab="warrants">
+                        <i class="fa-solid fa-gavel"></i> Mandats
+                    </button>
+                    <button class="tab-btn" data-tab="hearings">
+                        <i class="fa-solid fa-calendar"></i> Audiences
+                    </button>
+                </div>
+
+                <!-- EMS Tabs -->
+                <div class="tabs-group" id="emsTabs" style="display: none;">
+                    <button class="tab-btn active" data-tab="dispatch">
+                        <i class="fa-solid fa-phone"></i> Dispatch
+                    </button>
+                    <button class="tab-btn" data-tab="patients">
+                        <i class="fa-solid fa-user-injured"></i> Patients
+                    </button>
+                    <button class="tab-btn" data-tab="epcr">
+                        <i class="fa-solid fa-notes-medical"></i> ePCR
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tabContent">
+                <!-- CAD Tab (Police) -->
+                <div class="tab-panel active" id="tab-cad">
+                    <h2>CAD - Appels 911</h2>
+                    <button class="btn-primary" onclick="createCall()">
+                        <i class="fa-solid fa-plus"></i> Nouvel Appel
+                    </button>
+                    <div id="callsList"></div>
+                </div>
+
+                <!-- Search Tab (Police) -->
+                <div class="tab-panel" id="tab-search">
+                    <h2>Recherche</h2>
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="Nom, plaque, numéro série...">
+                        <div class="search-buttons">
+                            <button onclick="searchCitizen()">Citoyen</button>
+                            <button onclick="searchVehicle()">Véhicule</button>
+                            <button onclick="searchWeapon()">Arme</button>
+                        </div>
+                    </div>
+                    <div id="searchResults"></div>
+                </div>
+
+                <!-- Reports Tab (Police) -->
+                <div class="tab-panel" id="tab-reports">
+                    <h2>Rapports de Police</h2>
+                    <button class="btn-primary" onclick="createReport()">
+                        <i class="fa-solid fa-plus"></i> Nouveau Rapport
+                    </button>
+                    <div id="reportsList"></div>
+                </div>
+
+                <!-- BOLO Tab (Police) -->
+                <div class="tab-panel" id="tab-bolo">
+                    <h2>BOLO - Be On Lookout</h2>
+                    <button class="btn-primary" onclick="createBOLO()">
+                        <i class="fa-solid fa-plus"></i> Nouveau BOLO
+                    </button>
+                    <div id="boloList"></div>
+                </div>
+
+                <!-- Cases Tab (DOJ) -->
+                <div class="tab-panel" id="tab-cases">
+                    <h2>Dossiers / Affaires</h2>
+                    <button class="btn-primary" onclick="createCase()">
+                        <i class="fa-solid fa-plus"></i> Nouveau Dossier
+                    </button>
+                    <div id="casesList"></div>
+                </div>
+
+                <!-- Warrants Tab (DOJ) -->
+                <div class="tab-panel" id="tab-warrants">
+                    <h2>Mandats</h2>
+                    <button class="btn-primary" onclick="createWarrant()">
+                        <i class="fa-solid fa-plus"></i> Nouveau Mandat
+                    </button>
+                    <div id="warrantsList"></div>
+                </div>
+
+                <!-- Hearings Tab (DOJ) -->
+                <div class="tab-panel" id="tab-hearings">
+                    <h2>Calendrier Tribunal</h2>
+                    <button class="btn-primary" onclick="scheduleHearing()">
+                        <i class="fa-solid fa-plus"></i> Planifier Audience
+                    </button>
+                    <div id="hearingsList"></div>
+                </div>
+
+                <!-- Dispatch Tab (EMS) -->
+                <div class="tab-panel" id="tab-dispatch">
+                    <h2>Dispatch EMS</h2>
+                    <button class="btn-primary" onclick="createEMSCall()">
+                        <i class="fa-solid fa-plus"></i> Nouvel Appel
+                    </button>
+                    <div id="emsCallsList"></div>
+                </div>
+
+                <!-- Patients Tab (EMS) -->
+                <div class="tab-panel" id="tab-patients">
+                    <h2>Patients</h2>
+                    <div class="search-container">
+                        <input type="text" id="patientSearch" placeholder="Rechercher un patient...">
+                        <button onclick="searchPatient()">Rechercher</button>
+                    </div>
+                    <div id="patientsList"></div>
+                </div>
+
+                <!-- ePCR Tab (EMS) -->
+                <div class="tab-panel" id="tab-epcr">
+                    <h2>Rapports Médicaux (ePCR)</h2>
+                    <button class="btn-primary" onclick="createEPCR()">
+                        <i class="fa-solid fa-plus"></i> Nouveau Rapport
+                    </button>
+                    <div id="epcrList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

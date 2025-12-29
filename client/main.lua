@@ -44,6 +44,19 @@ function HasAuditAccess()
     return false
 end
 
+-- Vérifier si le joueur a accès MDT (Police/DOJ/EMS)
+function HasMDTAccess()
+    local PlayerData = ESX.GetPlayerData()
+    if not PlayerData.job then return false end
+
+    for _, job in ipairs(Config.MDTJobs) do
+        if PlayerData.job.name == job then
+            return true
+        end
+    end
+    return false
+end
+
 -- Récupérer les joueurs proches
 function GetNearbyPlayers()
     local playerPed = PlayerPedId()
@@ -91,6 +104,7 @@ function OpenTablet()
     isTabletOpen = true
     local isBoss = IsBoss()
     local hasAudit = HasAuditAccess()
+    local hasMDT = HasMDTAccess()
     local nearbyPlayers = GetNearbyPlayers()
 
     -- Récupérer les données du joueur
@@ -107,6 +121,7 @@ function OpenTablet()
             userName = GetPlayerName(PlayerId()),
             isBoss = isBoss,
             hasAuditAccess = hasAudit,
+            hasMDTAccess = hasMDT,
             commission = playerData.commission or Config.DefaultCommission,
             products = playerData.products or {},
             partnerships = playerData.partnerships or {},
@@ -327,6 +342,16 @@ end)
 
 RegisterNUICallback('closeInvoiceMenu', function(data, cb)
     SetNuiFocus(false, false)
+    cb('ok')
+end)
+
+-- ============================================
+-- MDT - Ouvrir le système MDT (Police/DOJ/EMS)
+-- ============================================
+
+RegisterNUICallback('openMDT', function(data, cb)
+    -- Trigger the MDT resource
+    TriggerEvent('zmdt:open')
     cb('ok')
 end)
 

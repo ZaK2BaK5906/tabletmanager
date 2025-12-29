@@ -3,6 +3,7 @@ let tabletData = {
     userName: '',
     isBoss: false,
     hasAuditAccess: false,
+    hasMDTAccess: false,
     commission: 0,
     products: [],
     partnerships: [],
@@ -65,6 +66,7 @@ function openTablet(data) {
     tabletData.userName = data.userName;
     tabletData.isBoss = data.isBoss;
     tabletData.hasAuditAccess = data.hasAuditAccess || false;
+    tabletData.hasMDTAccess = data.hasMDTAccess || false;
     tabletData.commission = data.commission || 0;
     tabletData.products = data.products || [];
     tabletData.partnerships = data.partnerships || [];
@@ -92,6 +94,14 @@ function openTablet(data) {
         auditTab.style.display = 'flex';
     } else {
         auditTab.style.display = 'none';
+    }
+
+    // Afficher/masquer bouton MDT (Police/DOJ/EMS)
+    const mdtBtn = document.getElementById('mdtBtn');
+    if (tabletData.hasMDTAccess) {
+        mdtBtn.style.display = 'flex';
+    } else {
+        mdtBtn.style.display = 'none';
     }
 
     // Afficher/masquer onglet véhicules (dealership only)
@@ -185,11 +195,18 @@ function preFillInvoiceData(data) {
 
 document.getElementById('closeBtn').addEventListener('click', closeTablet);
 
+// MDT Button - Open MDT system
+document.getElementById('mdtBtn').addEventListener('click', () => {
+    postData('openMDT', {});
+});
+
 // Navigation
 document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const page = btn.dataset.page;
-        switchPage(page);
+        if (page) { // Only switch page if data-page exists
+            switchPage(page);
+        }
     });
 });
 
