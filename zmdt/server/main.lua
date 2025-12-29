@@ -46,6 +46,40 @@ end
 -- SYNCHRONISATION ESX
 -- ============================================
 
+-- Convertir date au format MySQL (YYYY-MM-DD)
+local function ConvertDateToMySQL(dateStr)
+    if not dateStr then return '2000-01-01' end
+
+    -- Si déjà au bon format (YYYY-MM-DD)
+    if string.match(dateStr, '^%d%d%d%d%-%d%d%-%d%d$') then
+        return dateStr
+    end
+
+    -- Format DD/MM/YYYY ou MM/DD/YYYY
+    local day, month, year = string.match(dateStr, '^(%d+)/(%d+)/(%d+)$')
+    if day and month and year then
+        -- Si année sur 2 chiffres, ajouter 2000 ou 1900
+        if #year == 2 then
+            year = tonumber(year) > 50 and ('19'..year) or ('20'..year)
+        end
+
+        -- Déterminer si c'est DD/MM/YYYY ou MM/DD/YYYY
+        -- Si le premier nombre > 12, c'est forcément le jour
+        if tonumber(day) > 12 then
+            return string.format('%04d-%02d-%02d', tonumber(year), tonumber(month), tonumber(day))
+        -- Si le deuxième nombre > 12, c'est forcément le mois
+        elseif tonumber(month) > 12 then
+            return string.format('%04d-%02d-%02d', tonumber(year), tonumber(day), tonumber(month))
+        -- Sinon on assume DD/MM/YYYY (format européen)
+        else
+            return string.format('%04d-%02d-%02d', tonumber(year), tonumber(month), tonumber(day))
+        end
+    end
+
+    -- Format par défaut si rien ne match
+    return '2000-01-01'
+end
+
 -- Sync ALL players au démarrage de la ressource
 CreateThread(function()
     Wait(2000) -- Attendre que ESX soit chargé
@@ -58,7 +92,7 @@ CreateThread(function()
             local identifier = xPlayer.identifier
             local firstname = xPlayer.get('firstName') or 'Unknown'
             local lastname = xPlayer.get('lastName') or 'Unknown'
-            local dob = xPlayer.get('dateofbirth') or '2000-01-01'
+            local dob = ConvertDateToMySQL(xPlayer.get('dateofbirth'))
             local sex = xPlayer.get('sex') or 'M'
             local height = xPlayer.get('height') or 175
 
@@ -88,7 +122,7 @@ AddEventHandler('esx:playerLoaded', function(playerId, xPlayer)
     local identifier = xPlayer.identifier
     local firstname = xPlayer.get('firstName') or 'Unknown'
     local lastname = xPlayer.get('lastName') or 'Unknown'
-    local dob = xPlayer.get('dateofbirth') or '2000-01-01'
+    local dob = ConvertDateToMySQL(xPlayer.get('dateofbirth'))
     local sex = xPlayer.get('sex') or 'M'
     local height = xPlayer.get('height') or 175
 
