@@ -28,9 +28,7 @@ AddEventHandler('zmdt:police:createCall', function(data)
     ]], {callNumber, data.priority, data.call_type, data.location, data.description})
 
     if callId then
-        Show
-
-Notification(_source, '✅ Appel créé: '..callNumber, 'success')
+        ShowNotification(_source, '✅ Appel créé: '..callNumber, 'success')
 
         -- Broadcast to all police
         local call = {

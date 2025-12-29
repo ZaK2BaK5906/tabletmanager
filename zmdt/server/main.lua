@@ -90,7 +90,7 @@ ESX.RegisterServerCallback('zmdt:getInitialData', function(source, cb, service)
         },
         permissions = {}, -- TODO: Load permissions
         service = service
-    end
+    }
 
     -- Service-specific data
     if service == 'police' then
