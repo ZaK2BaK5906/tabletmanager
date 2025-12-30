@@ -1,10 +1,9 @@
 // ============================================
-// B_ADMIN2 - NUI APP (VANILLA JS)
+// B_ADMIN2 - Modern NUI App
 // ============================================
 
-let currentPlayer = null;
 let players = [];
-let tickets = [];
+let currentPlayer = null;
 
 // ============================================
 // UTILS
@@ -15,13 +14,7 @@ function post(endpoint, data = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-    }).then(res => res.json());
-}
-
-function formatTime(seconds) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return `${h}h ${m}m`;
+    }).then(res => res.json()).catch(() => null);
 }
 
 // ============================================
@@ -29,59 +22,264 @@ function formatTime(seconds) {
 // ============================================
 
 window.addEventListener('message', (event) => {
-    const data = event.data;
+    const { action, visible, data: eventData } = event.data;
 
-    if (data.action === 'toggle') {
+    if (action === 'toggle') {
         const app = document.getElementById('app');
-        if (data.visible) {
+        if (visible) {
             app.classList.remove('hidden');
-            loadDashboard();
+            loadPlayers();
         } else {
             app.classList.add('hidden');
+            closePlayerPanel();
         }
     }
-
-    if (data.action === 'spectateStart') {
-        // TODO: Show spectate overlay
-    }
-
-    if (data.action === 'spectateStop') {
-        // TODO: Hide spectate overlay
-    }
-
-    if (data.action === 'spectateUpdate') {
-        // TODO: Update spectate overlay data
-    }
 });
 
 // ============================================
-// NAVIGATION
+// PLAYERS
 // ============================================
 
-document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        // Update active nav
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        // Show page
-        const page = btn.dataset.page;
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(`page-${page}`).classList.add('active');
-
-        // Load data
-        if (page === 'dashboard') loadDashboard();
-        if (page === 'players') loadPlayers();
-        if (page === 'tickets') loadTickets();
+function loadPlayers() {
+    post('getPlayers').then(data => {
+        if (!data) return;
+        players = data;
+        renderPlayers();
+        updateStats();
     });
+}
+
+function renderPlayers() {
+    const list = document.getElementById('players-list');
+    const search = document.getElementById('player-search').value.toLowerCase();
+
+    const filtered = search
+        ? players.filter(p => p.name.toLowerCase().includes(search))
+        : players;
+
+    list.innerHTML = '';
+
+    filtered.forEach(player => {
+        const card = document.createElement('div');
+        card.className = 'player-card';
+
+        const initial = player.name.charAt(0).toUpperCase();
+
+        card.innerHTML = `
+            <div class="player-avatar">${initial}</div>
+            <div class="player-info">
+                <div class="player-name">${player.name}</div>
+                <div class="player-meta">ID: ${player.id} • ${player.job}</div>
+            </div>
+            <div class="player-ping">${player.ping}ms</div>
+        `;
+
+        card.addEventListener('click', () => openPlayerPanel(player.id));
+        list.appendChild(card);
+    });
+}
+
+function updateStats() {
+    document.getElementById('stat-players').textContent = players.length;
+    const staffCount = players.filter(p => p.isStaff).length || 0;
+    document.getElementById('stat-staff').textContent = staffCount;
+}
+
+// ============================================
+// SEARCH
+// ============================================
+
+document.getElementById('player-search')?.addEventListener('input', () => {
+    renderPlayers();
 });
 
-// Close button
-document.getElementById('close-btn').addEventListener('click', () => {
+document.getElementById('refresh-players')?.addEventListener('click', () => {
+    loadPlayers();
+});
+
+// ============================================
+// PLAYER PANEL
+// ============================================
+
+function openPlayerPanel(playerId) {
+    post('getPlayerData', { playerId }).then(data => {
+        if (!data) return;
+
+        currentPlayer = data;
+        const panel = document.getElementById('player-panel');
+        const content = document.getElementById('panel-content');
+
+        document.getElementById('panel-player-name').textContent = data.name;
+
+        content.innerHTML = `
+            <!-- Actions Grid -->
+            <div class="actions-grid">
+                <button onclick="playerAction('goto', ${data.id})" class="action-btn-small">Goto</button>
+                <button onclick="playerAction('bring', ${data.id})" class="action-btn-small">Bring</button>
+                <button onclick="playerAction('spectate', ${data.id})" class="action-btn-small">Spectate</button>
+                <button onclick="playerAction('freeze', ${data.id})" class="action-btn-small">Freeze</button>
+                <button onclick="playerAction('revive', ${data.id})" class="action-btn-small">Revive</button>
+                <button onclick="playerAction('heal', ${data.id})" class="action-btn-small">Heal</button>
+                <button onclick="playerAction('kill', ${data.id})" class="action-btn-small">Kill</button>
+                <button onclick="playerAction('kick', ${data.id})" class="action-btn-small">Kick</button>
+            </div>
+
+            <!-- Info General -->
+            <div class="info-section">
+                <h3>Informations</h3>
+                <div class="info-row">
+                    <span class="info-label">ID</span>
+                    <span class="info-value">${data.id}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Job</span>
+                    <span class="info-value">${data.job} [${data.grade}]</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Ping</span>
+                    <span class="info-value">${data.ping}ms</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">License</span>
+                    <span class="info-value">${data.license || 'N/A'}</span>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="info-section">
+                <h3>Stats</h3>
+                <div class="info-row">
+                    <span class="info-label">HP</span>
+                    <span class="info-value">${data.health || 0}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Armor</span>
+                    <span class="info-value">${data.armor || 0}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Zone</span>
+                    <span class="info-value">${data.zone || 'N/A'}</span>
+                </div>
+            </div>
+
+            <!-- Money -->
+            <div class="info-section">
+                <h3>Argent</h3>
+                <div class="info-row">
+                    <span class="info-label">Cash</span>
+                    <span class="info-value">$${data.money?.cash || 0}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Bank</span>
+                    <span class="info-value">$${data.money?.bank || 0}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Black</span>
+                    <span class="info-value">$${data.money?.black || 0}</span>
+                </div>
+            </div>
+
+            <!-- Inventory -->
+            <div class="info-section">
+                <h3>Inventaire</h3>
+                <div class="info-row">
+                    <span class="info-label">Poids</span>
+                    <span class="info-value">${data.inventory?.weight || 0}/${data.inventory?.maxWeight || 0}</span>
+                </div>
+            </div>
+
+            <!-- Moderation Actions -->
+            <div class="actions-grid">
+                <button onclick="warnPlayer(${data.id})" class="action-btn-small">Warn</button>
+                <button onclick="banPlayer(${data.id})" class="action-btn-small">Ban</button>
+            </div>
+        `;
+
+        panel.classList.remove('hidden');
+        panel.classList.add('active');
+    });
+}
+
+function closePlayerPanel() {
+    const panel = document.getElementById('player-panel');
+    panel.classList.remove('active');
+    setTimeout(() => panel.classList.add('hidden'), 300);
+}
+
+document.getElementById('close-panel')?.addEventListener('click', closePlayerPanel);
+
+// ============================================
+// PLAYER ACTIONS
+// ============================================
+
+function playerAction(action, playerId) {
+    switch(action) {
+        case 'goto':
+            post('goto', { playerId });
+            break;
+        case 'bring':
+            post('bring', { playerId });
+            break;
+        case 'spectate':
+            post('spectate', { playerId });
+            closePlayerPanel();
+            break;
+        case 'freeze':
+            post('freeze', { playerId, freeze: true });
+            break;
+        case 'revive':
+            post('revive', { playerId });
+            break;
+        case 'heal':
+            post('heal', { playerId });
+            break;
+        case 'kill':
+            if (confirm('Tuer ce joueur ?')) {
+                // TODO: Add kill action server-side
+            }
+            break;
+        case 'kick':
+            const reason = prompt('Raison du kick:');
+            if (reason) {
+                post('kick', { playerId, reason });
+            }
+            break;
+    }
+}
+
+function warnPlayer(playerId) {
+    const reason = prompt('Raison du warn:');
+    if (reason) {
+        post('warn', { playerId, reason, points: 1 });
+    }
+}
+
+function banPlayer(playerId) {
+    const reason = prompt('Raison du ban:');
+    if (!reason) return;
+
+    const type = confirm('Ban permanent ? (Annuler = temporaire)') ? 'permanent' : 'temp';
+    const duration = type === 'temp' ? prompt('Durée en secondes:', '86400') : null;
+
+    post('ban', { playerId, banType: type, reason, duration });
+}
+
+// ============================================
+// QUICK ACTIONS
+// ============================================
+
+document.getElementById('btn-staffmode')?.addEventListener('click', () => {
+    post('toggleStaffMode');
+});
+
+document.getElementById('close-btn')?.addEventListener('click', () => {
     post('close');
 });
 
-// ESC key
+// ============================================
+// ESC KEY
+// ============================================
+
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         const app = document.getElementById('app');
@@ -92,210 +290,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================
-// DASHBOARD
-// ============================================
-
-function loadDashboard() {
-    post('getDashboard').then(data => {
-        if (!data) return;
-
-        document.getElementById('stat-players').textContent = data.playersOnline || 0;
-        document.getElementById('stat-staff').textContent = data.staffOnline || 0;
-        document.getElementById('stat-tickets').textContent = data.openReports || 0;
-        document.getElementById('stat-uptime').textContent = formatTime(data.uptime || 0);
-
-        // Activity feed
-        const feed = document.getElementById('activity-feed');
-        feed.innerHTML = '';
-        if (data.activityFeed) {
-            data.activityFeed.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'activity-item';
-                div.innerHTML = `
-                    <div><strong>${item.action_type}</strong> - ${item.admin_rank}</div>
-                    <div class="time">${new Date(item.performed_at).toLocaleString()}</div>
-                `;
-                feed.appendChild(div);
-            });
-        }
-    });
-}
-
-// ============================================
-// PLAYERS
-// ============================================
-
-function loadPlayers() {
-    post('getPlayers').then(data => {
-        players = data || [];
-        renderPlayers();
-    });
-}
-
-function renderPlayers() {
-    const list = document.getElementById('players-list');
-    list.innerHTML = '';
-
-    const search = document.getElementById('player-search').value.toLowerCase();
-    const filtered = players.filter(p => p.name.toLowerCase().includes(search));
-
-    filtered.forEach(player => {
-        const card = document.createElement('div');
-        card.className = 'player-card';
-        card.innerHTML = `
-            <div class="name">${player.name} [${player.id}]</div>
-            <div class="info">Job: ${player.job} | Ping: ${player.ping}ms</div>
-            <div class="info">Zone: ${player.zone}</div>
-        `;
-        card.addEventListener('click', () => openPlayerDetail(player.id));
-        list.appendChild(card);
-    });
-}
-
-document.getElementById('player-search')?.addEventListener('input', renderPlayers);
-document.getElementById('refresh-players')?.addEventListener('click', loadPlayers);
-
-function openPlayerDetail(playerId) {
-    post('getPlayerData', { playerId }).then(data => {
-        if (!data) return;
-
-        currentPlayer = data;
-        const modal = document.getElementById('player-modal');
-        const detail = document.getElementById('player-detail');
-        document.getElementById('modal-player-name').textContent = data.name;
-
-        detail.innerHTML = `
-            <div class="section">
-                <h4>Infos</h4>
-                <p>ID: ${data.id} | Job: ${data.job} [${data.grade}]</p>
-                <p>License: ${data.license}</p>
-                <p>Zone: ${data.zone}</p>
-                <p>HP: ${data.health} | Armor: ${data.armor}</p>
-                <p>💰 Cash: $${data.money.cash} | Bank: $${data.money.bank} | Black: $${data.money.black}</p>
-            </div>
-            <div class="section">
-                <h4>Actions Rapides</h4>
-                <button onclick="playerAction('goto', ${data.id})" class="btn">📍 Goto</button>
-                <button onclick="playerAction('bring', ${data.id})" class="btn">📍 Bring</button>
-                <button onclick="playerAction('spectate', ${data.id})" class="btn">👁️ Spectate</button>
-                <button onclick="playerAction('freeze', ${data.id})" class="btn">🧊 Freeze</button>
-                <button onclick="playerAction('revive', ${data.id})" class="btn">💚 Revive</button>
-                <button onclick="playerAction('heal', ${data.id})" class="btn">💊 Heal</button>
-            </div>
-            <div class="section">
-                <h4>Modération</h4>
-                <input type="text" id="warn-reason" placeholder="Raison du warn">
-                <button onclick="warnPlayer(${data.id})" class="btn">⚠️ Warn</button>
-                <button onclick="kickPlayer(${data.id})" class="btn-danger">🚫 Kick</button>
-            </div>
-        `;
-
-        modal.classList.remove('hidden');
-    });
-}
-
-function closeModal() {
-    document.getElementById('player-modal').classList.add('hidden');
-}
-
-function playerAction(action, playerId) {
-    if (action === 'goto') post('goto', { playerId });
-    if (action === 'bring') post('bring', { playerId });
-    if (action === 'spectate') post('spectate', { playerId });
-    if (action === 'freeze') post('freeze', { playerId, freeze: true });
-    if (action === 'revive') post('revive', { playerId });
-    if (action === 'heal') post('heal', { playerId });
-}
-
-function warnPlayer(playerId) {
-    const reason = document.getElementById('warn-reason').value;
-    if (!reason) return alert('Raison requise');
-    post('warn', { playerId, reason, points: 1 });
-}
-
-function kickPlayer(playerId) {
-    const reason = prompt('Raison du kick:');
-    if (!reason) return;
-    post('kick', { playerId, reason });
-}
-
-// ============================================
-// VEHICLES
-// ============================================
-
-function spawnVehicle() {
-    const model = document.getElementById('vehicle-model').value;
-    if (!model) return alert('Modèle requis');
-    post('spawnVehicle', { model });
-}
-
-function deleteVehicle() {
-    post('deleteVehicle');
-}
-
-function vehicleAction(action) {
-    post('vehicleAction', { action });
-}
-
-// ============================================
-// WORLD
-// ============================================
-
-function setTime() {
-    const hour = parseInt(document.getElementById('hour').value) || 12;
-    const minute = parseInt(document.getElementById('minute').value) || 0;
-    post('setTime', { hour, minute });
-}
-
-function setWeather() {
-    const weather = document.getElementById('weather').value;
-    post('setWeather', { weather });
-}
-
-// ============================================
-// TICKETS
-// ============================================
-
-function loadTickets() {
-    post('getTickets', {}).then(data => {
-        tickets = data || [];
-        renderTickets();
-    });
-}
-
-function renderTickets() {
-    const list = document.getElementById('tickets-list');
-    list.innerHTML = '';
-
-    tickets.forEach(ticket => {
-        const card = document.createElement('div');
-        card.className = `ticket-card ${ticket.priority}`;
-        card.innerHTML = `
-            <div class="title">#${ticket.id} - ${ticket.title}</div>
-            <div class="meta">Par: ${ticket.reporter_name} | Statut: ${ticket.status} | Priorité: ${ticket.priority}</div>
-        `;
-        list.appendChild(card);
-    });
-}
-
-document.getElementById('refresh-tickets')?.addEventListener('click', loadTickets);
-
-// ============================================
-// STAFF MODE
-// ============================================
-
-document.getElementById('toggle-staffmode')?.addEventListener('click', () => {
-    post('toggleStaffMode');
-});
-
-document.getElementById('toggle-panic')?.addEventListener('click', () => {
-    if (confirm('Activer/Désactiver le Panic Mode ?')) {
-        post('togglePanicMode');
-    }
-});
-
-// ============================================
 // READY
 // ============================================
 
-console.log('[B_ADMIN2] NUI Ready');
+console.log('[B_ADMIN2] Modern NUI Ready');

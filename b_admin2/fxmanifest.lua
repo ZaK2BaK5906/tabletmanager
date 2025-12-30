@@ -26,6 +26,7 @@ server_scripts {
     'server/utils/*.lua',
     'server/permissions.lua',
     'server/logging.lua',
+    'server/nui_callbacks.lua',
     'server/actions/*.lua',
     'server/discord_api.lua',
     'server/tickets.lua',

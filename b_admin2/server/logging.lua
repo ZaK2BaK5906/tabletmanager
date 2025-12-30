@@ -299,8 +299,9 @@ end
 ---@param coords vector3
 ---@return string
 function GetZoneName(coords)
-    local zone = GetNameOfZone(coords.x, coords.y, coords.z)
-    return zone or 'UNKNOWN'
+    -- NOTE: GetNameOfZone n'existe que client-side
+    -- Server-side, on retourne juste "N/A" ou coords
+    return string.format("X:%.0f Y:%.0f", coords.x, coords.y)
 end
 
 --- Sauvegarde une entrée dans un fichier JSONL
