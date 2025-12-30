@@ -4,7 +4,7 @@ Config = {}
 -- GÉNÉRAL
 -- ============================================
 Config.Locale = 'fr'
-Config.ServerName = 'Votre Serveur'
+Config.ServerName = 'REVIVE RP'
 Config.ServerId = 'srv01' -- Pour multi-serveur
 
 -- ============================================
@@ -22,11 +22,7 @@ Config.Ranks = {
 
 -- Mapping Discord Role IDs -> Rank (remplacer par vos IDs)
 Config.DiscordRoles = {
-    ['1234567890123456789'] = 'helper',
-    ['1234567890123456790'] = 'mod',
-    ['1234567890123456791'] = 'admin',
-    ['1234567890123456792'] = 'superadmin',
-    ['1234567890123456793'] = 'owner'
+    ['1043283984672641094'] = 'owner' -- Role staff = owner (toutes permissions)
 }
 
 -- Overrides par Discord User ID (optionnel, prioritaire sur roles)
@@ -220,13 +216,13 @@ Config.Logging = {
 
 -- Discord Webhooks (par catégorie)
 Config.Webhooks = {
-    moderation = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN',
-    economy = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN',
-    player = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN',
-    staffmode = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN',
-    reports = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN',
-    security = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN',
-    player_actions = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN' -- Optionnel
+    moderation = 'https://discord.com/api/webhooks/1455405399317676065/hqda9icjhpbbZdi1l4oWY5WYd74QNjgLgBmfjVlPYl96QXpRlakgK5oeQ5uqSQURMYiV',
+    economy = 'https://discord.com/api/webhooks/1455405399317676065/hqda9icjhpbbZdi1l4oWY5WYd74QNjgLgBmfjVlPYl96QXpRlakgK5oeQ5uqSQURMYiV',
+    player = 'https://discord.com/api/webhooks/1455405399317676065/hqda9icjhpbbZdi1l4oWY5WYd74QNjgLgBmfjVlPYl96QXpRlakgK5oeQ5uqSQURMYiV',
+    staffmode = 'https://discord.com/api/webhooks/1455405399317676065/hqda9icjhpbbZdi1l4oWY5WYd74QNjgLgBmfjVlPYl96QXpRlakgK5oeQ5uqSQURMYiV',
+    reports = 'https://discord.com/api/webhooks/1455405399317676065/hqda9icjhpbbZdi1l4oWY5WYd74QNjgLgBmfjVlPYl96QXpRlakgK5oeQ5uqSQURMYiV',
+    security = 'https://discord.com/api/webhooks/1455405399317676065/hqda9icjhpbbZdi1l4oWY5WYd74QNjgLgBmfjVlPYl96QXpRlakgK5oeQ5uqSQURMYiV',
+    player_actions = 'https://discord.com/api/webhooks/1455405399317676065/hqda9icjhpbbZdi1l4oWY5WYd74QNjgLgBmfjVlPYl96QXpRlakgK5oeQ5uqSQURMYiV' -- Optionnel
 }
 
 -- ============================================
@@ -235,8 +231,8 @@ Config.Webhooks = {
 
 Config.DiscordBot = {
     Enabled = true,
-    GuildId = '1234567890123456789', -- Votre Guild ID
-    StaffChannelId = '1234567890123456789', -- Channel staff
+    GuildId = '1043276815629815998', -- Votre Guild ID
+    StaffChannelId = '1455405371920220233', -- Channel staff
 
     -- Sécurité HMAC
     HMACSecret = 'CHANGE_ME_SUPER_SECRET_KEY_MINIMUM_32_CHARS', -- CHANGER !
@@ -248,11 +244,7 @@ Config.DiscordBot = {
 
     -- Whitelist roles autorisés (Discord Role IDs)
     AllowedRoles = {
-        '1234567890123456789', -- Helper+
-        '1234567890123456790',
-        '1234567890123456791',
-        '1234567890123456792',
-        '1234567890123456793'
+        '1043283984672641094' -- Role staff
     }
 }
 
@@ -261,7 +253,7 @@ Config.DiscordBot = {
 -- ============================================
 
 Config.Tickets = {
-    Enabled = true,
+    Enabled = false,
     MaxOpenPerPlayer = 3,
     AutoAssign = true, -- Auto-assign au staff dispo
     RequireScreenshot = false,
