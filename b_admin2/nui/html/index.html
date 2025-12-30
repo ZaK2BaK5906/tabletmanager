@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B_Admin2</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div id="app" class="hidden">
+        <!-- Sidebar Gauche -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🛡️ B_ADMIN2</h1>
+                <p id="server-name">Loading...</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-page="dashboard">
+                    📊 Dashboard
+                </button>
+                <button class="nav-btn" data-page="players">
+                    👥 Players
+                </button>
+                <button class="nav-btn" data-page="moderation">
+                    🔨 Moderation
+                </button>
+                <button class="nav-btn" data-page="economy">
+                    💰 Economy
+                </button>
+                <button class="nav-btn" data-page="vehicles">
+                    🚗 Vehicles
+                </button>
+                <button class="nav-btn" data-page="world">
+                    🌍 World
+                </button>
+                <button class="nav-btn" data-page="tickets">
+                    📋 Tickets
+                </button>
+                <button class="nav-btn" data-page="staffmode">
+                    🛡️ Staff Mode
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="close-btn" class="btn-danger">✖ Fermer</button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content">
+            <!-- Dashboard Page -->
+            <div id="page-dashboard" class="page active">
+                <h2>📊 Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>👥 Joueurs en ligne</h3>
+                        <p id="stat-players" class="stat-value">-</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>🛡️ Staff en ligne</h3>
+                        <p id="stat-staff" class="stat-value">-</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>📋 Tickets ouverts</h3>
+                        <p id="stat-tickets" class="stat-value">-</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>⏱️ Uptime</h3>
+                        <p id="stat-uptime" class="stat-value">-</p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>📰 Activité Récente</h3>
+                    <div id="activity-feed" class="activity-feed"></div>
+                </div>
+            </div>
+
+            <!-- Players Page -->
+            <div id="page-players" class="page">
+                <h2>👥 Gestion Joueurs</h2>
+                <div class="toolbar">
+                    <input type="text" id="player-search" placeholder="🔍 Rechercher un joueur...">
+                    <button id="refresh-players" class="btn">🔄 Rafraîchir</button>
+                </div>
+
+                <div id="players-list" class="players-list"></div>
+
+                <!-- Player Detail Modal -->
+                <div id="player-modal" class="modal hidden">
+                    <div class="modal-content large">
+                        <h3 id="modal-player-name">Joueur</h3>
+                        <div id="player-detail"></div>
+                        <div class="modal-actions">
+                            <button onclick="closeModal()" class="btn-secondary">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moderation Page -->
+            <div id="page-moderation" class="page">
+                <h2>🔨 Modération</h2>
+                <p>Sélectionnez un joueur dans l'onglet Players pour modérer.</p>
+            </div>
+
+            <!-- Economy Page -->
+            <div id="page-economy" class="page">
+                <h2>💰 Économie</h2>
+                <p>Actions économiques disponibles via le profil joueur.</p>
+            </div>
+
+            <!-- Vehicles Page -->
+            <div id="page-vehicles" class="page">
+                <h2>🚗 Véhicules</h2>
+                <div class="section">
+                    <h3>Spawn Véhicule</h3>
+                    <input type="text" id="vehicle-model" placeholder="Modèle (ex: adder)">
+                    <button onclick="spawnVehicle()" class="btn">🚗 Spawn</button>
+                </div>
+                <div class="section">
+                    <h3>Actions Rapides</h3>
+                    <button onclick="deleteVehicle()" class="btn-danger">🗑️ Supprimer Véhicule</button>
+                    <button onclick="vehicleAction('repair')" class="btn">🔧 Réparer</button>
+                    <button onclick="vehicleAction('clean')" class="btn">✨ Nettoyer</button>
+                    <button onclick="vehicleAction('flip')" class="btn">🔄 Retourner</button>
+                </div>
+            </div>
+
+            <!-- World Page -->
+            <div id="page-world" class="page">
+                <h2>🌍 Monde</h2>
+                <div class="section">
+                    <h3>Heure</h3>
+                    <input type="number" id="hour" placeholder="Heure (0-23)" min="0" max="23">
+                    <input type="number" id="minute" placeholder="Minute (0-59)" min="0" max="59">
+                    <button onclick="setTime()" class="btn">⏰ Définir</button>
+                </div>
+                <div class="section">
+                    <h3>Météo</h3>
+                    <select id="weather">
+                        <option value="CLEAR">Clair</option>
+                        <option value="EXTRASUNNY">Très ensoleillé</option>
+                        <option value="CLOUDS">Nuageux</option>
+                        <option value="RAIN">Pluie</option>
+                        <option value="THUNDER">Orage</option>
+                        <option value="SNOW">Neige</option>
+                    </select>
+                    <button onclick="setWeather()" class="btn">🌤️ Définir</button>
+                </div>
+            </div>
+
+            <!-- Tickets Page -->
+            <div id="page-tickets" class="page">
+                <h2>📋 Tickets</h2>
+                <button id="refresh-tickets" class="btn">🔄 Rafraîchir</button>
+                <div id="tickets-list" class="tickets-list"></div>
+            </div>
+
+            <!-- Staff Mode Page -->
+            <div id="page-staffmode" class="page">
+                <h2>🛡️ Staff Mode</h2>
+                <button id="toggle-staffmode" class="btn">🔄 Toggle Staff Mode</button>
+                <button id="toggle-panic" class="btn-danger">🚨 Toggle Panic Mode (Owner)</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+</body>
+</html>
