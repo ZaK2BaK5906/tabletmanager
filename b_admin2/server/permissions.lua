@@ -82,18 +82,13 @@ local function GetDiscordRank(source)
         return override.rank
     end
 
-    -- Check roles
-    local discordId = string.gsub(discord, 'discord:', '')
-    local roles = exports.badmin_discord:GetPlayerRoles(source) -- Assume external resource si besoin
-
-    -- Fallback: récupérer roles via identifiers (si pas d'export externe)
-    -- Ici on simule avec Config.DiscordRoles (à adapter selon votre méthode)
-
-    for roleId, rank in pairs(Config.DiscordRoles) do
-        -- Vérifier si le joueur a ce role (nécessite intégration Discord)
-        -- Pour l'instant, on fait un fallback simple
-        -- TODO: Intégrer récupération roles Discord via API ou autre ressource
-    end
+    -- NOTE: La récupération automatique des roles Discord nécessite une ressource externe
+    -- (comme discord_perms ou autre) qui expose les roles du joueur.
+    --
+    -- Pour l'instant, utilisez :
+    -- 1. DB (z_admin_permissions) - méthode recommandée
+    -- 2. Config.DiscordUserOverrides (user ID direct)
+    -- 3. Fallback ACE (server.cfg)
 
     -- Fallback: pas de rank Discord trouvé
     DiscordCache[discord] = {
