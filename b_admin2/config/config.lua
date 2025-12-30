@@ -25,6 +25,14 @@ Config.DiscordRoles = {
     ['1043283984672641094'] = 'owner' -- Role staff = owner (toutes permissions)
 }
 
+-- WHITELIST LICENSES (PRIORITAIRE - ajoutez vos licenses ici)
+Config.AdminLicenses = {
+    ['license:fcb47b307801e586e8c95881bdfc98004f24d031'] = 'owner', -- Ta license = owner
+    -- Ajouter d'autres licenses ici :
+    -- ['license:xxxxx'] = 'admin',
+    -- ['license:yyyyy'] = 'mod',
+}
+
 -- Overrides par Discord User ID (optionnel, prioritaire sur roles)
 Config.DiscordUserOverrides = {
     -- ['discord:123456789'] = { rank = 'owner', flags = {'*'} }

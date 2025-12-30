@@ -120,31 +120,39 @@ function GetPlayerPermissions(source)
 
     local permissions = { rank = 'none', flags = {} }
 
-    -- 1. Check DB
-    local result = MySQL.query.await('SELECT `rank`, `flags`, `is_active`, `expires_at` FROM `z_admin_permissions` WHERE `identifier` = ? LIMIT 1', {
-        license
-    })
+    -- 0. CHECK WHITELIST CONFIG (PRIORITAIRE)
+    if Config.AdminLicenses and Config.AdminLicenses[license] then
+        permissions.rank = Config.AdminLicenses[license]
+        print(string.format('^2[B_ADMIN2 Permissions]^7 License whitelist trouvée: %s -> rank %s', license, permissions.rank))
+    end
 
-    if result and result[1] then
-        local dbPerms = result[1]
-        if dbPerms.is_active == 1 then
-            -- Check expiration
-            if not dbPerms.expires_at or os.time() < GetTimestamp(dbPerms.expires_at) then
-                permissions.rank = dbPerms.rank
-                permissions.flags = json.decode(dbPerms.flags or '[]')
+    -- 1. Check DB (seulement si pas dans whitelist)
+    if permissions.rank == 'none' then
+        local result = MySQL.query.await('SELECT `rank`, `flags`, `is_active`, `expires_at` FROM `z_admin_permissions` WHERE `identifier` = ? LIMIT 1', {
+            license
+        })
+
+        if result and result[1] then
+            local dbPerms = result[1]
+            if dbPerms.is_active == 1 then
+                -- Check expiration
+                if not dbPerms.expires_at or os.time() < GetTimestamp(dbPerms.expires_at) then
+                    permissions.rank = dbPerms.rank
+                    permissions.flags = json.decode(dbPerms.flags or '[]')
+                end
             end
         end
     end
 
-    -- 2. Check Discord (si pas de DB ou si Discord rank supérieur)
-    local discordRank = GetDiscordRank(source)
-    if discordRank then
-        if permissions.rank == 'none' or IsRankSuperiorOrEqual(discordRank, permissions.rank) then
+    -- 2. Check Discord (seulement si pas dans whitelist et pas de DB)
+    if permissions.rank == 'none' then
+        local discordRank = GetDiscordRank(source)
+        if discordRank then
             permissions.rank = discordRank
         end
     end
 
-    -- 3. Fallback ACE (optionnel)
+    -- 3. Fallback ACE (optionnel, seulement si rien trouvé)
     if Config.UseFallbackACE and permissions.rank == 'none' then
         if IsPlayerAceAllowed(source, Config.ACEPermission) then
             permissions.rank = 'admin' -- Rank par défaut pour ACE
