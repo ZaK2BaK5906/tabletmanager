@@ -3,96 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B_Admin2</title>
+    <title>B_Admin2 Ultimate</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <div id="app" class="hidden">
-        <!-- Menu Latéral Gauche -->
-        <div class="sidebar-left">
-            <!-- Header -->
-            <div class="sidebar-header">
-                <div class="brand">
-                    <div class="brand-icon">A</div>
-                    <div class="brand-text">
-                        <h1>Admin Panel</h1>
-                        <span id="server-name">REVIVE RP</span>
+        <!-- Main Container -->
+        <div class="admin-container">
+            <!-- Left Sidebar - Players List -->
+            <div class="players-sidebar">
+                <div class="sidebar-header">
+                    <h2>Players Online</h2>
+                    <span id="player-count" class="count-badge">0</span>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="player-search" placeholder="Search player...">
+                </div>
+                <div id="players-list" class="players-list-compact"></div>
+            </div>
+
+            <!-- Center - Player Info Panel -->
+            <div id="player-info-panel" class="player-info-panel hidden">
+                <div class="panel-header-compact">
+                    <div class="player-avatar-big" id="player-avatar">?</div>
+                    <div class="player-header-info">
+                        <h2 id="player-name-display">Select a player</h2>
+                        <span id="player-id-display" class="player-id-badge">ID: -</span>
+                    </div>
+                    <button id="close-player-panel" class="btn-icon-close">×</button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="general">General</button>
+                    <button class="tab-btn" data-tab="inventory">Inventory</button>
+                    <button class="tab-btn" data-tab="vehicles">Vehicles</button>
+                    <button class="tab-btn" data-tab="moderation">Moderation</button>
+                </div>
+
+                <!-- Tab Content General -->
+                <div class="tab-content active" id="tab-general">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">License</span>
+                            <span class="value" id="p-license">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Job</span>
+                            <span class="value" id="p-job">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Ping</span>
+                            <span class="value" id="p-ping">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">HP</span>
+                            <span class="value" id="p-health">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Armor</span>
+                            <span class="value" id="p-armor">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Cash</span>
+                            <span class="value" id="p-cash">$0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Bank</span>
+                            <span class="value" id="p-bank">$0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Black Money</span>
+                            <span class="value" id="p-black">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content Inventory -->
+                <div class="tab-content" id="tab-inventory">
+                    <div class="inventory-info">
+                        <p>Weight: <span id="p-weight">0/0</span></p>
+                    </div>
+                </div>
+
+                <!-- Tab Content Vehicles -->
+                <div class="tab-content" id="tab-vehicles">
+                    <p>Vehicle info here</p>
+                </div>
+
+                <!-- Tab Content Moderation -->
+                <div class="tab-content" id="tab-moderation">
+                    <div class="mod-history">
+                        <h4>Warns: <span id="p-warns-count">0</span></h4>
+                        <h4>Bans: <span id="p-bans-count">0</span></h4>
                     </div>
                 </div>
             </div>
 
-            <!-- Search -->
-            <div class="search-box">
-                <input type="text" id="player-search" placeholder="Rechercher un joueur...">
-                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-            </div>
+            <!-- Right - Actions Panel -->
+            <div id="actions-panel" class="actions-panel hidden">
+                <h3>Actions</h3>
 
-            <!-- Stats Quick -->
-            <div class="stats-quick">
-                <div class="stat-item">
-                    <span class="stat-label">Joueurs</span>
-                    <span class="stat-value" id="stat-players">0</span>
+                <!-- Quick Actions -->
+                <div class="action-category">
+                    <h4>Teleport</h4>
+                    <div class="action-btns-grid">
+                        <button onclick="action('goto')" class="action-btn">Goto</button>
+                        <button onclick="action('bring')" class="action-btn">Bring</button>
+                        <button onclick="action('tpm')" class="action-btn">TP to me</button>
+                        <button onclick="action('tptome')" class="action-btn">TP me to</button>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Staff</span>
-                    <span class="stat-value" id="stat-staff">0</span>
-                </div>
-            </div>
 
-            <!-- Players List -->
-            <div class="players-section">
-                <div class="section-header">
-                    <span>Joueurs en ligne</span>
-                    <button id="refresh-players" class="icon-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-                        </svg>
-                    </button>
+                <!-- Player Actions -->
+                <div class="action-category">
+                    <h4>Player</h4>
+                    <div class="action-btns-grid">
+                        <button onclick="action('revive')" class="action-btn">Revive</button>
+                        <button onclick="action('heal')" class="action-btn">Heal</button>
+                        <button onclick="action('freeze')" class="action-btn">Freeze</button>
+                        <button onclick="action('unfreeze')" class="action-btn">Unfreeze</button>
+                        <button onclick="action('spectate')" class="action-btn">Spectate</button>
+                        <button onclick="action('noclip')" class="action-btn">Noclip</button>
+                        <button onclick="action('kill')" class="action-btn">Kill</button>
+                        <button onclick="action('slap')" class="action-btn">Slap</button>
+                        <button onclick="action('drunk')" class="action-btn">Drunk</button>
+                        <button onclick="action('drug')" class="action-btn">Drug Effect</button>
+                        <button onclick="action('ragdoll')" class="action-btn">Ragdoll</button>
+                        <button onclick="action('fling')" class="action-btn">Fling</button>
+                    </div>
                 </div>
-                <div id="players-list" class="players-list"></div>
-            </div>
 
-            <!-- Quick Actions Bottom -->
-            <div class="quick-actions">
-                <button id="btn-staffmode" class="action-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    </svg>
-                    <span>Staff Mode</span>
-                </button>
-                <button id="btn-noclip" class="action-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-                    </svg>
-                    <span>Noclip</span>
-                </button>
-                <button id="close-btn" class="action-btn danger">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                    <span>Fermer</span>
-                </button>
+                <!-- Vehicle Actions -->
+                <div class="action-category">
+                    <h4>Vehicle</h4>
+                    <div class="action-btns-grid">
+                        <button onclick="action('givecar')" class="action-btn">Give Car</button>
+                        <button onclick="action('fixveh')" class="action-btn">Fix Vehicle</button>
+                        <button onclick="action('delveh')" class="action-btn">Delete Vehicle</button>
+                        <button onclick="action('flipveh')" class="action-btn">Flip Vehicle</button>
+                    </div>
+                </div>
+
+                <!-- Inventory Actions -->
+                <div class="action-category">
+                    <h4>Inventory</h4>
+                    <div class="action-btns-grid">
+                        <button onclick="action('openinv')" class="action-btn">Open Inventory</button>
+                        <button onclick="action('clearinv')" class="action-btn">Clear Inventory</button>
+                        <button onclick="action('giveitem')" class="action-btn">Give Item</button>
+                        <button onclick="action('giveweapon')" class="action-btn">Give Weapon</button>
+                        <button onclick="action('stripweapons')" class="action-btn">Strip Weapons</button>
+                    </div>
+                </div>
+
+                <!-- Money Actions -->
+                <div class="action-category">
+                    <h4>Money</h4>
+                    <div class="action-btns-grid">
+                        <button onclick="action('givemoney')" class="action-btn">Give Money</button>
+                        <button onclick="action('removemoney')" class="action-btn">Remove Money</button>
+                        <button onclick="action('setcash')" class="action-btn">Set Cash</button>
+                        <button onclick="action('setbank')" class="action-btn">Set Bank</button>
+                    </div>
+                </div>
+
+                <!-- Job Actions -->
+                <div class="action-category">
+                    <h4>Job</h4>
+                    <div class="action-btns-grid">
+                        <button onclick="action('setjob')" class="action-btn">Set Job</button>
+                        <button onclick="action('firejob')" class="action-btn">Fire Job</button>
+                    </div>
+                </div>
+
+                <!-- Moderation Actions -->
+                <div class="action-category">
+                    <h4>Moderation</h4>
+                    <div class="action-btns-grid">
+                        <button onclick="action('warn')" class="action-btn">Warn</button>
+                        <button onclick="action('kick')" class="action-btn">Kick</button>
+                        <button onclick="action('ban')" class="action-btn">Ban</button>
+                        <button onclick="action('unban')" class="action-btn">Unban</button>
+                        <button onclick="action('screenshot')" class="action-btn">Screenshot</button>
+                        <button onclick="action('pm')" class="action-btn">Send PM</button>
+                        <button onclick="action('clearwarns')" class="action-btn">Clear Warns</button>
+                    </div>
+                </div>
+
+                <!-- Admin Actions -->
+                <div class="action-category">
+                    <h4>Admin</h4>
+                    <div class="action-btns-grid">
+                        <button onclick="action('setadmin')" class="action-btn">Set Admin</button>
+                        <button onclick="action('removeadmin')" class="action-btn">Remove Admin</button>
+                        <button onclick="action('viewperms')" class="action-btn">View Perms</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Player Detail Panel (slide from right) -->
-        <div id="player-panel" class="player-panel hidden">
-            <div class="panel-header">
-                <h2 id="panel-player-name">Joueur</h2>
-                <button id="close-panel" class="icon-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
+        <!-- Bottom Bar - Staff Actions -->
+        <div class="bottom-bar">
+            <button onclick="staffAction('staffmode')" class="staff-btn">Staff Mode</button>
+            <button onclick="staffAction('noclip-self')" class="staff-btn">Noclip</button>
+            <button onclick="staffAction('godmode')" class="staff-btn">God Mode</button>
+            <button onclick="staffAction('invisible')" class="staff-btn">Invisible</button>
+            <button onclick="openStaffMenu()" class="staff-btn primary">Staff Menu</button>
+            <button onclick="closeMenu()" class="staff-btn danger">Close</button>
+        </div>
 
-            <div class="panel-content" id="panel-content">
-                <!-- Dynamically loaded player info -->
+        <!-- Staff Menu Modal -->
+        <div id="staff-menu-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Staff Menu</h2>
+                    <button onclick="closeStaffMenu()" class="btn-icon-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="staff-actions-grid">
+                        <button onclick="staffAction('changeped')" class="staff-action-btn">Change Ped</button>
+                        <button onclick="staffAction('clothesmenu')" class="staff-action-btn">Clothes Menu</button>
+                        <button onclick="staffAction('godmode')" class="staff-action-btn">God Mode</button>
+                        <button onclick="staffAction('invisible')" class="staff-action-btn">Invisible</button>
+                        <button onclick="staffAction('superjump')" class="staff-action-btn">Super Jump</button>
+                        <button onclick="staffAction('fastrun')" class="staff-action-btn">Fast Run</button>
+                        <button onclick="staffAction('fastsw im')" class="staff-action-btn">Fast Swim</button>
+                        <button onclick="staffAction('noragdoll')" class="staff-action-btn">No Ragdoll</button>
+                        <button onclick="staffAction('infinitestamina')" class="staff-action-btn">Infinite Stamina</button>
+                        <button onclick="staffAction('setarmor')" class="staff-action-btn">Set Armor 100</button>
+                        <button onclick="staffAction('sethealth')" class="staff-action-btn">Set Health 200</button>
+                        <button onclick="staffAction('clearwanted')" class="staff-action-btn">Clear Wanted</button>
+                        <button onclick="staffAction('spawnveh')" class="staff-action-btn">Spawn Vehicle</button>
+                        <button onclick="staffAction('fixveh')" class="staff-action-btn">Fix Vehicle</button>
+                        <button onclick="staffAction('delveh')" class="staff-action-btn">Delete Vehicle</button>
+                        <button onclick="staffAction('tpwaypoint')" class="staff-action-btn">TP to Waypoint</button>
+                        <button onclick="staffAction('tpcoords')" class="staff-action-btn">TP to Coords</button>
+                        <button onclick="staffAction('savepos')" class="staff-action-btn">Save Position</button>
+                        <button onclick="staffAction('loadpos')" class="staff-action-btn">Load Position</button>
+                        <button onclick="staffAction('showcoords')" class="staff-action-btn">Show Coords</button>
+                        <button onclick="staffAction('reviveself')" class="staff-action-btn">Revive Self</button>
+                        <button onclick="staffAction('healself')" class="staff-action-btn">Heal Self</button>
+                        <button onclick="staffAction('giveallweapons')" class="staff-action-btn">Give All Weapons</button>
+                        <button onclick="staffAction('removeallweapons')" class="staff-action-btn">Remove All Weapons</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
