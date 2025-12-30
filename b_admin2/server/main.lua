@@ -5,6 +5,21 @@
 print('^3[B_ADMIN2]^7 Chargement...')
 
 -- ============================================
+-- MENU OPEN (CHECK PERMISSIONS)
+-- ============================================
+
+RegisterNetEvent('badmin:requestOpen', function()
+    local source = source
+
+    if not HasPermission(source, 'admin.ui.open') then
+        TriggerClientEvent('badmin:notify', source, Config.Messages.NoPermission or '❌ Vous n\'avez pas la permission.')
+        return
+    end
+
+    TriggerClientEvent('badmin:openMenu', source)
+end)
+
+-- ============================================
 -- VEHICLE ACTIONS
 -- ============================================
 

@@ -7,7 +7,7 @@
 -- ============================================
 
 RegisterNUICallback('close', function(data, cb)
-    ToggleMenu()
+    CloseMenu()
     cb('ok')
 end)
 

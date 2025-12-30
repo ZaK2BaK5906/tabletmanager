@@ -16,27 +16,57 @@ end)
 -- MENU TOGGLE
 -- ============================================
 
+-- Touche F10 (si pas de conflit)
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
-        if IsControlJustPressed(0, Keys[Config.MenuKey]) then
-            ToggleMenu()
+        if IsControlJustPressed(0, 57) then -- F10 = 57
+            TriggerServerEvent('badmin:requestOpen')
         end
     end
 end)
 
-function ToggleMenu()
-    menuOpen = not menuOpen
-    SetNuiFocus(menuOpen, menuOpen)
+-- Commande alternative
+RegisterCommand('badmin', function()
+    TriggerServerEvent('badmin:requestOpen')
+end, false)
+
+RegisterCommand('admin', function()
+    TriggerServerEvent('badmin:requestOpen')
+end, false)
+
+-- Event serveur pour ouvrir (après check permissions)
+RegisterNetEvent('badmin:openMenu', function()
+    OpenMenu()
+end)
+
+function OpenMenu()
+    if menuOpen then return end
+    menuOpen = true
+    SetNuiFocus(true, true)
     SendNUIMessage({
         action = 'toggle',
-        visible = menuOpen
+        visible = true
     })
+    ESX.ShowNotification(Config.Messages.MenuOpened or '📋 Menu admin ouvert')
+end
 
+function CloseMenu()
+    if not menuOpen then return end
+    menuOpen = false
+    SetNuiFocus(false, false)
+    SendNUIMessage({
+        action = 'toggle',
+        visible = false
+    })
+    ESX.ShowNotification(Config.Messages.MenuClosed or '📋 Menu admin fermé')
+end
+
+function ToggleMenu()
     if menuOpen then
-        ESX.ShowNotification(Config.Messages.MenuOpened)
+        CloseMenu()
     else
-        ESX.ShowNotification(Config.Messages.MenuClosed)
+        TriggerServerEvent('badmin:requestOpen')
     end
 end
 
