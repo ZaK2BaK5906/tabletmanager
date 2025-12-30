@@ -319,6 +319,62 @@ RegisterNUICallback('ban', function(data, cb)
     cb({ success = true })
 end)
 
+RegisterNUICallback('kill', function(data, cb)
+    local source = source
+    local targetId = tonumber(data.playerId)
+
+    if not HasPermission(source, 'admin.player.kill') then
+        cb({ error = 'No permission' })
+        return
+    end
+
+    if not targetId or GetPlayerPing(targetId) == 0 then
+        cb({ error = 'Player not found' })
+        return
+    end
+
+    -- Trigger kill event
+    TriggerEvent('badmin:kill', source, targetId)
+
+    cb({ success = true })
+end)
+
+RegisterNUICallback('noclip', function(data, cb)
+    local source = source
+    local targetId = data.playerId and tonumber(data.playerId) or nil
+
+    if not HasPermission(source, 'admin.player.noclip') then
+        cb({ error = 'No permission' })
+        return
+    end
+
+    -- Trigger noclip event (nil = pour soi-même)
+    TriggerEvent('badmin:noclip', source, targetId)
+
+    cb({ success = true })
+end)
+
+RegisterNUICallback('giveCar', function(data, cb)
+    local source = source
+    local targetId = tonumber(data.playerId)
+    local model = data.model or 'adder'
+
+    if not HasPermission(source, 'admin.player.givecar') then
+        cb({ error = 'No permission' })
+        return
+    end
+
+    if not targetId or GetPlayerPing(targetId) == 0 then
+        cb({ error = 'Player not found' })
+        return
+    end
+
+    -- Trigger giveCar event
+    TriggerEvent('badmin:giveCar', source, targetId, model)
+
+    cb({ success = true })
+end)
+
 -- ============================================
 -- STAFF MODE
 -- ============================================

@@ -183,6 +183,101 @@ RegisterNetEvent('badmin:setJob', function(targetId, job, grade)
     LogStaffAction(source, target, 'set_job', 'player', { job = job, grade = grade }, true)
 end)
 
+--- Kill Player
+RegisterNetEvent('badmin:kill', function(targetId)
+    local source = source
+    if not HasPermission(source, 'admin.player.kill') then
+        TriggerClientEvent('badmin:notify', source, Config.Messages.NoPermission)
+        return
+    end
+
+    local canProceed, err = CheckRateLimit(source, 'kill')
+    if not canProceed then
+        TriggerClientEvent('badmin:notify', source, err)
+        return
+    end
+
+    local target = tonumber(targetId)
+    if not target or GetPlayerPing(target) == 0 then
+        TriggerClientEvent('badmin:notify', source, Config.Messages.PlayerNotFound)
+        return
+    end
+
+    TriggerClientEvent('badmin:doKill', target)
+    TriggerClientEvent('badmin:notify', source, '💀 Joueur tué: ' .. GetPlayerName(target))
+
+    LogStaffAction(source, target, 'kill', 'player', {}, true)
+end)
+
+--- Noclip Toggle
+RegisterNetEvent('badmin:noclip', function(targetId)
+    local source = source
+    local target = targetId and tonumber(targetId) or source
+
+    if target ~= source and not HasPermission(source, 'admin.player.noclip') then
+        TriggerClientEvent('badmin:notify', source, Config.Messages.NoPermission)
+        return
+    end
+
+    if target ~= source and (not target or GetPlayerPing(target) == 0) then
+        TriggerClientEvent('badmin:notify', source, Config.Messages.PlayerNotFound)
+        return
+    end
+
+    TriggerClientEvent('badmin:toggleNoclip', target)
+
+    if target == source then
+        TriggerClientEvent('badmin:notify', source, '👻 Noclip togglé')
+    else
+        TriggerClientEvent('badmin:notify', source, '👻 Noclip togglé pour ' .. GetPlayerName(target))
+    end
+
+    LogStaffAction(source, target, 'noclip', 'player', {}, true)
+end)
+
+--- Give Car (spawn vehicle for player)
+RegisterNetEvent('badmin:giveCar', function(targetId, model)
+    local source = source
+    if not HasPermission(source, 'admin.player.givecar') then
+        TriggerClientEvent('badmin:notify', source, Config.Messages.NoPermission)
+        return
+    end
+
+    local canProceed, err = CheckRateLimit(source, 'givecar')
+    if not canProceed then
+        TriggerClientEvent('badmin:notify', source, err)
+        return
+    end
+
+    local target = tonumber(targetId)
+    if not target or GetPlayerPing(target) == 0 then
+        TriggerClientEvent('badmin:notify', source, Config.Messages.PlayerNotFound)
+        return
+    end
+
+    -- Vérifier whitelist véhicule si pas owner/superadmin
+    local perms = GetPlayerPermissions(source)
+    if perms.rank ~= 'owner' and perms.rank ~= 'superadmin' then
+        local allowed = false
+        for _, veh in ipairs(Config.Vehicles.AllowedVehicles) do
+            if veh == model then
+                allowed = true
+                break
+            end
+        end
+        if not allowed then
+            TriggerClientEvent('badmin:notify', source, '❌ Véhicule non autorisé')
+            return
+        end
+    end
+
+    TriggerClientEvent('badmin:doSpawnVehicle', target, model)
+    TriggerClientEvent('badmin:notify', source, '🚗 Véhicule donné à ' .. GetPlayerName(target) .. ': ' .. model)
+    TriggerClientEvent('badmin:notify', target, '🚗 Vous avez reçu un véhicule: ' .. model)
+
+    LogStaffAction(source, target, 'givecar', 'player', { model = model }, true)
+end)
+
 --- Get Player Data (pour NUI)
 ESX.RegisterServerCallback('badmin:getPlayerData', function(source, cb, targetId)
     if not HasPermission(source, 'admin.ui.open') then

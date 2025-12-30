@@ -214,6 +214,114 @@ RegisterNetEvent('badmin:syncWeather', function(weather)
 end)
 
 -- ============================================
+-- NOCLIP
+-- ============================================
+
+local noclipEnabled = false
+local noclipSpeed = 1.0
+
+RegisterNetEvent('badmin:toggleNoclip', function()
+    noclipEnabled = not noclipEnabled
+
+    local ped = PlayerPedId()
+
+    if noclipEnabled then
+        ESX.ShowNotification('👻 Noclip activé')
+    else
+        ESX.ShowNotification('✅ Noclip désactivé')
+        -- Reset physics
+        FreezeEntityPosition(ped, false)
+        SetEntityCollision(ped, true, true)
+        SetEntityVisible(ped, true, false)
+    end
+end)
+
+-- Thread noclip
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0)
+
+        if noclipEnabled then
+            local ped = PlayerPedId()
+            local x, y, z = table.unpack(GetEntityCoords(ped, true))
+            local dx, dy, dz = GetCamDirection()
+            local speed = noclipSpeed
+
+            -- Modifier la vitesse avec Shift/Ctrl
+            if IsControlPressed(0, 21) then -- Shift = plus rapide
+                speed = speed * 3.0
+            end
+            if IsControlPressed(0, 36) then -- Ctrl = plus lent
+                speed = speed * 0.3
+            end
+
+            -- Désactiver la physique
+            FreezeEntityPosition(ped, true)
+            SetEntityCollision(ped, false, false)
+            SetEntityVisible(ped, false, false)
+
+            -- Mouvement
+            if IsControlPressed(0, 32) then -- W = avant
+                x = x + dx * speed
+                y = y + dy * speed
+                z = z + dz * speed
+            end
+            if IsControlPressed(0, 33) then -- S = arrière
+                x = x - dx * speed
+                y = y - dy * speed
+                z = z - dz * speed
+            end
+            if IsControlPressed(0, 34) then -- A = gauche
+                x = x + (-dy) * speed
+                y = y + dx * speed
+            end
+            if IsControlPressed(0, 35) then -- D = droite
+                x = x + dy * speed
+                y = y + (-dx) * speed
+            end
+            if IsControlPressed(0, 44) then -- Q = monter
+                z = z + speed
+            end
+            if IsControlPressed(0, 46) then -- E = descendre
+                z = z - speed
+            end
+
+            SetEntityCoordsNoOffset(ped, x, y, z, true, true, true)
+        else
+            Citizen.Wait(500)
+        end
+    end
+end)
+
+function GetCamDirection()
+    local heading = GetGameplayCamRelativeHeading() + GetEntityHeading(PlayerPedId())
+    local pitch = GetGameplayCamRelativePitch()
+
+    local x = -math.sin(heading * math.pi / 180.0)
+    local y = math.cos(heading * math.pi / 180.0)
+    local z = math.sin(pitch * math.pi / 180.0)
+
+    local len = math.sqrt(x * x + y * y + z * z)
+    if len ~= 0 then
+        x = x / len
+        y = y / len
+        z = z / len
+    end
+
+    return x, y, z
+end
+
+-- ============================================
+-- KILL PLAYER
+-- ============================================
+
+RegisterNetEvent('badmin:doKill', function()
+    local ped = PlayerPedId()
+    SetEntityHealth(ped, 0)
+    ESX.ShowNotification('💀 Vous avez été tué')
+end)
+
+-- ============================================
 -- KEYS MAPPING
 -- ============================================
 

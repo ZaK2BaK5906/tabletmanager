@@ -112,15 +112,25 @@ function openPlayerPanel(playerId) {
         document.getElementById('panel-player-name').textContent = data.name;
 
         content.innerHTML = `
-            <!-- Actions Grid -->
+            <!-- Actions Teleport -->
             <div class="actions-grid">
                 <button onclick="playerAction('goto', ${data.id})" class="action-btn-small">Goto</button>
                 <button onclick="playerAction('bring', ${data.id})" class="action-btn-small">Bring</button>
                 <button onclick="playerAction('spectate', ${data.id})" class="action-btn-small">Spectate</button>
+                <button onclick="playerAction('noclip', ${data.id})" class="action-btn-small">Noclip</button>
+            </div>
+
+            <!-- Actions Player -->
+            <div class="actions-grid">
                 <button onclick="playerAction('freeze', ${data.id})" class="action-btn-small">Freeze</button>
                 <button onclick="playerAction('revive', ${data.id})" class="action-btn-small">Revive</button>
                 <button onclick="playerAction('heal', ${data.id})" class="action-btn-small">Heal</button>
                 <button onclick="playerAction('kill', ${data.id})" class="action-btn-small">Kill</button>
+            </div>
+
+            <!-- Actions Vehicle -->
+            <div class="actions-grid">
+                <button onclick="giveCarPlayer(${data.id})" class="action-btn-small">Give Car</button>
                 <button onclick="playerAction('kick', ${data.id})" class="action-btn-small">Kick</button>
             </div>
 
@@ -235,7 +245,12 @@ function playerAction(action, playerId) {
             break;
         case 'kill':
             if (confirm('Tuer ce joueur ?')) {
-                // TODO: Add kill action server-side
+                post('kill', { playerId });
+            }
+            break;
+        case 'noclip':
+            if (confirm('Toggle noclip pour ce joueur ?')) {
+                post('noclip', { playerId });
             }
             break;
         case 'kick':
@@ -244,6 +259,13 @@ function playerAction(action, playerId) {
                 post('kick', { playerId, reason });
             }
             break;
+    }
+}
+
+function giveCarPlayer(playerId) {
+    const model = prompt('Modèle du véhicule (ex: adder, t20, zentorno):', 'adder');
+    if (model) {
+        post('giveCar', { playerId, model });
     }
 }
 
@@ -270,6 +292,10 @@ function banPlayer(playerId) {
 
 document.getElementById('btn-staffmode')?.addEventListener('click', () => {
     post('toggleStaffMode');
+});
+
+document.getElementById('btn-noclip')?.addEventListener('click', () => {
+    post('noclip', { playerId: null }); // null = pour soi-même
 });
 
 document.getElementById('close-btn')?.addEventListener('click', () => {
