@@ -12,7 +12,7 @@ DiscordCache = {}     -- Cache Discord identifiers
 --- Récupère l'identifier Discord d'un joueur
 ---@param source number
 ---@return string|nil
-local function GetDiscordIdentifier(source)
+function GetDiscordIdentifier(source)
     local identifiers = GetPlayerIdentifiers(source)
     for _, id in pairs(identifiers) do
         if string.match(id, 'discord:') then
@@ -25,7 +25,7 @@ end
 --- Récupère la license d'un joueur
 ---@param source number
 ---@return string|nil
-local function GetPlayerLicense(source)
+function GetPlayerLicense(source)
     local identifiers = GetPlayerIdentifiers(source)
     for _, id in pairs(identifiers) do
         if string.match(id, 'license:') then
