@@ -189,16 +189,26 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
     local license = GetPlayerLicense(source)
 
     if not license then
-        deferrals.done('❌ Identifier introuvable')
+        -- Pas de license = laisser passer (ou autre système gère ça)
+        deferrals.done()
         return
     end
 
     Wait(100)
 
-    -- Check ban
-    local ban = MySQL.query.await('SELECT * FROM `z_admin_bans` WHERE `target_license` = ? AND `is_active` = 1 LIMIT 1', {
-        license
-    })
+    -- Check ban avec protection (pcall)
+    local success, ban = pcall(function()
+        return MySQL.query.await('SELECT * FROM `z_admin_bans` WHERE `target_license` = ? AND `is_active` = 1 LIMIT 1', {
+            license
+        })
+    end)
+
+    -- Si MySQL fail ou pas prêt, laisser passer (évite blocage connexions)
+    if not success then
+        print('^1[B_ADMIN2]^7 Erreur check ban (MySQL pas prêt ?): ' .. tostring(ban))
+        deferrals.done()
+        return
+    end
 
     if ban and ban[1] then
         local banData = ban[1]
@@ -207,7 +217,9 @@ AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
 
         -- Check si ban expiré
         if banData.ban_type == 'temp' and expiresAt and now >= expiresAt then
-            MySQL.update('UPDATE `z_admin_bans` SET `is_active` = 0 WHERE `id` = ?', { banData.id })
+            pcall(function()
+                MySQL.update('UPDATE `z_admin_bans` SET `is_active` = 0 WHERE `id` = ?', { banData.id })
+            end)
             deferrals.done()
             return
         end
