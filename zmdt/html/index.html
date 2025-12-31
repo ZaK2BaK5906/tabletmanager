@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT System</title>
+    <title>ZX Police MDT System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/main.css">
 </head>
@@ -14,14 +14,19 @@
         <div id="mdtHeader">
             <div class="header-left">
                 <i class="fa-solid fa-shield-halved"></i>
-                <span id="serviceLabel">MDT</span>
+                <span id="serviceLabel">POLICE MDT</span>
             </div>
             <div class="header-center">
                 <span id="userName"></span>
                 <span class="separator">|</span>
                 <span id="userJob"></span>
+                <span class="separator">|</span>
+                <span id="userGrade"></span>
             </div>
             <div class="header-right">
+                <button class="btn-panic" onclick="triggerPanic()">
+                    <i class="fa-solid fa-triangle-exclamation"></i> PANIC
+                </button>
                 <button class="btn-close" onclick="closeMDT()">
                     <i class="fa-solid fa-times"></i>
                 </button>
@@ -32,9 +37,12 @@
         <div id="mdtContent">
             <!-- Tabs Navigation -->
             <div id="tabsNav">
-                <!-- Police Tabs -->
-                <div class="tabs-group" id="policeTabs" style="display: none;">
-                    <button class="tab-btn active" data-tab="cad">
+                <!-- Police Tabs (17 tabs) -->
+                <div class="tabs-group" id="policeTabs">
+                    <button class="tab-btn active" data-tab="dashboard">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
+                    </button>
+                    <button class="tab-btn" data-tab="cad">
                         <i class="fa-solid fa-phone"></i> CAD
                     </button>
                     <button class="tab-btn" data-tab="search">
@@ -43,267 +51,510 @@
                     <button class="tab-btn" data-tab="reports">
                         <i class="fa-solid fa-file-lines"></i> Rapports
                     </button>
-                    <button class="tab-btn" data-tab="bolo">
-                        <i class="fa-solid fa-bullhorn"></i> BOLO
-                    </button>
                     <button class="tab-btn" data-tab="arrests">
                         <i class="fa-solid fa-handcuffs"></i> Arrestations
                     </button>
-                    <button class="tab-btn" data-tab="vehicles">
-                        <i class="fa-solid fa-car"></i> Véhicules
+                    <button class="tab-btn" data-tab="citations">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Citations
                     </button>
-                    <button class="tab-btn" data-tab="evidence">
-                        <i class="fa-solid fa-box"></i> Preuves
-                    </button>
-                    <button class="tab-btn" data-tab="personnel">
-                        <i class="fa-solid fa-users"></i> Personnel
-                    </button>
-                </div>
-
-                <!-- DOJ Tabs -->
-                <div class="tabs-group" id="dojTabs" style="display: none;">
-                    <button class="tab-btn active" data-tab="cases">
-                        <i class="fa-solid fa-folder"></i> Dossiers
+                    <button class="tab-btn" data-tab="bolo">
+                        <i class="fa-solid fa-bullhorn"></i> BOLO
                     </button>
                     <button class="tab-btn" data-tab="warrants">
                         <i class="fa-solid fa-gavel"></i> Mandats
                     </button>
-                    <button class="tab-btn" data-tab="hearings">
-                        <i class="fa-solid fa-calendar"></i> Audiences
+                    <button class="tab-btn" data-tab="wanted">
+                        <i class="fa-solid fa-user-secret"></i> Wanted
                     </button>
-                </div>
-
-                <!-- EMS Tabs -->
-                <div class="tabs-group" id="emsTabs" style="display: none;">
-                    <button class="tab-btn active" data-tab="dispatch">
-                        <i class="fa-solid fa-phone"></i> Dispatch
+                    <button class="tab-btn" data-tab="evidence">
+                        <i class="fa-solid fa-box"></i> Preuves
                     </button>
-                    <button class="tab-btn" data-tab="patients">
-                        <i class="fa-solid fa-user-injured"></i> Patients
+                    <button class="tab-btn" data-tab="ppa">
+                        <i class="fa-solid fa-gun"></i> PPA
                     </button>
-                    <button class="tab-btn" data-tab="epcr">
-                        <i class="fa-solid fa-notes-medical"></i> ePCR
+                    <button class="tab-btn" data-tab="ppa-heavy">
+                        <i class="fa-solid fa-burst"></i> PPA Lourd
+                    </button>
+                    <button class="tab-btn" data-tab="vehicles">
+                        <i class="fa-solid fa-car"></i> Véhicules
+                    </button>
+                    <button class="tab-btn" data-tab="intel">
+                        <i class="fa-solid fa-user-shield"></i> Intel
+                    </button>
+                    <button class="tab-btn" data-tab="units">
+                        <i class="fa-solid fa-car-side"></i> Unités
+                    </button>
+                    <button class="tab-btn" data-tab="charges">
+                        <i class="fa-solid fa-book"></i> Charges
+                    </button>
+                    <button class="tab-btn" data-tab="personnel">
+                        <i class="fa-solid fa-users"></i> Personnel
                     </button>
                 </div>
             </div>
 
             <!-- Tab Content -->
             <div id="tabContent">
-                <!-- CAD Tab (Police) -->
-                <div class="tab-panel active" id="tab-cad">
-                    <h2>CAD - Appels 911</h2>
+                <!-- ============================================ -->
+                <!-- 1. DASHBOARD -->
+                <!-- ============================================ -->
+                <div class="tab-panel active" id="tab-dashboard">
+                    <h2><i class="fa-solid fa-chart-line"></i> Dashboard</h2>
+
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <i class="fa-solid fa-phone-volume"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Appels Actifs</span>
+                                <span class="stat-value" id="stat-activeCalls">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-car-side"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Unités en Service</span>
+                                <span class="stat-value" id="stat-activeUnits">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-handcuffs"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Arrestations (24h)</span>
+                                <span class="stat-value" id="stat-recentArrests">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-bullhorn"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">BOLO Actifs</span>
+                                <span class="stat-value" id="stat-activeBOLO">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-user-secret"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Personnes Recherchées</span>
+                                <span class="stat-value" id="stat-wantedPersons">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-gavel"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Mandats Actifs</span>
+                                <span class="stat-value" id="stat-activeWarrants">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-sections">
+                        <div class="dashboard-section">
+                            <h3>Activité Récente</h3>
+                            <div id="recentActivity"></div>
+                        </div>
+                        <div class="dashboard-section">
+                            <h3>BOLO Actifs</h3>
+                            <div id="dashboardBOLO"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 2. CAD - 911 CALLS -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-cad">
+                    <h2><i class="fa-solid fa-phone"></i> CAD - Appels 911</h2>
                     <button class="btn-primary" onclick="createCall()">
                         <i class="fa-solid fa-plus"></i> Nouvel Appel
                     </button>
+
+                    <div class="filter-tabs">
+                        <button class="filter-btn active" onclick="filterCalls('all')">Tous</button>
+                        <button class="filter-btn" onclick="filterCalls('pending')">En Attente</button>
+                        <button class="filter-btn" onclick="filterCalls('dispatched')">Dispatché</button>
+                        <button class="filter-btn" onclick="filterCalls('on_scene')">Sur Place</button>
+                    </div>
+
                     <div id="callsList"></div>
                 </div>
 
-                <!-- Search Tab (Police) -->
+                <!-- ============================================ -->
+                <!-- 3. SEARCH -->
+                <!-- ============================================ -->
                 <div class="tab-panel" id="tab-search">
-                    <h2>Recherche</h2>
+                    <h2><i class="fa-solid fa-magnifying-glass"></i> Recherche</h2>
                     <div class="search-container">
-                        <input type="text" id="searchInput" placeholder="Nom, plaque, numéro série...">
+                        <input type="text" id="searchInput" placeholder="Nom, prénom, plaque, numéro série...">
                         <div class="search-buttons">
-                            <button onclick="searchCitizen()">Citoyen</button>
-                            <button onclick="searchVehicle()">Véhicule</button>
-                            <button onclick="searchWeapon()">Arme</button>
+                            <button onclick="searchCitizen()"><i class="fa-solid fa-user"></i> Citoyen</button>
+                            <button onclick="searchVehicle()"><i class="fa-solid fa-car"></i> Véhicule</button>
+                            <button onclick="searchWeapon()"><i class="fa-solid fa-gun"></i> Arme</button>
                         </div>
                     </div>
                     <div id="searchResults"></div>
                 </div>
 
-                <!-- Reports Tab (Police) -->
+                <!-- ============================================ -->
+                <!-- 4. REPORTS -->
+                <!-- ============================================ -->
                 <div class="tab-panel" id="tab-reports">
-                    <h2>Rapports de Police</h2>
+                    <h2><i class="fa-solid fa-file-lines"></i> Rapports de Police</h2>
                     <button class="btn-primary" onclick="createReport()">
                         <i class="fa-solid fa-plus"></i> Nouveau Rapport
                     </button>
+
+                    <div class="filter-tabs">
+                        <button class="filter-btn active" onclick="filterReports('all')">Tous</button>
+                        <button class="filter-btn" onclick="filterReports('pending')">En Attente</button>
+                        <button class="filter-btn" onclick="filterReports('approved')">Approuvés</button>
+                        <button class="filter-btn" onclick="filterReports('my_reports')">Mes Rapports</button>
+                    </div>
+
                     <div id="reportsList"></div>
                 </div>
 
-                <!-- BOLO Tab (Police) -->
-                <div class="tab-panel" id="tab-bolo">
-                    <h2>BOLO - Be On Lookout</h2>
-                    <button class="btn-primary" onclick="createBOLO()">
-                        <i class="fa-solid fa-plus"></i> Nouveau BOLO
-                    </button>
-                    <div id="boloList"></div>
-                </div>
-
-                <!-- Arrests Tab (Police) -->
+                <!-- ============================================ -->
+                <!-- 5. ARRESTS -->
+                <!-- ============================================ -->
                 <div class="tab-panel" id="tab-arrests">
-                    <h2>Arrestations</h2>
+                    <h2><i class="fa-solid fa-handcuffs"></i> Arrestations</h2>
                     <button class="btn-primary" onclick="createArrest()">
                         <i class="fa-solid fa-plus"></i> Nouvelle Arrestation
                     </button>
+
                     <div class="stats-cards">
                         <div class="stat-card">
-                            <i class="fa-solid fa-handcuffs"></i>
+                            <i class="fa-solid fa-calendar-day"></i>
                             <div class="stat-info">
                                 <span class="stat-label">Aujourd'hui</span>
-                                <span class="stat-value">0</span>
+                                <span class="stat-value" id="arrests-today">0</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <i class="fa-solid fa-calendar-week"></i>
                             <div class="stat-info">
                                 <span class="stat-label">Cette Semaine</span>
-                                <span class="stat-value">0</span>
+                                <span class="stat-value" id="arrests-week">0</span>
                             </div>
                         </div>
                     </div>
+
                     <div id="arrestsList"></div>
                 </div>
 
-                <!-- Vehicles Tab (Police) -->
-                <div class="tab-panel" id="tab-vehicles">
-                    <h2>Véhicules</h2>
-                    <div class="search-container">
-                        <input type="text" id="vehicleQuickSearch" placeholder="Recherche rapide par plaque...">
-                        <button onclick="quickSearchVehicle()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <!-- ============================================ -->
+                <!-- 6. CITATIONS -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-citations">
+                    <h2><i class="fa-solid fa-file-invoice-dollar"></i> Citations / Amendes</h2>
+                    <button class="btn-primary" onclick="createCitation()">
+                        <i class="fa-solid fa-plus"></i> Nouvelle Citation
+                    </button>
+
+                    <div class="filter-tabs">
+                        <button class="filter-btn active" onclick="filterCitations('all')">Toutes</button>
+                        <button class="filter-btn" onclick="filterCitations('unpaid')">Impayées</button>
+                        <button class="filter-btn" onclick="filterCitations('paid')">Payées</button>
                     </div>
-                    <div class="stats-cards">
-                        <div class="stat-card">
-                            <i class="fa-solid fa-ban"></i>
-                            <div class="stat-info">
-                                <span class="stat-label">Véhicules Volés</span>
-                                <span class="stat-value">0</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fa-solid fa-warehouse"></i>
-                            <div class="stat-info">
-                                <span class="stat-label">Fourrières Actives</span>
-                                <span class="stat-value">0</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="vehiclesList"></div>
+
+                    <div id="citationsList"></div>
                 </div>
 
-                <!-- Evidence Tab (Police) -->
+                <!-- ============================================ -->
+                <!-- 7. BOLO -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-bolo">
+                    <h2><i class="fa-solid fa-bullhorn"></i> BOLO - Be On Lookout</h2>
+                    <button class="btn-primary" onclick="createBOLO()">
+                        <i class="fa-solid fa-plus"></i> Nouveau BOLO
+                    </button>
+
+                    <div class="filter-tabs">
+                        <button class="filter-btn active" onclick="filterBOLO('all')">Tous</button>
+                        <button class="filter-btn" onclick="filterBOLO('person')">Personnes</button>
+                        <button class="filter-btn" onclick="filterBOLO('vehicle')">Véhicules</button>
+                        <button class="filter-btn" onclick="filterBOLO('high')">Haute Priorité</button>
+                    </div>
+
+                    <div id="boloList"></div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 8. WARRANTS -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-warrants">
+                    <h2><i class="fa-solid fa-gavel"></i> Mandats</h2>
+                    <button class="btn-primary" onclick="createWarrant()">
+                        <i class="fa-solid fa-plus"></i> Nouveau Mandat
+                    </button>
+
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <i class="fa-solid fa-user-check"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Mandats d'Arrêt</span>
+                                <span class="stat-value" id="warrant-arrest">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-house-circle-check"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Perquisitions</span>
+                                <span class="stat-value" id="warrant-search">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="warrantsList"></div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 9. WANTED PERSONS -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-wanted">
+                    <h2><i class="fa-solid fa-user-secret"></i> Personnes Recherchées</h2>
+                    <button class="btn-primary" onclick="addWantedPerson()">
+                        <i class="fa-solid fa-plus"></i> Ajouter Wanted
+                    </button>
+
+                    <div class="filter-tabs">
+                        <button class="filter-btn active" onclick="filterWanted('all')">Tous</button>
+                        <button class="filter-btn" onclick="filterWanted('high')">Dangereux</button>
+                        <button class="filter-btn" onclick="filterWanted('armed')">Armés</button>
+                    </div>
+
+                    <div id="wantedList"></div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 10. EVIDENCE -->
+                <!-- ============================================ -->
                 <div class="tab-panel" id="tab-evidence">
-                    <h2>Preuves & Scènes de Crime</h2>
+                    <h2><i class="fa-solid fa-box"></i> Preuves & Scènes de Crime</h2>
                     <button class="btn-primary" onclick="logEvidence()">
                         <i class="fa-solid fa-plus"></i> Nouvelle Preuve
                     </button>
+
                     <div class="stats-cards">
                         <div class="stat-card">
                             <i class="fa-solid fa-box"></i>
                             <div class="stat-info">
-                                <span class="stat-label">Preuves en Stock</span>
-                                <span class="stat-value">0</span>
+                                <span class="stat-label">En Stock</span>
+                                <span class="stat-value" id="evidence-stored">0</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <i class="fa-solid fa-flask"></i>
                             <div class="stat-info">
                                 <span class="stat-label">En Analyse</span>
-                                <span class="stat-value">0</span>
+                                <span class="stat-value" id="evidence-analysis">0</span>
                             </div>
                         </div>
                     </div>
+
                     <div id="evidenceList"></div>
                 </div>
 
-                <!-- Personnel Tab (Police) -->
+                <!-- ============================================ -->
+                <!-- 11. PPA - WEAPON PERMITS -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-ppa">
+                    <h2><i class="fa-solid fa-gun"></i> PPA - Permis de Port d'Armes</h2>
+                    <button class="btn-primary" onclick="issuePPA()">
+                        <i class="fa-solid fa-plus"></i> Délivrer PPA
+                    </button>
+
+                    <div class="filter-tabs">
+                        <button class="filter-btn active" onclick="filterPPA('all')">Tous</button>
+                        <button class="filter-btn" onclick="filterPPA('active')">Actifs</button>
+                        <button class="filter-btn" onclick="filterPPA('expired')">Expirés</button>
+                        <button class="filter-btn" onclick="filterPPA('revoked')">Révoqués</button>
+                    </div>
+
+                    <div id="ppaList"></div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 12. PPA HEAVY -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-ppa-heavy">
+                    <h2><i class="fa-solid fa-burst"></i> PPA Lourd - Armes Automatiques/Lourdes</h2>
+                    <button class="btn-primary" onclick="issuePPAHeavy()">
+                        <i class="fa-solid fa-plus"></i> Délivrer PPA Lourd
+                    </button>
+
+                    <div class="alert-warning">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <strong>Attention:</strong> Les PPA Lourds nécessitent une approbation judiciaire et une justification solide.
+                    </div>
+
+                    <div class="filter-tabs">
+                        <button class="filter-btn active" onclick="filterPPAHeavy('all')">Tous</button>
+                        <button class="filter-btn" onclick="filterPPAHeavy('pending')">En Attente</button>
+                        <button class="filter-btn" onclick="filterPPAHeavy('approved')">Approuvés</button>
+                    </div>
+
+                    <div id="ppaHeavyList"></div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 13. STOLEN VEHICLES -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-vehicles">
+                    <h2><i class="fa-solid fa-car"></i> Véhicules Volés</h2>
+                    <button class="btn-primary" onclick="reportStolenVehicle()">
+                        <i class="fa-solid fa-plus"></i> Signaler Vol
+                    </button>
+
+                    <div class="search-container">
+                        <input type="text" id="vehicleQuickSearch" placeholder="Recherche rapide par plaque...">
+                        <button onclick="quickSearchVehicle()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <i class="fa-solid fa-ban"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Véhicules Volés</span>
+                                <span class="stat-value" id="vehicles-stolen">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-check-circle"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Récupérés (7j)</span>
+                                <span class="stat-value" id="vehicles-recovered">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="vehiclesList"></div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 14. INTEL -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-intel">
+                    <h2><i class="fa-solid fa-user-shield"></i> Renseignements</h2>
+                    <button class="btn-primary" onclick="createIntel()">
+                        <i class="fa-solid fa-plus"></i> Nouveau Renseignement
+                    </button>
+
+                    <div class="alert-warning">
+                        <i class="fa-solid fa-lock"></i>
+                        <strong>Confidentiel:</strong> Les informations de cette section sont classifiées selon leur niveau.
+                    </div>
+
+                    <div class="filter-tabs">
+                        <button class="filter-btn active" onclick="filterIntel('all')">Tous</button>
+                        <button class="filter-btn" onclick="filterIntel('gang')">Gangs</button>
+                        <button class="filter-btn" onclick="filterIntel('organized_crime')">Crime Organisé</button>
+                        <button class="filter-btn" onclick="filterIntel('confidential')">Confidentiel</button>
+                    </div>
+
+                    <div id="intelList"></div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 15. UNITS -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-units">
+                    <h2><i class="fa-solid fa-car-side"></i> Unités Actives</h2>
+                    <button class="btn-primary" onclick="createUnit()">
+                        <i class="fa-solid fa-plus"></i> Créer Unité
+                    </button>
+
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <i class="fa-solid fa-check-circle"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">10-8 Disponible</span>
+                                <span class="stat-value" id="units-available">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-spinner"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">10-6 Occupé</span>
+                                <span class="stat-value" id="units-busy">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-route"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">En Route</span>
+                                <span class="stat-value" id="units-enroute">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="unitsList"></div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 16. CHARGES LIBRARY -->
+                <!-- ============================================ -->
+                <div class="tab-panel" id="tab-charges">
+                    <h2><i class="fa-solid fa-book"></i> Bibliothèque de Charges</h2>
+
+                    <div class="search-container">
+                        <input type="text" id="chargeLibrarySearch" placeholder="Rechercher une charge..." onkeyup="searchChargesLibrary()">
+                    </div>
+
+                    <div class="filter-tabs">
+                        <button class="filter-btn active" onclick="filterChargesLib('all')">Toutes</button>
+                        <button class="filter-btn" onclick="filterChargesLib('felony')">Felonies</button>
+                        <button class="filter-btn" onclick="filterChargesLib('misdemeanor')">Misdemeanors</button>
+                        <button class="filter-btn" onclick="filterChargesLib('traffic')">Traffic</button>
+                    </div>
+
+                    <div id="chargesLibraryList"></div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 17. PERSONNEL -->
+                <!-- ============================================ -->
                 <div class="tab-panel" id="tab-personnel">
-                    <h2>Personnel Police</h2>
+                    <h2><i class="fa-solid fa-users"></i> Personnel Police</h2>
+
                     <div class="stats-cards">
                         <div class="stat-card">
                             <i class="fa-solid fa-user-shield"></i>
                             <div class="stat-info">
                                 <span class="stat-label">En Service</span>
-                                <span class="stat-value">0</span>
+                                <span class="stat-value" id="personnel-on-duty">0</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <i class="fa-solid fa-car-side"></i>
                             <div class="stat-info">
                                 <span class="stat-label">Unités Actives</span>
-                                <span class="stat-value">0</span>
+                                <span class="stat-value" id="personnel-active-units">0</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <i class="fa-solid fa-phone-volume"></i>
                             <div class="stat-info">
                                 <span class="stat-label">Appels en Cours</span>
-                                <span class="stat-value">0</span>
+                                <span class="stat-value" id="personnel-active-calls">0</span>
                             </div>
                         </div>
                     </div>
-                    <div id="personnelList">
-                        <p style="color: #94a3b8; text-align: center; padding: 20px;">
-                            <i class="fa-solid fa-info-circle"></i> Liste du personnel en service
-                        </p>
-                    </div>
-                </div>
 
-                <!-- Cases Tab (DOJ) -->
-                <div class="tab-panel" id="tab-cases">
-                    <h2>Dossiers / Affaires</h2>
-                    <button class="btn-primary" onclick="createCase()">
-                        <i class="fa-solid fa-plus"></i> Nouveau Dossier
-                    </button>
-                    <div id="casesList"></div>
-                </div>
-
-                <!-- Warrants Tab (DOJ) -->
-                <div class="tab-panel" id="tab-warrants">
-                    <h2>Mandats</h2>
-                    <button class="btn-primary" onclick="createWarrant()">
-                        <i class="fa-solid fa-plus"></i> Nouveau Mandat
-                    </button>
-                    <div id="warrantsList"></div>
-                </div>
-
-                <!-- Hearings Tab (DOJ) -->
-                <div class="tab-panel" id="tab-hearings">
-                    <h2>Calendrier Tribunal</h2>
-                    <button class="btn-primary" onclick="scheduleHearing()">
-                        <i class="fa-solid fa-plus"></i> Planifier Audience
-                    </button>
-                    <div id="hearingsList"></div>
-                </div>
-
-                <!-- Dispatch Tab (EMS) -->
-                <div class="tab-panel" id="tab-dispatch">
-                    <h2>Dispatch EMS</h2>
-                    <button class="btn-primary" onclick="createEMSCall()">
-                        <i class="fa-solid fa-plus"></i> Nouvel Appel
-                    </button>
-                    <div id="emsCallsList"></div>
-                </div>
-
-                <!-- Patients Tab (EMS) -->
-                <div class="tab-panel" id="tab-patients">
-                    <h2>Patients</h2>
-                    <div class="search-container">
-                        <input type="text" id="patientSearch" placeholder="Rechercher un patient...">
-                        <button onclick="searchPatient()">Rechercher</button>
-                    </div>
-                    <div id="patientsList"></div>
-                </div>
-
-                <!-- ePCR Tab (EMS) -->
-                <div class="tab-panel" id="tab-epcr">
-                    <h2>Rapports Médicaux (ePCR)</h2>
-                    <button class="btn-primary" onclick="createEPCR()">
-                        <i class="fa-solid fa-plus"></i> Nouveau Rapport
-                    </button>
-                    <div id="epcrList"></div>
+                    <div id="personnelList"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ============================================ -->
     <!-- MODALS -->
+    <!-- ============================================ -->
 
-    <!-- Modal: Create Call (Police/EMS) -->
+    <!-- Modal: Create Call -->
     <div class="modal" id="createCallModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-phone"></i> Créer un Appel</h2>
+                <h2><i class="fa-solid fa-phone"></i> Créer un Appel 911</h2>
                 <button class="modal-close" onclick="closeModal('createCallModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -318,6 +569,8 @@
                             <option value="10-66">10-66 - Suspicious person</option>
                             <option value="10-90">10-90 - Alarm</option>
                             <option value="10-99">10-99 - Officer needs help</option>
+                            <option value="211">211 - Robbery in progress</option>
+                            <option value="273D">273D - Domestic violence</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -344,7 +597,7 @@
         </div>
     </div>
 
-    <!-- Modal: Create Report (Police) -->
+    <!-- Modal: Create Report -->
     <div class="modal" id="createReportModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -362,15 +615,12 @@
                             <option value="traffic">Traffic Stop</option>
                             <option value="investigation">Investigation</option>
                             <option value="use_of_force">Use of Force</option>
+                            <option value="property_damage">Property Damage</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Titre</label>
                         <input type="text" id="reportTitle" placeholder="Titre du rapport" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Suspect / Personne Impliquée (Optionnel)</label>
-                        <input type="text" id="reportSuspect" placeholder="Nom ou ID">
                     </div>
                     <div class="form-group">
                         <label>Localisation</label>
@@ -397,11 +647,11 @@
         </div>
     </div>
 
-    <!-- Modal: Create BOLO (Police) -->
+    <!-- Modal: Create BOLO -->
     <div class="modal" id="createBOLOModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-triangle-exclamation"></i> Créer un BOLO</h2>
+                <h2><i class="fa-solid fa-bullhorn"></i> Créer un BOLO</h2>
                 <button class="modal-close" onclick="closeModal('createBOLOModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -428,6 +678,15 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label>Niveau de Danger</label>
+                        <select id="boloDangerLevel">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="extreme">Extreme</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Description</label>
                         <textarea id="boloDescription" rows="5" placeholder="Description détaillée (apparence, plaque, raison, etc.)" required></textarea>
                     </div>
@@ -444,7 +703,7 @@
         </div>
     </div>
 
-    <!-- Modal: Create Arrest (Police) -->
+    <!-- Modal: Create Arrest -->
     <div class="modal" id="createArrestModal">
         <div class="modal-content modal-large">
             <div class="modal-header">
@@ -493,7 +752,7 @@
         </div>
     </div>
 
-    <!-- Modal: Create Citation (Police) -->
+    <!-- Modal: Create Citation -->
     <div class="modal" id="createCitationModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -552,7 +811,7 @@
         </div>
     </div>
 
-    <!-- Modal: Create Evidence (Police) -->
+    <!-- Modal: Create Evidence -->
     <div class="modal" id="createEvidenceModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -570,6 +829,8 @@
                             <option value="documents">Documents</option>
                             <option value="money">Argent</option>
                             <option value="electronics">Électronique</option>
+                            <option value="clothing">Vêtements</option>
+                            <option value="biological">Biologique</option>
                             <option value="other">Autre</option>
                         </select>
                     </div>
@@ -600,7 +861,8 @@
                         <select id="evidenceStorage">
                             <option value="Evidence Locker">Evidence Locker</option>
                             <option value="Crime Lab">Crime Lab</option>
-                            <option value="Vault">Vault</option>
+                            <option value="Off-site Storage">Off-site Storage</option>
+                            <option value="Seized Assets">Seized Assets</option>
                         </select>
                     </div>
 
@@ -612,7 +874,7 @@
         </div>
     </div>
 
-    <!-- Modal: Citizen Profile (Police) -->
+    <!-- Modal: Citizen Profile -->
     <div class="modal" id="citizenProfileModal">
         <div class="modal-content modal-large">
             <div class="modal-header">
@@ -620,7 +882,6 @@
                 <button class="modal-close" onclick="closeModal('citizenProfileModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <!-- Informations de base -->
                 <div class="profile-header">
                     <div class="profile-info">
                         <h3 id="profileName"></h3>
@@ -631,10 +892,12 @@
                         <button class="btn-secondary" onclick="addCitizenNote()">
                             <i class="fa-solid fa-note-sticky"></i> Ajouter Note
                         </button>
+                        <button class="btn-secondary" onclick="addToWanted()">
+                            <i class="fa-solid fa-user-secret"></i> Wanted
+                        </button>
                     </div>
                 </div>
 
-                <!-- Tabs dans le profil -->
                 <div class="profile-tabs">
                     <button class="profile-tab-btn active" data-profile-tab="info">Infos</button>
                     <button class="profile-tab-btn" data-profile-tab="criminal">Casier</button>
@@ -644,7 +907,6 @@
                     <button class="profile-tab-btn" data-profile-tab="licenses">Licences</button>
                 </div>
 
-                <!-- Tab Content -->
                 <div class="profile-tab-content">
                     <div class="profile-tab-panel active" id="profile-info">
                         <div id="profileInfoContent"></div>
