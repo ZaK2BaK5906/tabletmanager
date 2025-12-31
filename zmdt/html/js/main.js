@@ -187,6 +187,13 @@ function searchWeapon() {
     postData('police_searchWeapon', {query: query});
 }
 
+function quickSearchVehicle() {
+    const query = document.getElementById('vehicleQuickSearch').value;
+    if (!query) return;
+
+    postData('police_searchVehicle', {query: query});
+}
+
 // ============================================
 // POLICE - REPORTS
 // ============================================
