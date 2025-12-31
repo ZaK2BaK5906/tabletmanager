@@ -510,3 +510,17 @@ CreateThread(function()
 end)
 
 print('^2[TabletManager]^0 Client démarré avec succès')
+
+-- ============================================
+-- CALLBACK: OUVRIR LA MDT POLICE
+-- ============================================
+
+RegisterNUICallback('openMDT', function(data, cb)
+    -- Fermer la tablette
+    CloseTablet()
+    
+    -- Ouvrir la MDT Police (ressource zmdt)
+    exports.zmdt:OpenPoliceMDT()
+    
+    cb('ok')
+end)
