@@ -1,383 +1,296 @@
 -- ============================================
--- CLIENT POLICE - NUI CALLBACKS COMPLET
+-- ZX POLICE MDT - CLIENT
 -- ============================================
 
+local mdtOpen = false
+local currentData = {}
+
 -- ============================================
--- CAD / APPELS 911
+-- OUVRIR LA MDT
 -- ============================================
 
-RegisterNUICallback('police_getCalls', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getCalls', function(calls)
-        cb(calls)
+function OpenPoliceMDT()
+    if mdtOpen then return end
+    
+    ESX.TriggerServerCallback('zmdt:police:getDashboard', function(dashboard)
+        mdtOpen = true
+        
+        SetNuiFocus(true, true)
+        SendNUIMessage({
+            action = 'open',
+            service = 'police',
+            data = {
+                dashboard = dashboard,
+                user = {
+                    name = ESX.PlayerData.name,
+                    job = ESX.PlayerData.job.name,
+                    job_label = ESX.PlayerData.job.label,
+                    grade = ESX.PlayerData.job.grade
+                }
+            }
+        })
+    end)
+end
+
+-- ============================================
+-- FERMER LA MDT
+-- ============================================
+
+function ClosePoliceMDT()
+    if not mdtOpen then return end
+    
+    mdtOpen = false
+    SetNuiFocus(false, false)
+    SendNUIMessage({action = 'close'})
+end
+
+-- ============================================
+-- NUI CALLBACKS
+-- ============================================
+
+RegisterNUICallback('close', function(data, cb)
+    ClosePoliceMDT()
+    cb('ok')
+end)
+
+-- Dashboard
+RegisterNUICallback('getDashboard', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:getDashboard', function(result)
+        cb(result)
     end)
 end)
 
-RegisterNUICallback('police_getAllCalls', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getAllCalls', function(calls)
-        cb(calls)
+-- CAD/Calls
+RegisterNUICallback('getCalls', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:getCalls', function(result)
+        cb(result)
     end, data.filters)
 end)
 
-RegisterNUICallback('police_createCall', function(data, cb)
+RegisterNUICallback('createCall', function(data, cb)
     TriggerServerEvent('zmdt:police:createCall', data)
     cb('ok')
 end)
 
-RegisterNUICallback('police_updateCall', function(data, cb)
-    TriggerServerEvent('zmdt:police:updateCall', data.callId, data.status, data.units)
-    cb('ok')
-end)
-
-RegisterNUICallback('police_closeCall', function(data, cb)
-    TriggerServerEvent('zmdt:police:closeCall', data.callId)
-    cb('ok')
-end)
-
--- ============================================
--- RECHERCHES
--- ============================================
-
-RegisterNUICallback('police_searchCitizen', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:searchCitizen', function(results)
-        cb(results)
+-- Recherche Citoyens
+RegisterNUICallback('searchCitizen', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:searchCitizen', function(result)
+        cb(result)
     end, data.query)
 end)
 
-RegisterNUICallback('police_getCitizenProfile', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getCitizenProfile', function(profile)
-        cb(profile)
+RegisterNUICallback('getCitizenProfile', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:getCitizenProfile', function(result)
+        cb(result)
     end, data.identifier)
 end)
 
-RegisterNUICallback('police_addCitizenNote', function(data, cb)
-    TriggerServerEvent('zmdt:police:addCitizenNote', data)
-    cb('ok')
+-- Recherche Véhicules
+RegisterNUICallback('searchVehicle', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:searchVehicle', function(result)
+        cb(result)
+    end, data.plate)
 end)
 
-RegisterNUICallback('police_searchVehicle', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:searchVehicle', function(results)
-        cb(results)
-    end, data.query)
-end)
-
-RegisterNUICallback('police_searchWeapon', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:searchWeapon', function(results)
-        cb(results)
-    end, data.query)
-end)
-
--- ============================================
--- RAPPORTS
--- ============================================
-
-RegisterNUICallback('police_getReports', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getReports', function(reports)
-        cb(reports)
-    end, data.filters)
-end)
-
-RegisterNUICallback('police_getReport', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getReport', function(report)
-        cb(report)
-    end, data.reportId)
-end)
-
-RegisterNUICallback('police_createReport', function(data, cb)
-    TriggerServerEvent('zmdt:police:createReport', data)
-    cb('ok')
-end)
-
-RegisterNUICallback('police_updateReport', function(data, cb)
-    TriggerServerEvent('zmdt:police:updateReport', data.reportId, data)
-    cb('ok')
-end)
-
--- ============================================
--- ARRESTATIONS
--- ============================================
-
-RegisterNUICallback('police_getArrests', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getArrests', function(arrests)
-        cb(arrests)
-    end, data.filters)
-end)
-
-RegisterNUICallback('police_createArrest', function(data, cb)
-    TriggerServerEvent('zmdt:police:createArrest', data)
-    cb('ok')
-end)
-
--- ============================================
 -- BOLO
--- ============================================
-
-RegisterNUICallback('police_getBOLO', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getBOLO', function(bolos)
-        cb(bolos)
+RegisterNUICallback('getBOLO', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:getBOLO', function(result)
+        cb(result)
     end)
 end)
 
-RegisterNUICallback('police_createBOLO', function(data, cb)
+RegisterNUICallback('createBOLO', function(data, cb)
     TriggerServerEvent('zmdt:police:createBOLO', data)
     cb('ok')
 end)
 
-RegisterNUICallback('police_closeBOLO', function(data, cb)
-    TriggerServerEvent('zmdt:police:closeBOLO', data.boloId)
+-- Rapports
+RegisterNUICallback('getReports', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:getReports', function(result)
+        cb(result)
+    end, data.filters)
+end)
+
+RegisterNUICallback('createReport', function(data, cb)
+    TriggerServerEvent('zmdt:police:createReport', data)
     cb('ok')
 end)
 
--- ============================================
--- CITATIONS / AMENDES
--- ============================================
-
-RegisterNUICallback('police_getCitations', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getCitations', function(citations)
-        cb(citations)
-    end, data.identifier)
+-- Arrestations
+RegisterNUICallback('createArrest', function(data, cb)
+    TriggerServerEvent('zmdt:police:createArrest', data)
+    cb('ok')
 end)
 
-RegisterNUICallback('police_createCitation', function(data, cb)
+-- Citations
+RegisterNUICallback('createCitation', function(data, cb)
     TriggerServerEvent('zmdt:police:createCitation', data)
     cb('ok')
 end)
 
--- ============================================
--- PREUVES / EVIDENCE
--- ============================================
-
-RegisterNUICallback('police_getEvidence', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getEvidence', function(evidence)
-        cb(evidence)
+-- Mandats
+RegisterNUICallback('getWarrants', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:getWarrants', function(result)
+        cb(result)
     end, data.filters)
 end)
 
-RegisterNUICallback('police_createEvidence', function(data, cb)
-    TriggerServerEvent('zmdt:police:createEvidence', data)
+RegisterNUICallback('createWarrant', function(data, cb)
+    TriggerServerEvent('zmdt:police:createWarrant', data)
     cb('ok')
 end)
 
--- ============================================
--- PERSONNEL / UNITS
--- ============================================
+-- Preuves
+RegisterNUICallback('logEvidence', function(data, cb)
+    TriggerServerEvent('zmdt:police:logEvidence', data)
+    cb('ok')
+end)
 
-RegisterNUICallback('police_getUnits', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getUnits', function(units)
-        cb(units)
+-- PPA
+RegisterNUICallback('issuePPA', function(data, cb)
+    TriggerServerEvent('zmdt:police:issuePPA', data)
+    cb('ok')
+end)
+
+RegisterNUICallback('issuePPAHeavy', function(data, cb)
+    TriggerServerEvent('zmdt:police:issuePPAHeavy', data)
+    cb('ok')
+end)
+
+-- Véhicules Volés
+RegisterNUICallback('getStolenVehicles', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:getStolenVehicles', function(result)
+        cb(result)
     end)
 end)
 
-RegisterNUICallback('police_getOfficerStatus', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getOfficerStatus', function(status)
-        cb(status)
+RegisterNUICallback('reportStolenVehicle', function(data, cb)
+    TriggerServerEvent('zmdt:police:reportStolenVehicle', data)
+    cb('ok')
+end)
+
+-- Charges Pénales
+RegisterNUICallback('getCharges', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:getCharges', function(result)
+        cb(result)
     end)
 end)
 
-RegisterNUICallback('police_updateStatus', function(data, cb)
-    TriggerServerEvent('zmdt:police:updateStatus', data.statusCode, data.location)
+-- Unités
+RegisterNUICallback('getUnits', function(data, cb)
+    ESX.TriggerServerCallback('zmdt:police:getUnits', function(result)
+        cb(result)
+    end)
+end)
+
+RegisterNUICallback('updateUnitStatus', function(data, cb)
+    TriggerServerEvent('zmdt:police:updateUnitStatus', data.status, data.statusText)
+    cb('ok')
+end)
+
+-- Notes
+RegisterNUICallback('addNote', function(data, cb)
+    TriggerServerEvent('zmdt:police:addNote', data)
     cb('ok')
 end)
 
 -- ============================================
--- CHARGES PÉNALES
+-- EVENTS SERVEUR
 -- ============================================
-
-RegisterNUICallback('police_getCharges', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getCharges', function(charges)
-        cb(charges)
-    end, data.filters)
-end)
-
--- ============================================
--- WARRANTS
--- ============================================
-
-RegisterNUICallback('police_getWarrants', function(data, cb)
-    ESX.TriggerServerCallback('zmdt:police:getWarrants', function(warrants)
-        cb(warrants)
-    end, data.identifier)
-end)
-
-RegisterNUICallback('police_executeWarrant', function(data, cb)
-    TriggerServerEvent('zmdt:police:executeWarrant', data.warrantId)
-    cb('ok')
-end)
-
--- ============================================
--- JOUEURS PROCHES (pour citations/arrestations)
--- ============================================
-
-RegisterNUICallback('police_getNearbyPlayers', function(data, cb)
-    local playerPed = PlayerPedId()
-    local playerCoords = GetEntityCoords(playerPed)
-    local nearbyPlayers = {}
-
-    for _, player in ipairs(GetActivePlayers()) do
-        local targetPed = GetPlayerPed(player)
-        local targetCoords = GetEntityCoords(targetPed)
-        local distance = #(playerCoords - targetCoords)
-
-        if distance < (Config.NearbyRadius or 50.0) and player ~= PlayerId() then
-            local targetServerId = GetPlayerServerId(player)
-
-            -- Demander les infos du joueur au serveur
-            ESX.TriggerServerCallback('zmdt:getNearbyPlayerInfo', function(info)
-                if info then
-                    table.insert(nearbyPlayers, {
-                        serverId = targetServerId,
-                        name = info.name,
-                        identifier = info.identifier,
-                        distance = math.floor(distance)
-                    })
-                end
-            end, targetServerId)
-        end
-    end
-
-    -- Attendre un peu pour recevoir toutes les réponses
-    Citizen.Wait(500)
-    cb(nearbyPlayers)
-end)
-
--- ============================================
--- EVENTS SERVEUR → CLIENT
--- ============================================
-
--- Nouvel appel 911
-RegisterNetEvent('zmdt:police:newCall')
-AddEventHandler('zmdt:police:newCall', function(call)
-    SendNUIMessage({
-        action = 'police_newCall',
-        call = call
-    })
-
-    -- Notification sonore
-    PlaySound(-1, "CONFIRM_BEEP", "HUD_MINI_GAME_SOUNDSET", 0, 0, 1)
-
-    -- Notification visuelle
-    ESX.ShowNotification('🚨 Nouvel Appel: ' .. call.call_type .. ' - ' .. call.location)
-end)
-
--- Appel mis à jour
-RegisterNetEvent('zmdt:police:callUpdated')
-AddEventHandler('zmdt:police:callUpdated', function(data)
-    SendNUIMessage({
-        action = 'police_callUpdated',
-        data = data
-    })
-end)
-
--- Appel fermé
-RegisterNetEvent('zmdt:police:callClosed')
-AddEventHandler('zmdt:police:callClosed', function(callId)
-    SendNUIMessage({
-        action = 'police_callClosed',
-        callId = callId
-    })
-end)
 
 -- Nouveau BOLO
-RegisterNetEvent('zmdt:police:newBOLO')
-AddEventHandler('zmdt:police:newBOLO', function(bolo)
-    SendNUIMessage({
-        action = 'police_newBOLO',
-        bolo = bolo
-    })
-
-    PlaySound(-1, "CONFIRM_BEEP", "HUD_MINI_GAME_SOUNDSET", 0, 0, 1)
-
-    local dangerText = ''
-    if bolo.danger_level == 'armed_dangerous' then
-        dangerText = ' ⚠️ ARMÉ ET DANGEREUX'
+RegisterNetEvent('zmdt:police:newBOLO', function(bolo)
+    if mdtOpen then
+        SendNUIMessage({
+            action = 'newBOLO',
+            data = bolo
+        })
     end
-
-    ESX.ShowNotification('⚠️ BOLO: ' .. bolo.subject .. dangerText)
+    
+    -- Notification
+    ESX.ShowNotification('~r~[BOLO]~s~ '..bolo.subject..' ('..bolo.priority..')')
 end)
 
--- BOLO fermé
-RegisterNetEvent('zmdt:police:boloClosed')
-AddEventHandler('zmdt:police:boloClosed', function(boloId)
-    SendNUIMessage({
-        action = 'police_boloClosed',
-        boloId = boloId
-    })
+-- Nouveau Call
+RegisterNetEvent('zmdt:police:callCreated', function(call)
+    if mdtOpen then
+        SendNUIMessage({
+            action = 'newCall',
+            data = call
+        })
+    end
 end)
 
--- Status officier changé
-RegisterNetEvent('zmdt:police:statusChanged')
-AddEventHandler('zmdt:police:statusChanged', function(data)
-    SendNUIMessage({
-        action = 'police_statusChanged',
-        data = data
-    })
+-- Changement statut unité
+RegisterNetEvent('zmdt:police:unitStatusChanged', function(data)
+    if mdtOpen then
+        SendNUIMessage({
+            action = 'unitStatusChanged',
+            data = data
+        })
+    end
 end)
 
--- Rapport créé
-RegisterNetEvent('zmdt:police:reportCreated')
-AddEventHandler('zmdt:police:reportCreated', function(data)
-    ESX.ShowNotification('✅ Rapport créé: ' .. data.report_number)
-end)
-
--- Citation reçue (pour le citoyen)
-RegisterNetEvent('zmdt:police:receiveCitation')
-AddEventHandler('zmdt:police:receiveCitation', function(data)
-    ESX.ShowNotification('~o~Citation Reçue~s~\n' ..
-        'Violation: ' .. data.violation .. '\n' ..
-        'Montant: $' .. data.fine_amount .. '\n' ..
-        'Officier: ' .. data.officer
-    )
+-- Notification
+RegisterNetEvent('zmdt:notify', function(type, message)
+    if type == 'success' then
+        ESX.ShowNotification('~g~'..message)
+    elseif type == 'error' then
+        ESX.ShowNotification('~r~'..message)
+    else
+        ESX.ShowNotification(message)
+    end
 end)
 
 -- ============================================
--- COMMANDES RAPIDES
+-- COMMANDES
 -- ============================================
 
--- /panic - Bouton panique
-RegisterCommand('panic', function()
-    local playerPed = PlayerPedId()
-    local coords = GetEntityCoords(playerPed)
-    local streetHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
-    local streetName = GetStreetNameFromHashKey(streetHash)
-
-    ESX.TriggerServerCallback('zmdt:police:sendPanic', function(success)
-        if success then
-            ESX.ShowNotification('🚨 SIGNAL DE DÉTRESSE ENVOYÉ')
-            PlaySound(-1, "CONFIRM_BEEP", "HUD_MINI_GAME_SOUNDSET", 0, 0, 1)
+-- Panic Button
+if Config.PanicButton.enabled then
+    local panicCooldown = 0
+    
+    RegisterCommand(Config.PanicButton.command, function()
+        if GetGameTimer() - panicCooldown < (Config.PanicButton.cooldown * 1000) then
+            ESX.ShowNotification('~r~Panic button en cooldown')
+            return
         end
-    end, {
-        location = streetName,
-        coords = coords
-    })
-end)
-
--- /10-8, /10-7, etc. (Status rapide)
-for _, code in ipairs({'10-4', '10-6', '10-7', '10-8', '10-15', '10-20', '10-97', '10-99'}) do
-    RegisterCommand(code, function()
-        local playerPed = PlayerPedId()
-        local coords = GetEntityCoords(playerPed)
-        local streetHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
-        local streetName = GetStreetNameFromHashKey(streetHash)
-
-        TriggerServerEvent('zmdt:police:updateStatus', code, streetName)
+        
+        panicCooldown = GetGameTimer()
+        
+        local coords = GetEntityCoords(PlayerPedId())
+        local street = GetStreetNameFromHashKey(GetStreetNameAtCoord(coords.x, coords.y, coords.z))
+        
+        TriggerServerEvent('zmdt:police:panicButton', {
+            coords = coords,
+            street = street,
+            officer = ESX.PlayerData.name
+        })
+        
+        ESX.ShowNotification('~r~[PANIC BUTTON]~s~ Signal envoyé!')
     end)
 end
 
--- /bolo [texte] - BOLO rapide
-RegisterCommand(Config.Commands.bolo or 'bolo', function(source, args)
-    if #args == 0 then
-        ESX.ShowNotification('Usage: /' .. (Config.Commands.bolo or 'bolo') .. ' [description]')
-        return
-    end
+-- Commandes rapides (10-8, 10-7, etc.)
+for command, action in pairs(Config.QuickCommands) do
+    RegisterCommand(command:gsub('/', ''), function()
+        if action:find('setStatus') then
+            local status = action:gsub('setStatus_', '')
+            TriggerServerEvent('zmdt:police:updateUnitStatus', status, nil)
+            ESX.ShowNotification('Statut changé: '..status)
+        elseif action == 'openBOLO' then
+            if mdtOpen then
+                SendNUIMessage({action = 'openTab', tab = 'bolo'})
+            end
+        end
+    end)
+end
 
-    local description = table.concat(args, ' ')
+-- ============================================
+-- EXPORTS
+-- ============================================
 
-    TriggerServerEvent('zmdt:police:createBOLO', {
-        bolo_type = 'other',
-        subject = 'BOLO Rapide',
-        description = description,
-        priority = 'medium',
-        danger_level = 'medium'
-    })
-end)
+exports('OpenPoliceMDT', OpenPoliceMDT)
+exports('ClosePoliceMDT', ClosePoliceMDT)
 
-print('^2[ZMDT]^0 Police client loaded - FULL SYSTEM')
+print('^2[ZX Police MDT]^0 Client chargé')
