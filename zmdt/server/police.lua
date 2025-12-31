@@ -1,162 +1,125 @@
 -- ============================================
--- SERVER POLICE - SYSTÈME COMPLET
+-- ZX POLICE MDT - BACKEND COMPLET
 -- ============================================
 
+local Webhooks = require('server/webhooks')
+
 -- ============================================
--- CAD / APPELS 911
+-- UTILITAIRES
 -- ============================================
 
--- Get active calls
-ESX.RegisterServerCallback('zmdt:police:getCalls', function(source, cb)
-    if not HasPermission(source, 'police.cad.view') then
-        cb({})
-        return
-    end
+local function GenerateNumber(format)
+    local date = os.date('*t')
+    local year = string.format('%02d', date.year % 100)
+    local month = string.format('%02d', date.month)
+    local day = string.format('%02d', date.day)
+    
+    -- Trouver le prochain numéro incrémental
+    local pattern = format:gsub('%%y', year):gsub('%%m', month):gsub('%%d', day):gsub('%%n', '___')
+    local result = MySQL.query.await('SELECT MAX(CAST(SUBSTRING_INDEX(call_number, "-", -1) AS UNSIGNED)) as max_num FROM zx_police_calls WHERE call_number LIKE ?', {pattern:gsub('___', '%')})
+    local nextNum = (result[1] and result[1].max_num or 0) + 1
+    
+    return format:gsub('%%y', year):gsub('%%m', month):gsub('%%d', day):gsub('%%n', string.format('%03d', nextNum))
+end
 
-    local calls = MySQL.query.await([[
-        SELECT * FROM mdt_calls
-        WHERE status != 'closed'
-        ORDER BY
-            FIELD(priority, 'critical', 'high', 'medium', 'low'),
-            created_at DESC
-        LIMIT 100
-    ]])
+local function HasPermission(source, permission)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then return false end
+    
+    local perms = Config.Permissions.police[xPlayer.job.grade]
+    if not perms then return false end
+    
+    return perms[permission] == true or perms.all == true
+end
 
-    cb(calls or {})
+-- ============================================
+-- DASHBOARD
+-- ============================================
+
+ESX.RegisterServerCallback('zmdt:police:getDashboard', function(source, cb)
+    local stats = {}
+    
+    -- Appels actifs
+    stats.activeCalls = MySQL.query.await('SELECT COUNT(*) as count FROM zx_police_calls WHERE status IN ("pending","dispatched","on_scene")', {})
+    stats.activeCalls = stats.activeCalls[1].count
+    
+    -- Unités actives
+    stats.activeUnits = MySQL.query.await('SELECT COUNT(*) as count FROM zx_police_units WHERE status != "10-7"', {})
+    stats.activeUnits = stats.activeUnits[1].count
+    
+    -- Arrestations récentes (24h)
+    stats.recentArrests = MySQL.query.await('SELECT COUNT(*) as count FROM zx_police_arrests WHERE arrest_date >= DATE_SUB(NOW(), INTERVAL 24 HOUR)', {})
+    stats.recentArrests = stats.recentArrests[1].count
+    
+    -- BOLO actifs
+    stats.activeBOLO = MySQL.query.await('SELECT COUNT(*) as count FROM zx_police_bolo WHERE status = "active"', {})
+    stats.activeBOLO = stats.activeBOLO[1].count
+    
+    -- Personnes recherchées
+    stats.wantedPersons = MySQL.query.await('SELECT COUNT(*) as count FROM zx_police_wanted WHERE status = "active"', {})
+    stats.wantedPersons = stats.wantedPersons[1].count
+    
+    -- Mandats actifs
+    stats.activeWarrants = MySQL.query.await('SELECT COUNT(*) as count FROM zx_police_warrants WHERE status IN ("pending","active")', {})
+    stats.activeWarrants = stats.activeWarrants[1].count
+    
+    cb(stats)
 end)
 
--- Get all calls (history)
-ESX.RegisterServerCallback('zmdt:police:getAllCalls', function(source, cb, filters)
-    if not HasPermission(source, 'police.cad.view') then
-        cb({})
-        return
-    end
+-- ============================================
+-- CAD / 911 CALLS
+-- ============================================
 
-    local query = 'SELECT * FROM mdt_calls WHERE 1=1'
+ESX.RegisterServerCallback('zmdt:police:getCalls', function(source, cb, filters)
+    local query = 'SELECT * FROM zx_police_calls'
+    local conditions = {}
     local params = {}
-
+    
     if filters and filters.status then
-        query = query .. ' AND status = ?'
+        table.insert(conditions, 'status = ?')
         table.insert(params, filters.status)
     end
-
-    if filters and filters.date then
-        query = query .. ' AND DATE(created_at) = ?'
-        table.insert(params, filters.date)
+    
+    if #conditions > 0 then
+        query = query .. ' WHERE ' .. table.concat(conditions, ' AND ')
     end
-
-    query = query .. ' ORDER BY created_at DESC LIMIT 200'
-
+    
+    query = query .. ' ORDER BY created_at DESC LIMIT 50'
+    
     local calls = MySQL.query.await(query, params)
     cb(calls or {})
 end)
 
--- Create call
-RegisterNetEvent('zmdt:police:createCall')
-AddEventHandler('zmdt:police:createCall', function(data)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.cad.create') then return end
-
-    local callNumber = GenerateNumber('calls')
-
-    local callId = MySQL.insert.await([[
-        INSERT INTO mdt_calls (
-            call_number, priority, call_type, location,
-            caller_info, description, status
-        ) VALUES (?, ?, ?, ?, ?, ?, 'pending')
+RegisterNetEvent('zmdt:police:createCall', function(data)
+    local source = source
+    if not HasPermission(source, 'cad') then return end
+    
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local callNumber = GenerateNumber(Config.AutoNumbering.calls)
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_calls (call_number, priority, call_type, location, postal, caller_name, caller_phone, description, created_by, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     ]], {
         callNumber,
-        data.priority or 'medium',
+        data.priority,
         data.call_type,
         data.location,
-        data.caller_info,
-        data.description
-    })
-
-    if callId then
-        ShowNotification(_source, '✅ Appel créé: '..callNumber, 'success')
-
-        -- Broadcast to all police
-        local call = {
-            id = callId,
-            call_number = callNumber,
-            priority = data.priority or 'medium',
-            call_type = data.call_type,
-            location = data.location,
-            caller_info = data.caller_info,
-            description = data.description,
-            status = 'pending',
-            created_at = os.date('%Y-%m-%d %H:%M:%S')
-        }
-
-        BroadcastToPolice('zmdt:police:newCall', call)
-        LogActivity(xPlayer.identifier, 'create', 'calls', callId, {call_number = callNumber})
-
-        -- Webhook Discord
-        SendWebhook('PoliceReports', {
-            title = '🚨 Nouvel Appel 911',
+        data.postal,
+        data.caller_name,
+        data.caller_phone,
+        data.description,
+        xPlayer.identifier
+    }, function(id)
+        TriggerClientEvent('zmdt:police:callCreated', -1, {
+            id = id,
             call_number = callNumber,
             priority = data.priority,
+            call_type = data.call_type,
             location = data.location,
-            created_by = xPlayer.getName()
+            description = data.description
         })
-    end
-end)
-
--- Update call status
-RegisterNetEvent('zmdt:police:updateCall')
-AddEventHandler('zmdt:police:updateCall', function(callId, status, units)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.cad.create') then return end
-
-    local updates = {}
-    local params = {}
-
-    if status then
-        table.insert(updates, 'status = ?')
-        table.insert(params, status)
-
-        if status == 'dispatched' then
-            table.insert(updates, 'dispatched_at = NOW()')
-        elseif status == 'closed' then
-            table.insert(updates, 'closed_at = NOW()')
-            table.insert(updates, 'closed_by = ?')
-            table.insert(params, xPlayer.identifier)
-        end
-    end
-
-    if units then
-        table.insert(updates, 'units_assigned = ?')
-        table.insert(params, json.encode(units))
-    end
-
-    if #updates > 0 then
-        table.insert(params, callId)
-        local query = 'UPDATE mdt_calls SET ' .. table.concat(updates, ', ') .. ' WHERE id = ?'
-        MySQL.update.await(query, params)
-
-        ShowNotification(_source, '✅ Appel mis à jour', 'success')
-        BroadcastToPolice('zmdt:police:callUpdated', {id = callId, status = status, units = units})
-    end
-end)
-
--- Close call
-RegisterNetEvent('zmdt:police:closeCall')
-AddEventHandler('zmdt:police:closeCall', function(callId)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.cad.create') then return end
-
-    MySQL.update.await([[
-        UPDATE mdt_calls
-        SET status = 'closed', closed_at = NOW(), closed_by = ?
-        WHERE id = ?
-    ]], {xPlayer.identifier, callId})
-
-    ShowNotification(_source, '✅ Appel fermé', 'success')
-    BroadcastToPolice('zmdt:police:callClosed', callId)
+    end)
 end)
 
 -- ============================================
@@ -164,909 +127,651 @@ end)
 -- ============================================
 
 ESX.RegisterServerCallback('zmdt:police:searchCitizen', function(source, cb, query)
-    if not HasPermission(source, 'police.search.citizen') then
-        cb({})
-        return
-    end
-
-    if not query or query == '' then
-        cb({})
-        return
-    end
-
-    -- Recherche dans mdt_citizens (synchronisé depuis users)
+    if not HasPermission(source, 'search_citizens') then cb({}) return end
+    
     local citizens = MySQL.query.await([[
-        SELECT
-            c.identifier,
-            c.firstname,
-            c.lastname,
-            c.dateofbirth,
-            c.sex,
-            c.height,
-            c.phone_number,
+        SELECT 
+            u.identifier,
+            u.firstname,
+            u.lastname,
+            u.dateofbirth,
+            u.sex,
+            u.height,
+            u.phone_number,
             u.job,
             u.job_grade
-        FROM mdt_citizens c
-        LEFT JOIN users u ON u.identifier = c.identifier
-        WHERE LOWER(c.firstname) LIKE ?
-           OR LOWER(c.lastname) LIKE ?
-           OR c.identifier LIKE ?
-           OR c.phone_number LIKE ?
+        FROM users u
+        WHERE LOWER(u.firstname) LIKE ? 
+           OR LOWER(u.lastname) LIKE ?
+           OR u.identifier LIKE ?
+           OR u.phone_number LIKE ?
         LIMIT 20
-    ]], {
-        '%'..query:lower()..'%',
-        '%'..query:lower()..'%',
-        '%'..query..'%',
-        '%'..query..'%'
-    })
-
-    -- Enrichir avec données MDT
-    if citizens then
-        for i, citizen in ipairs(citizens) do
-            -- Casier criminel (nombre de charges)
-            local criminal = MySQL.query.await([[
-                SELECT
-                    COUNT(*) as total_charges,
-                    SUM(CASE WHEN charge_class = 'felony' THEN 1 ELSE 0 END) as felonies,
-                    SUM(CASE WHEN charge_class = 'misdemeanor' THEN 1 ELSE 0 END) as misdemeanors
-                FROM mdt_criminal_records
-                WHERE citizen_identifier = ? AND status = 'active'
-            ]], {citizen.identifier})
-
-            citizen.criminal_charges = criminal[1].total_charges or 0
-            citizen.felonies = criminal[1].felonies or 0
-            citizen.misdemeanors = criminal[1].misdemeanors or 0
-
-            -- Citations
-            local citations = MySQL.query.await([[
-                SELECT
-                    COUNT(*) as total,
-                    SUM(fine_amount) as total_fines
-                FROM mdt_citations
-                WHERE citizen_identifier = ? AND payment_status = 'unpaid'
-            ]], {citizen.identifier})
-
-            citizen.pending_citations = citations[1].total or 0
-            citizen.total_unpaid_fines = citations[1].total_fines or 0
-
-            -- Notes flaggées
-            local notes = MySQL.scalar.await([[
-                SELECT COUNT(*)
-                FROM mdt_citizen_notes
-                WHERE citizen_identifier = ? AND is_flagged = 1
-            ]], {citizen.identifier})
-
-            citizen.flagged_notes = notes or 0
-
-            -- Véhicules
-            local vehicles = MySQL.scalar.await([[
-                SELECT COUNT(*)
-                FROM owned_vehicles
-                WHERE owner = ?
-            ]], {citizen.identifier})
-
-            citizen.owned_vehicles = vehicles or 0
-
-            -- Wanted/BOLO actif
-            local wanted = MySQL.scalar.await([[
-                SELECT COUNT(*)
-                FROM mdt_wanted
-                WHERE citizen_identifier = ? AND status = 'active'
-            ]], {citizen.identifier})
-
-            citizen.is_wanted = (wanted or 0) > 0
-
-            -- Warrants actifs
-            local warrants = MySQL.scalar.await([[
-                SELECT COUNT(*)
-                FROM mdt_warrants
-                WHERE citizen_identifier = ? AND status = 'active'
-            ]], {citizen.identifier})
-
-            citizen.active_warrants = warrants or 0
-
-            -- Licenses
-            local licenses = MySQL.query.await([[
-                SELECT license_type, status
-                FROM mdt_licenses
-                WHERE citizen_identifier = ?
-            ]], {citizen.identifier})
-
-            citizen.licenses = licenses or {}
-        end
-    end
-
+    ]], {'%'..query:lower()..'%', '%'..query:lower()..'%', '%'..query..'%', '%'..query..'%'})
+    
     cb(citizens or {})
 end)
 
--- Get citizen full profile
+-- ============================================
+-- PROFIL CITOYEN COMPLET
+-- ============================================
+
 ESX.RegisterServerCallback('zmdt:police:getCitizenProfile', function(source, cb, identifier)
-    if not HasPermission(source, 'police.search.citizen') then
-        cb(nil)
-        return
-    end
-
-    -- Info de base depuis mdt_citizens + users
-    local citizen = MySQL.query.await([[
-        SELECT c.*, u.job, u.job_grade
-        FROM mdt_citizens c
-        LEFT JOIN users u ON u.identifier = c.identifier
-        WHERE c.identifier = ?
-        LIMIT 1
-    ]], {identifier})
-
-    if not citizen or #citizen == 0 then
-        cb(nil)
-        return
-    end
-
+    if not HasPermission(source, 'citizen_profile') then cb(nil) return end
+    
+    -- Infos de base
+    local citizen = MySQL.query.await('SELECT * FROM users WHERE identifier = ?', {identifier})
+    if not citizen[1] then cb(nil) return end
+    
     local profile = citizen[1]
-
-    -- Casier criminel
-    profile.criminal_history = MySQL.query.await([[
-        SELECT * FROM mdt_criminal_records
-        WHERE citizen_identifier = ?
-        ORDER BY arrest_date DESC
-    ]], {identifier}) or {}
-
-    -- Citations
-    profile.citations = MySQL.query.await([[
-        SELECT * FROM mdt_citations
-        WHERE citizen_identifier = ?
-        ORDER BY created_at DESC
-    ]], {identifier}) or {}
-
-    -- Notes
-    profile.notes = MySQL.query.await([[
-        SELECT n.*, u.firstname, u.lastname
-        FROM mdt_citizen_notes n
-        LEFT JOIN users u ON u.identifier = n.author_identifier
-        WHERE n.citizen_identifier = ?
-        ORDER BY n.created_at DESC
-    ]], {identifier}) or {}
-
-    -- Véhicules
-    profile.vehicles = MySQL.query.await([[
-        SELECT * FROM owned_vehicles
-        WHERE owner = ?
-    ]], {identifier}) or {}
-
-    -- Licenses
-    profile.licenses = MySQL.query.await([[
-        SELECT * FROM mdt_licenses
-        WHERE citizen_identifier = ?
-    ]], {identifier}) or {}
-
-    -- Wanted
-    profile.wanted = MySQL.query.await([[
-        SELECT * FROM mdt_wanted
-        WHERE citizen_identifier = ? AND status = 'active'
-    ]], {identifier}) or {}
-
-    -- Warrants
-    profile.warrants = MySQL.query.await([[
-        SELECT * FROM mdt_warrants
-        WHERE citizen_identifier = ? AND status = 'active'
-    ]], {identifier}) or {}
-
-    -- Arrestations
-    profile.arrests = MySQL.query.await([[
-        SELECT * FROM mdt_arrests
-        WHERE citizen_identifier = ?
-        ORDER BY arrest_date DESC
-        LIMIT 20
-    ]], {identifier}) or {}
-
-    cb(profile)
-end)
-
--- ============================================
--- NOTES CITOYENS
--- ============================================
-
-RegisterNetEvent('zmdt:police:addCitizenNote')
-AddEventHandler('zmdt:police:addCitizenNote', function(data)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.notes.create') then return end
-
-    local noteId = MySQL.insert.await([[
-        INSERT INTO mdt_citizen_notes (
-            citizen_identifier, note_text, note_type,
-            is_flagged, author_identifier
-        ) VALUES (?, ?, ?, ?, ?)
-    ]], {
-        data.identifier,
-        data.note_text,
-        data.note_type or 'info',
-        data.is_flagged or 0,
-        xPlayer.identifier
-    })
-
-    if noteId then
-        ShowNotification(_source, '✅ Note ajoutée', 'success')
-        LogActivity(xPlayer.identifier, 'create', 'citizen_notes', noteId, {
-            citizen = data.identifier
-        })
+    
+    -- Comptes bancaires (si configuré)
+    if Config.CitizenSearch.show_bank_accounts then
+        profile.bank_accounts = MySQL.query.await('SELECT * FROM bank_accounts WHERE owner = ?', {identifier}) or {}
     end
+    
+    -- Véhicules
+    if Config.CitizenSearch.show_vehicles then
+        profile.vehicles = MySQL.query.await([[
+            SELECT plate, vehicle, stored, pound
+            FROM owned_vehicles 
+            WHERE owner = ?
+        ]], {identifier}) or {}
+    end
+    
+    -- Arrestations
+    if Config.CitizenSearch.show_arrests then
+        profile.arrests = MySQL.query.await([[
+            SELECT * FROM zx_police_arrests 
+            WHERE citizen_identifier = ?
+            ORDER BY arrest_date DESC
+            LIMIT 10
+        ]], {identifier}) or {}
+    end
+    
+    -- Citations
+    if Config.CitizenSearch.show_citations then
+        profile.citations = MySQL.query.await([[
+            SELECT * FROM zx_police_citations
+            WHERE citizen_identifier = ?
+            ORDER BY created_at DESC
+            LIMIT 10
+        ]], {identifier}) or {}
+    end
+    
+    -- Notes
+    if Config.CitizenSearch.show_notes then
+        profile.notes = MySQL.query.await([[
+            SELECT * FROM zx_police_notes
+            WHERE citizen_identifier = ?
+            ORDER BY created_at DESC
+        ]], {identifier}) or {}
+    end
+    
+    -- Mandats
+    if Config.CitizenSearch.show_warrants then
+        profile.warrants = MySQL.query.await([[
+            SELECT * FROM zx_police_warrants
+            WHERE citizen_identifier = ? AND status IN ('pending','active')
+        ]], {identifier}) or {}
+    end
+    
+    -- PPA
+    profile.ppa = MySQL.query.await([[
+        SELECT * FROM zx_police_ppa
+        WHERE citizen_identifier = ? AND status = 'active'
+    ]], {identifier}) or {}
+    
+    profile.ppa_heavy = MySQL.query.await([[
+        SELECT * FROM zx_police_ppa_heavy
+        WHERE citizen_identifier = ? AND status = 'active'
+    ]], {identifier}) or {}
+    
+    cb(profile)
 end)
 
 -- ============================================
 -- RECHERCHE VÉHICULES
 -- ============================================
 
-ESX.RegisterServerCallback('zmdt:police:searchVehicle', function(source, cb, query)
-    if not HasPermission(source, 'police.search.vehicle') then
-        cb({})
-        return
-    end
-
-    local results = MySQL.query.await([[
-        SELECT
-            v.plate,
-            v.vehicle,
-            v.stored,
-            v.parking,
-            v.pound,
+ESX.RegisterServerCallback('zmdt:police:searchVehicle', function(source, cb, plate)
+    if not HasPermission(source, 'search_vehicles') then cb(nil) return end
+    
+    -- Chercher dans owned_vehicles
+    local vehicle = MySQL.query.await([[
+        SELECT 
+            ov.plate,
+            ov.vehicle,
+            ov.owner,
+            ov.stored,
+            ov.pound,
             u.firstname,
             u.lastname,
-            u.identifier
-        FROM owned_vehicles v
-        LEFT JOIN users u ON u.identifier = v.owner
-        WHERE LOWER(v.plate) LIKE ?
-           OR LOWER(v.vehicle) LIKE ?
-           OR LOWER(u.firstname) LIKE ?
-           OR LOWER(u.lastname) LIKE ?
-        LIMIT 20
-    ]], {
-        '%'..query:lower()..'%',
-        '%'..query:lower()..'%',
-        '%'..query:lower()..'%',
-        '%'..query:lower()..'%'
-    })
-
-    -- Enrichir avec données MDT
-    if results then
-        for i, vehicle in ipairs(results) do
-            -- Check si volé
-            local stolen = MySQL.query.await([[
-                SELECT * FROM mdt_vehicle_flags
-                WHERE plate = ? AND flag_type = 'stolen' AND is_active = 1
-                LIMIT 1
-            ]], {vehicle.plate})
-
-            vehicle.is_stolen = stolen and #stolen > 0
-
-            -- Check BOLO
-            local bolo = MySQL.query.await([[
-                SELECT * FROM mdt_bolo
-                WHERE bolo_type = 'vehicle'
-                AND LOWER(subject) LIKE ?
-                AND status = 'active'
-                LIMIT 1
-            ]], {'%'..vehicle.plate:lower()..'%'})
-
-            vehicle.has_bolo = bolo and #bolo > 0
-
-            -- Citations impayées liées au véhicule
-            local citations = MySQL.scalar.await([[
-                SELECT COUNT(*) FROM mdt_citations
-                WHERE vehicle_plate = ? AND payment_status = 'unpaid'
-            ]], {vehicle.plate})
-
-            vehicle.unpaid_citations = citations or 0
-        end
-    end
-
-    cb(results or {})
-end)
-
--- ============================================
--- RECHERCHE ARMES
--- ============================================
-
-ESX.RegisterServerCallback('zmdt:police:searchWeapon', function(source, cb, query)
-    if not HasPermission(source, 'police.search.weapon') then
-        cb({})
-        return
-    end
-
-    local results = MySQL.query.await([[
-        SELECT w.*, u.firstname, u.lastname
-        FROM mdt_weapons w
-        LEFT JOIN users u ON u.identifier = w.owner_identifier
-        WHERE serial_number LIKE ?
-           OR LOWER(weapon_type) LIKE ?
-           OR LOWER(make) LIKE ?
-           OR LOWER(model) LIKE ?
-        LIMIT 20
-    ]], {
-        '%'..query..'%',
-        '%'..query:lower()..'%',
-        '%'..query:lower()..'%',
-        '%'..query:lower()..'%'
-    })
-
-    cb(results or {})
-end)
-
--- ============================================
--- RAPPORTS
--- ============================================
-
--- Get reports
-ESX.RegisterServerCallback('zmdt:police:getReports', function(source, cb, filters)
-    if not HasPermission(source, 'police.reports.view') then
-        cb({})
-        return
-    end
-
-    local query = [[
-        SELECT r.*, u.firstname, u.lastname
-        FROM mdt_reports r
-        LEFT JOIN users u ON u.identifier = r.primary_officer
-        WHERE 1=1
-    ]]
-    local params = {}
-
-    if filters and filters.report_type then
-        query = query .. ' AND r.report_type = ?'
-        table.insert(params, filters.report_type)
-    end
-
-    if filters and filters.status then
-        query = query .. ' AND r.status = ?'
-        table.insert(params, filters.status)
-    end
-
-    query = query .. ' ORDER BY r.created_at DESC LIMIT 100'
-
-    local reports = MySQL.query.await(query, params)
-    cb(reports or {})
-end)
-
--- Get single report
-ESX.RegisterServerCallback('zmdt:police:getReport', function(source, cb, reportId)
-    if not HasPermission(source, 'police.reports.view') then
-        cb(nil)
-        return
-    end
-
-    local report = MySQL.query.await([[
-        SELECT r.*, u.firstname, u.lastname
-        FROM mdt_reports r
-        LEFT JOIN users u ON u.identifier = r.primary_officer
-        WHERE r.id = ?
+            u.phone_number
+        FROM owned_vehicles ov
+        LEFT JOIN users u ON u.identifier = ov.owner
+        WHERE ov.plate LIKE ?
         LIMIT 1
-    ]], {reportId})
-
-    cb(report and report[1] or nil)
-end)
-
--- Create report
-RegisterNetEvent('zmdt:police:createReport')
-AddEventHandler('zmdt:police:createReport', function(data)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.reports.create') then return end
-
-    local reportNumber = GenerateNumber('reports')
-
-    local reportId = MySQL.insert.await([[
-        INSERT INTO mdt_reports (
-            report_number, report_type, title, location,
-            incident_date, primary_officer, assisting_officers,
-            involved_citizens, involved_vehicles, narrative, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ]], {
-        reportNumber,
-        data.report_type,
-        data.title,
-        data.location,
-        data.incident_date or os.date('%Y-%m-%d %H:%M:%S'),
-        xPlayer.identifier,
-        data.assisting_officers and json.encode(data.assisting_officers) or nil,
-        data.involved_citizens and json.encode(data.involved_citizens) or nil,
-        data.involved_vehicles and json.encode(data.involved_vehicles) or nil,
-        data.narrative,
-        data.status or 'draft'
-    })
-
-    if reportId then
-        ShowNotification(_source, '✅ Rapport créé: '..reportNumber, 'success')
-        LogActivity(xPlayer.identifier, 'create', 'reports', reportId, {report_number = reportNumber})
-
-        SendWebhook('PoliceReports', {
-            title = '📝 Nouveau Rapport',
-            report_number = reportNumber,
-            report_type = data.report_type,
-            officer = xPlayer.getName()
-        })
-
-        TriggerClientEvent('zmdt:police:reportCreated', _source, {
-            id = reportId,
-            report_number = reportNumber
-        })
-    end
-end)
-
--- Update report
-RegisterNetEvent('zmdt:police:updateReport')
-AddEventHandler('zmdt:police:updateReport', function(reportId, data)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.reports.edit') then return end
-
-    -- Check ownership ou supervisor
-    local report = MySQL.query.await('SELECT primary_officer FROM mdt_reports WHERE id = ?', {reportId})
-    if not report or #report == 0 then return end
-
-    local canEdit = report[1].primary_officer == xPlayer.identifier or HasPermission(_source, 'police.reports.edit_all')
-    if not canEdit then
-        ShowNotification(_source, '❌ Vous ne pouvez modifier que vos propres rapports', 'error')
-        return
-    end
-
-    MySQL.update.await([[
-        UPDATE mdt_reports
-        SET title = ?, narrative = ?, status = ?, updated_at = NOW()
-        WHERE id = ?
-    ]], {data.title, data.narrative, data.status, reportId})
-
-    ShowNotification(_source, '✅ Rapport mis à jour', 'success')
+    ]], {'%'..plate..'%'})
+    
+    if not vehicle[1] then cb(nil) return end
+    
+    local result = vehicle[1]
+    
+    -- Vérifier si volé
+    local stolen = MySQL.query.await([[
+        SELECT * FROM zx_police_stolen_vehicles 
+        WHERE plate = ? AND status = 'stolen'
+    ]], {result.plate})
+    
+    result.is_stolen = stolen and #stolen > 0 or false
+    result.stolen_info = stolen and stolen[1] or nil
+    
+    cb(result)
 end)
 
 -- ============================================
 -- ARRESTATIONS
 -- ============================================
 
--- Get arrests
-ESX.RegisterServerCallback('zmdt:police:getArrests', function(source, cb, filters)
-    if not HasPermission(source, 'police.arrests.view') then
-        cb({})
-        return
-    end
-
-    local query = 'SELECT * FROM mdt_arrests WHERE 1=1'
-    local params = {}
-
-    if filters and filters.date then
-        query = query .. ' AND DATE(arrest_date) = ?'
-        table.insert(params, filters.date)
-    end
-
-    query = query .. ' ORDER BY arrest_date DESC LIMIT 100'
-
-    local arrests = MySQL.query.await(query, params)
-    cb(arrests or {})
-end)
-
--- Create arrest
-RegisterNetEvent('zmdt:police:createArrest')
-AddEventHandler('zmdt:police:createArrest', function(data)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.arrests.create') then return end
-
-    local arrestNumber = GenerateNumber('arrests')
-
-    local arrestId = MySQL.insert.await([[
-        INSERT INTO mdt_arrests (
-            arrest_number, citizen_identifier, citizen_name,
-            charges, location, arresting_officer,
-            assisting_officers, miranda_read, witnesses,
-            evidence_seized, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RegisterNetEvent('zmdt:police:createArrest', function(data)
+    local source = source
+    if not HasPermission(source, 'arrests_create') then return end
+    
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local arrestNumber = GenerateNumber(Config.AutoNumbering.arrests)
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_arrests (
+            arrest_number, citizen_identifier, citizen_name, charges, total_fine, 
+            total_jail_time, location, postal, arresting_officer, arresting_officer_name, 
+            assisting_officers, miranda_read, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ]], {
         arrestNumber,
-        data.identifier,
+        data.citizen_identifier,
         data.citizen_name,
         json.encode(data.charges),
+        data.total_fine,
+        data.total_jail_time,
         data.location,
+        data.postal,
         xPlayer.identifier,
-        data.assisting_officers and json.encode(data.assisting_officers) or nil,
-        data.miranda_read or 0,
-        data.witnesses and json.encode(data.witnesses) or nil,
-        data.evidence_seized and json.encode(data.evidence_seized) or nil,
+        xPlayer.getName(),
+        json.encode(data.assisting_officers or {}),
+        data.miranda_read and 1 or 0,
         data.notes
-    })
-
-    if arrestId then
-        -- Ajouter au casier criminel
-        if data.charges then
-            for _, charge in ipairs(data.charges) do
-                MySQL.insert.await([[
-                    INSERT INTO mdt_criminal_records (
-                        citizen_identifier, record_type, charge_code,
-                        charge_title, charge_class, arrest_date,
-                        arresting_officer, status
-                    ) VALUES (?, 'arrest', ?, ?, ?, NOW(), ?, 'active')
-                ]], {
-                    data.identifier,
-                    charge.code,
-                    charge.title,
-                    charge.class,
-                    xPlayer.identifier
-                })
-            end
-        end
-
-        ShowNotification(_source, '✅ Arrestation enregistrée: '..arrestNumber, 'success')
-        LogActivity(xPlayer.identifier, 'create', 'arrests', arrestId, {
+    }, function(id)
+        -- Webhook
+        Webhooks.Send('arrests', 'arrest_created', {
             arrest_number = arrestNumber,
-            citizen = data.identifier
+            citizen_name = data.citizen_name,
+            officer_name = xPlayer.getName(),
+            charges_text = data.charges_text,
+            total_fine = data.total_fine,
+            total_jail_time = data.total_jail_time,
+            location = data.location
         })
-
-        SendWebhook('PoliceArrests', {
-            title = '🚔 Nouvelle Arrestation',
-            arrest_number = arrestNumber,
-            citizen = data.citizen_name,
-            charges_count = data.charges and #data.charges or 0,
-            officer = xPlayer.getName()
-        })
-    end
+        
+        TriggerClientEvent('zmdt:notify', source, 'success', 'Arrestation créée: '..arrestNumber)
+    end)
 end)
 
 -- ============================================
--- BOLO (Be On Lookout)
+-- RAPPORTS
 -- ============================================
 
--- Get active BOLOs
-ESX.RegisterServerCallback('zmdt:police:getBOLO', function(source, cb)
-    if not HasPermission(source, 'police.bolo.view') then
-        cb({})
-        return
-    end
-
-    local bolos = MySQL.query.await([[
-        SELECT b.*, u.firstname, u.lastname
-        FROM mdt_bolo b
-        LEFT JOIN users u ON u.identifier = b.issued_by
-        WHERE b.status = 'active'
-        ORDER BY
-            FIELD(b.priority, 'critical', 'high', 'medium', 'low'),
-            b.issued_at DESC
-    ]])
-
-    cb(bolos or {})
+ESX.RegisterServerCallback('zmdt:police:getReports', function(source, cb, filters)
+    if not HasPermission(source, 'reports_view') then cb({}) return end
+    
+    local reports = MySQL.query.await([[
+        SELECT * FROM zx_police_reports
+        ORDER BY created_at DESC
+        LIMIT 50
+    ]], {})
+    
+    cb(reports or {})
 end)
 
--- Create BOLO
-RegisterNetEvent('zmdt:police:createBOLO')
-AddEventHandler('zmdt:police:createBOLO', function(data)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.bolo.create') then return end
-
-    local boloId = MySQL.insert.await([[
-        INSERT INTO mdt_bolo (
-            bolo_type, subject, description,
-            priority, danger_level, zone, issued_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+RegisterNetEvent('zmdt:police:createReport', function(data)
+    local source = source
+    if not HasPermission(source, 'reports_create') then return end
+    
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local reportNumber = GenerateNumber(Config.AutoNumbering.reports)
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_reports (
+            report_number, report_type, title, location, postal, incident_date,
+            primary_officer, primary_officer_name, assisting_officers, 
+            involved_citizens, involved_vehicles, narrative, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')
     ]], {
-        data.bolo_type,
-        data.subject,
-        data.description,
-        data.priority or 'medium',
-        data.danger_level or 'medium',
-        data.zone,
-        xPlayer.identifier
-    })
-
-    if boloId then
-        ShowNotification(_source, '✅ BOLO créé #'..boloId, 'success')
-
-        -- Broadcast à tous les policiers
-        local bolo = {
-            id = boloId,
-            bolo_type = data.bolo_type,
-            subject = data.subject,
-            description = data.description,
-            priority = data.priority or 'medium',
-            danger_level = data.danger_level or 'medium',
-            zone = data.zone,
-            issued_by_name = xPlayer.getName(),
-            issued_at = os.date('%Y-%m-%d %H:%M:%S')
-        }
-
-        BroadcastToPolice('zmdt:police:newBOLO', bolo)
-
-        SendWebhook('PoliceBOLO', {
-            title = '⚠️ Nouveau BOLO',
-            type = data.bolo_type,
-            subject = data.subject,
-            priority = data.priority,
-            officer = xPlayer.getName()
+        reportNumber,
+        data.report_type,
+        data.title,
+        data.location,
+        data.postal,
+        data.incident_date,
+        xPlayer.identifier,
+        xPlayer.getName(),
+        json.encode(data.assisting_officers or {}),
+        json.encode(data.involved_citizens or {}),
+        json.encode(data.involved_vehicles or {}),
+        data.narrative
+    }, function(id)
+        Webhooks.Send('reports', 'report_created', {
+            report_number = reportNumber,
+            title = data.title,
+            report_type = data.report_type,
+            officer_name = xPlayer.getName(),
+            location = data.location
         })
-    end
-end)
-
--- Close BOLO
-RegisterNetEvent('zmdt:police:closeBOLO')
-AddEventHandler('zmdt:police:closeBOLO', function(boloId)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.bolo.create') then return end
-
-    MySQL.update.await([[
-        UPDATE mdt_bolo
-        SET status = 'closed', closed_by = ?, closed_at = NOW()
-        WHERE id = ?
-    ]], {xPlayer.identifier, boloId})
-
-    ShowNotification(_source, '✅ BOLO fermé', 'success')
-    BroadcastToPolice('zmdt:police:boloClosed', boloId)
+        
+        TriggerClientEvent('zmdt:notify', source, 'success', 'Rapport créé: '..reportNumber)
+    end)
 end)
 
 -- ============================================
--- CITATIONS / AMENDES
+-- CITATIONS
 -- ============================================
 
--- Get citations
-ESX.RegisterServerCallback('zmdt:police:getCitations', function(source, cb, identifier)
-    if not HasPermission(source, 'police.citations.view') then
-        cb({})
-        return
-    end
-
-    local query = 'SELECT * FROM mdt_citations WHERE 1=1'
-    local params = {}
-
-    if identifier then
-        query = query .. ' AND citizen_identifier = ?'
-        table.insert(params, identifier)
-    end
-
-    query = query .. ' ORDER BY created_at DESC LIMIT 100'
-
-    local citations = MySQL.query.await(query, params)
-    cb(citations or {})
-end)
-
--- Create citation
-RegisterNetEvent('zmdt:police:createCitation')
-AddEventHandler('zmdt:police:createCitation', function(data)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.citations.create') then return end
-
-    local citationNumber = GenerateNumber('citations')
-
-    local citationId = MySQL.insert.await([[
-        INSERT INTO mdt_citations (
-            citation_number, citizen_identifier, citizen_name,
-            violation_code, violation_description, fine_amount,
-            points, location, issued_by, issued_by_name,
-            payment_status, due_date
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', DATE_ADD(NOW(), INTERVAL 30 DAY))
+RegisterNetEvent('zmdt:police:createCitation', function(data)
+    local source = source
+    if not HasPermission(source, 'citations_create') then return end
+    
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local citationNumber = GenerateNumber(Config.AutoNumbering.citations)
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_citations (
+            citation_number, citizen_identifier, citizen_name, violation_code,
+            violation_description, fine_amount, points, location, postal,
+            vehicle_plate, issued_by, issued_by_name, payment_status, due_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', DATE_ADD(NOW(), INTERVAL 30 DAY))
     ]], {
         citationNumber,
-        data.identifier,
+        data.citizen_identifier,
         data.citizen_name,
         data.violation_code,
         data.violation_description,
         data.fine_amount,
         data.points or 0,
         data.location,
+        data.postal,
+        data.vehicle_plate,
         xPlayer.identifier,
         xPlayer.getName()
-    })
-
-    if citationId then
-        ShowNotification(_source, '✅ Citation émise: '..citationNumber, 'success')
-
-        -- Notifier le joueur si en ligne
-        local targetPlayer = ESX.GetPlayerFromIdentifier(data.identifier)
-        if targetPlayer then
-            TriggerClientEvent('zmdt:police:receiveCitation', targetPlayer.source, {
-                citation_number = citationNumber,
-                violation = data.violation_description,
-                fine_amount = data.fine_amount,
-                officer = xPlayer.getName()
-            })
-        end
-    end
+    }, function(id)
+        Webhooks.Send('citations', 'citation_issued', {
+            citation_number = citationNumber,
+            citizen_name = data.citizen_name,
+            officer_name = xPlayer.getName(),
+            violation_code = data.violation_code,
+            violation_description = data.violation_description,
+            fine_amount = data.fine_amount,
+            points = data.points or 0
+        })
+        
+        TriggerClientEvent('zmdt:notify', source, 'success', 'Citation émise: '..citationNumber)
+    end)
 end)
 
 -- ============================================
--- PREUVES / EVIDENCE
+-- BOLO
 -- ============================================
 
--- Get evidence
-ESX.RegisterServerCallback('zmdt:police:getEvidence', function(source, cb, filters)
-    if not HasPermission(source, 'police.evidence.view') then
-        cb({})
-        return
-    end
-
-    local query = 'SELECT * FROM mdt_evidence WHERE 1=1'
-    local params = {}
-
-    if filters and filters.case_id then
-        query = query .. ' AND case_id = ?'
-        table.insert(params, filters.case_id)
-    end
-
-    if filters and filters.report_id then
-        query = query .. ' AND report_id = ?'
-        table.insert(params, filters.report_id)
-    end
-
-    query = query .. ' ORDER BY seized_at DESC LIMIT 100'
-
-    local evidence = MySQL.query.await(query, params)
-    cb(evidence or {})
+ESX.RegisterServerCallback('zmdt:police:getBOLO', function(source, cb)
+    if not HasPermission(source, 'bolo_view') then cb({}) return end
+    
+    local bolos = MySQL.query.await([[
+        SELECT * FROM zx_police_bolo
+        WHERE status = 'active'
+        ORDER BY priority DESC, issued_at DESC
+    ]], {})
+    
+    cb(bolos or {})
 end)
 
--- Create evidence
-RegisterNetEvent('zmdt:police:createEvidence')
-AddEventHandler('zmdt:police:createEvidence', function(data)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.evidence.create') then return end
+RegisterNetEvent('zmdt:police:createBOLO', function(data)
+    local source = source
+    if not HasPermission(source, 'bolo_create') then return end
+    
+    local xPlayer = ESX.GetPlayerFromId(source)
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_bolo (
+            bolo_type, subject, description, last_seen_location, last_seen_postal,
+            priority, danger_level, plate, issued_by, issued_by_name, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+    ]], {
+        data.bolo_type,
+        data.subject,
+        data.description,
+        data.last_seen_location,
+        data.last_seen_postal,
+        data.priority,
+        data.danger_level,
+        data.plate,
+        xPlayer.identifier,
+        xPlayer.getName()
+    }, function(id)
+        Webhooks.Send('bolo', 'bolo_created', {
+            bolo_type = data.bolo_type,
+            subject = data.subject,
+            description = data.description,
+            priority = data.priority,
+            danger_level = data.danger_level,
+            issued_by_name = xPlayer.getName()
+        })
+        
+        -- Broadcast à toutes les unités
+        TriggerClientEvent('zmdt:police:newBOLO', -1, {
+            id = id,
+            bolo_type = data.bolo_type,
+            subject = data.subject,
+            priority = data.priority
+        })
+    end)
+end)
 
-    local evidenceNumber = 'EV-' .. os.date('%y') .. '-' .. string.format('%05d', math.random(1, 99999))
+-- ============================================
+-- MANDATS
+-- ============================================
 
-    local evidenceId = MySQL.insert.await([[
-        INSERT INTO mdt_evidence (
-            evidence_number, case_id, report_id, item_type,
-            description, quantity, seized_from, seized_location,
-            seized_by, storage_location, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seized')
+ESX.RegisterServerCallback('zmdt:police:getWarrants', function(source, cb, filters)
+    if not HasPermission(source, 'warrants_view') then cb({}) return end
+    
+    local warrants = MySQL.query.await([[
+        SELECT * FROM zx_police_warrants
+        WHERE status IN ('pending','active')
+        ORDER BY issued_at DESC
+    ]], {})
+    
+    cb(warrants or {})
+end)
+
+RegisterNetEvent('zmdt:police:createWarrant', function(data)
+    local source = source
+    if not HasPermission(source, 'warrants_create') then return end
+    
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local warrantNumber = GenerateNumber(Config.AutoNumbering.warrants)
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_warrants (
+            warrant_number, warrant_type, citizen_identifier, citizen_name,
+            address, charges, probable_cause, issued_by, issued_by_name,
+            expiry_date, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY), 'pending')
+    ]], {
+        warrantNumber,
+        data.warrant_type,
+        data.citizen_identifier,
+        data.citizen_name,
+        data.address,
+        json.encode(data.charges or {}),
+        data.probable_cause,
+        xPlayer.identifier,
+        xPlayer.getName()
+    }, function(id)
+        Webhooks.Send('warrants', 'warrant_issued', {
+            warrant_number = warrantNumber,
+            warrant_type = data.warrant_type,
+            citizen_name = data.citizen_name,
+            address = data.address,
+            issued_by_name = xPlayer.getName(),
+            status = 'pending'
+        })
+        
+        TriggerClientEvent('zmdt:notify', source, 'success', 'Mandat créé: '..warrantNumber)
+    end)
+end)
+
+-- ============================================
+-- PREUVES
+-- ============================================
+
+RegisterNetEvent('zmdt:police:logEvidence', function(data)
+    local source = source
+    if not HasPermission(source, 'evidence_create') then return end
+    
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local evidenceNumber = GenerateNumber(Config.AutoNumbering.evidence)
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_evidence (
+            evidence_number, report_id, arrest_id, item_type, item_description,
+            quantity, seized_from_identifier, seized_from_name, seized_location,
+            seized_postal, seized_by, seized_by_name, storage_location, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seized')
     ]], {
         evidenceNumber,
-        data.case_id,
         data.report_id,
+        data.arrest_id,
         data.item_type,
-        data.description,
+        data.item_description,
         data.quantity or 1,
-        data.seized_from,
+        data.seized_from_identifier,
+        data.seized_from_name,
         data.seized_location,
+        data.seized_postal,
         xPlayer.identifier,
+        xPlayer.getName(),
         data.storage_location or 'Evidence Locker'
-    })
-
-    if evidenceId then
-        ShowNotification(_source, '✅ Preuve enregistrée: '..evidenceNumber, 'success')
-        LogActivity(xPlayer.identifier, 'create', 'evidence', evidenceId, {
-            evidence_number = evidenceNumber
+    }, function(id)
+        Webhooks.Send('evidence', 'evidence_logged', {
+            evidence_number = evidenceNumber,
+            item_type = data.item_type,
+            item_description = data.item_description,
+            seized_from_name = data.seized_from_name,
+            officer_name = xPlayer.getName(),
+            storage_location = data.storage_location or 'Evidence Locker'
         })
-    end
+        
+        TriggerClientEvent('zmdt:notify', source, 'success', 'Preuve enregistrée: '..evidenceNumber)
+    end)
 end)
 
 -- ============================================
--- PERSONNEL / UNITS
+-- PPA / PERMIS PORT D'ARME
 -- ============================================
 
--- Get active units
-ESX.RegisterServerCallback('zmdt:police:getUnits', function(source, cb)
-    if not HasPermission(source, 'police.cad.view') then
-        cb({})
-        return
-    end
-
-    local units = MySQL.query.await([[
-        SELECT * FROM mdt_units
-        WHERE updated_at > DATE_SUB(NOW(), INTERVAL 12 HOUR)
-        ORDER BY status, unit_number
-    ]])
-
-    cb(units or {})
-end)
-
--- Get officer status
-ESX.RegisterServerCallback('zmdt:police:getOfficerStatus', function(source, cb)
+RegisterNetEvent('zmdt:police:issuePPA', function(data)
+    local source = source
+    if not HasPermission(source, 'ppa_issue') then return end
+    
     local xPlayer = ESX.GetPlayerFromId(source)
-    if not xPlayer then
-        cb(nil)
-        return
-    end
-
-    local status = MySQL.query.await([[
-        SELECT * FROM mdt_officer_status
-        WHERE officer_identifier = ?
-        ORDER BY changed_at DESC
-        LIMIT 1
-    ]], {xPlayer.identifier})
-
-    cb(status and status[1] or nil)
+    local ppaNumber = GenerateNumber(Config.AutoNumbering.ppa)
+    
+    local expiryDate = os.date('%Y-%m-%d', os.time() + (Config.PPA.validity.standard * 86400))
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_ppa (
+            permit_number, citizen_identifier, citizen_name, permit_type,
+            permit_class, authorized_weapons, restrictions, status,
+            issued_date, expiry_date, issued_by, issued_by_name,
+            background_check_date, training_completed
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', CURDATE(), ?, ?, ?, CURDATE(), ?)
+    ]], {
+        ppaNumber,
+        data.citizen_identifier,
+        data.citizen_name,
+        data.permit_type,
+        data.permit_class,
+        json.encode(data.authorized_weapons or {}),
+        data.restrictions,
+        expiryDate,
+        xPlayer.identifier,
+        xPlayer.getName(),
+        data.training_completed and 1 or 0
+    }, function(id)
+        Webhooks.Send('ppa', 'ppa_issued', {
+            permit_number = ppaNumber,
+            citizen_name = data.citizen_name,
+            permit_type = data.permit_type,
+            permit_class = data.permit_class,
+            expiry_date = expiryDate,
+            issued_by_name = xPlayer.getName()
+        })
+        
+        TriggerClientEvent('zmdt:notify', source, 'success', 'PPA délivré: '..ppaNumber)
+    end)
 end)
 
--- Update officer status (10-codes)
-RegisterNetEvent('zmdt:police:updateStatus')
-AddEventHandler('zmdt:police:updateStatus', function(statusCode, location)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer then return end
+-- PPA LOURD
+RegisterNetEvent('zmdt:police:issuePPAHeavy', function(data)
+    local source = source
+    if not HasPermission(source, 'ppa_heavy_issue') then return end
+    
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local ppaNumber = GenerateNumber(Config.AutoNumbering.ppa_heavy)
+    
+    local expiryDate = os.date('%Y-%m-%d', os.time() + (Config.PPA.validity.heavy * 86400))
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_ppa_heavy (
+            permit_number, citizen_identifier, citizen_name, weapon_category,
+            specific_weapons, justification, status, issued_date, expiry_date,
+            issued_by, issued_by_name, conditions, background_check_level,
+            yearly_review_required, last_review_date
+        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', CURDATE(), ?, ?, ?, ?, 'enhanced', 1, CURDATE())
+    ]], {
+        ppaNumber,
+        data.citizen_identifier,
+        data.citizen_name,
+        data.weapon_category,
+        json.encode(data.specific_weapons or {}),
+        data.justification,
+        expiryDate,
+        xPlayer.identifier,
+        xPlayer.getName(),
+        data.conditions
+    }, function(id)
+        Webhooks.Send('ppa', 'ppa_heavy_issued', {
+            permit_number = ppaNumber,
+            citizen_name = data.citizen_name,
+            weapon_category = data.weapon_category,
+            justification = data.justification,
+            expiry_date = expiryDate,
+            issued_by_name = xPlayer.getName(),
+            approved_by_judge = false
+        })
+        
+        TriggerClientEvent('zmdt:notify', source, 'success', 'PPA Lourd créé (en attente approbation juge): '..ppaNumber)
+    end)
+end)
 
-    MySQL.insert.await([[
-        INSERT INTO mdt_officer_status (
-            officer_identifier, status_code, location
-        ) VALUES (?, ?, ?)
-    ]], {xPlayer.identifier, statusCode, location})
+-- ============================================
+-- VÉHICULES VOLÉS
+-- ============================================
 
-    ShowNotification(_source, '✅ Status: '..statusCode, 'success')
-    BroadcastToPolice('zmdt:police:statusChanged', {
-        officer = xPlayer.getName(),
-        status = statusCode,
-        location = location
+ESX.RegisterServerCallback('zmdt:police:getStolenVehicles', function(source, cb)
+    if not HasPermission(source, 'stolen_vehicles') then cb({}) return end
+    
+    local stolen = MySQL.query.await([[
+        SELECT * FROM zx_police_stolen_vehicles
+        WHERE status = 'stolen'
+        ORDER BY stolen_date DESC
+    ]], {})
+    
+    cb(stolen or {})
+end)
+
+RegisterNetEvent('zmdt:police:reportStolenVehicle', function(data)
+    local source = source
+    local xPlayer = ESX.GetPlayerFromId(source)
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_stolen_vehicles (
+            plate, vehicle_model, vehicle_hash, owner_identifier, owner_name,
+            stolen_location, stolen_postal, reported_by, report_id, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'stolen')
+    ]], {
+        data.plate,
+        data.vehicle_model,
+        data.vehicle_hash,
+        data.owner_identifier,
+        data.owner_name,
+        data.stolen_location,
+        data.stolen_postal,
+        xPlayer.identifier,
+        data.report_id
     })
 end)
 
 -- ============================================
--- CHARGES PÉNALES (Penal Codes)
+-- CHARGES PÉNALES
 -- ============================================
 
-ESX.RegisterServerCallback('zmdt:police:getCharges', function(source, cb, filters)
-    if not HasPermission(source, 'police.search.citizen') then
-        cb({})
-        return
-    end
-
-    local query = 'SELECT * FROM mdt_charges WHERE 1=1'
-    local params = {}
-
-    if filters and filters.class then
-        query = query .. ' AND charge_class = ?'
-        table.insert(params, filters.class)
-    end
-
-    if filters and filters.search then
-        query = query .. ' AND (LOWER(charge_title) LIKE ? OR charge_code LIKE ?)'
-        local searchTerm = '%'..filters.search:lower()..'%'
-        table.insert(params, searchTerm)
-        table.insert(params, searchTerm)
-    end
-
-    query = query .. ' ORDER BY charge_class, charge_code'
-
-    local charges = MySQL.query.await(query, params)
+ESX.RegisterServerCallback('zmdt:police:getCharges', function(source, cb)
+    if not HasPermission(source, 'charges') then cb({}) return end
+    
+    local charges = MySQL.query.await([[
+        SELECT * FROM zx_police_charges
+        WHERE is_active = 1
+        ORDER BY charge_category, charge_code
+    ]], {})
+    
     cb(charges or {})
 end)
 
 -- ============================================
--- WARRANTS (Lecture seule pour Police)
+-- UNITÉS / PATROUILLES
 -- ============================================
 
-ESX.RegisterServerCallback('zmdt:police:getWarrants', function(source, cb, identifier)
-    if not HasPermission(source, 'police.warrants.view') then
-        cb({})
-        return
-    end
-
-    local query = [[
-        SELECT w.*, u.firstname, u.lastname
-        FROM mdt_warrants w
-        LEFT JOIN users u ON u.identifier = w.citizen_identifier
-        WHERE w.status = 'active'
-    ]]
-    local params = {}
-
-    if identifier then
-        query = query .. ' AND w.citizen_identifier = ?'
-        table.insert(params, identifier)
-    end
-
-    query = query .. ' ORDER BY w.issued_at DESC'
-
-    local warrants = MySQL.query.await(query, params)
-    cb(warrants or {})
+ESX.RegisterServerCallback('zmdt:police:getUnits', function(source, cb)
+    if not HasPermission(source, 'units') then cb({}) return end
+    
+    local units = MySQL.query.await([[
+        SELECT * FROM zx_police_units
+        ORDER BY unit_number
+    ]], {})
+    
+    cb(units or {})
 end)
 
--- Execute warrant
-RegisterNetEvent('zmdt:police:executeWarrant')
-AddEventHandler('zmdt:police:executeWarrant', function(warrantId)
-    local _source = source
-    local xPlayer = ESX.GetPlayerFromId(_source)
-    if not xPlayer or not HasPermission(_source, 'police.warrants.execute') then return end
-
-    MySQL.update.await([[
-        UPDATE mdt_warrants
-        SET status = 'executed', executed_by = ?, executed_at = NOW()
-        WHERE id = ?
-    ]], {xPlayer.identifier, warrantId})
-
-    ShowNotification(_source, '✅ Mandat exécuté', 'success')
+RegisterNetEvent('zmdt:police:updateUnitStatus', function(status, statusText)
+    local source = source
+    local xPlayer = ESX.GetPlayerFromId(source)
+    
+    MySQL.query.await([[
+        UPDATE zx_police_units
+        SET status = ?, status_text = ?, updated_at = NOW()
+        WHERE officer_identifier = ?
+    ]], {status, statusText, xPlayer.identifier})
+    
+    -- Broadcast aux autres unités
+    TriggerClientEvent('zmdt:police:unitStatusChanged', -1, {
+        officer = xPlayer.identifier,
+        status = status,
+        statusText = statusText
+    })
 end)
 
-print('^2[ZMDT]^0 Police server loaded - FULL SYSTEM')
+-- ============================================
+-- NOTES / INTEL
+-- ============================================
+
+RegisterNetEvent('zmdt:police:addNote', function(data)
+    local source = source
+    if not HasPermission(source, 'notes_create') then return end
+    
+    local xPlayer = ESX.GetPlayerFromId(source)
+    
+    MySQL.insert([[
+        INSERT INTO zx_police_notes (
+            citizen_identifier, note_text, note_type, is_flagged,
+            is_confidential, author_identifier, author_name
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ]], {
+        data.citizen_identifier,
+        data.note_text,
+        data.note_type,
+        data.is_flagged and 1 or 0,
+        data.is_confidential and 1 or 0,
+        xPlayer.identifier,
+        xPlayer.getName()
+    })
+end)
+
+print('^2[ZX Police MDT]^0 Backend chargé - 17 onglets opérationnels')
