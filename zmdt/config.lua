@@ -9,6 +9,28 @@ Config.Command = 'mdt' -- Commande pour ouvrir la MDT
 Config.UseSteam = false -- Utiliser Steam pour identifier les joueurs (false = fonctionne sans Steam)
 
 -- ============================================
+-- COMMANDES
+-- ============================================
+
+Config.Commands = {
+    mdt = 'mdt',         -- Commande principale pour ouvrir la MDT
+    bolo = 'bolo',       -- Commande rapide BOLO
+    wanted = 'wanted',   -- Commande rapide Wanted
+    dispatch = '911'     -- Commande dispatcher
+}
+
+-- ============================================
+-- NOTIFICATIONS
+-- ============================================
+
+Config.Notifications = {
+    ['no_permission'] = '❌ Vous n\'avez pas accès au MDT',
+    ['invalid_data'] = '❌ Données invalides',
+    ['success'] = '✅ Opération réussie',
+    ['error'] = '❌ Une erreur est survenue'
+}
+
+-- ============================================
 -- JOBS POLICE
 -- ============================================
 

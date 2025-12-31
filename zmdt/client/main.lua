@@ -238,4 +238,13 @@ CreateThread(function()
     end
 end)
 
+-- ============================================
+-- EXPORTS (Pour accès depuis d'autres ressources)
+-- ============================================
+
+exports('OpenMDT', OpenMDT)
+exports('CloseMDT', CloseMDT)
+exports('OpenPoliceMDT', OpenMDT) -- Alias pour la compatibilité tablette
+exports('IsMDTOpen', function() return isMDTOpen end)
+
 print('^2[ZMDT]^0 Client loaded successfully')

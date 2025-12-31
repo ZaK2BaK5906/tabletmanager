@@ -1661,15 +1661,6 @@ function createStatsCharts(stats) {
 // ============================================
 // BOUTON MDT - INTÉGRATION
 // ============================================
-
-document.getElementById("mdtBtn").addEventListener("click", () => {
-    // Fermer la tablette
-    closeTablet();
-    
-    // Ouvrir la MDT Police via export zmdt
-    fetch("https://tabletmanager/openMDT", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({})
-    });
-});
+// SUPPRIMÉ: Doublon de l'event listener du bouton MDT
+// L'event listener est déjà défini à la ligne 199 du fichier
+// Utilise: postData('openMDT', {});

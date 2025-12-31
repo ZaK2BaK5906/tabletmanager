@@ -350,8 +350,24 @@ end)
 -- ============================================
 
 RegisterNUICallback('openMDT', function(data, cb)
-    -- Trigger the MDT resource
-    TriggerEvent('zmdt:open')
+    print('[TABLET DEBUG] Opening MDT...')
+
+    -- Fermer la tablette d'abord
+    CloseTablet()
+
+    -- Attendre un petit peu avant d'ouvrir la MDT
+    Wait(100)
+
+    -- Ouvrir la MDT via export
+    local success, err = pcall(function()
+        exports['zmdt']:OpenPoliceMDT()
+    end)
+
+    if not success then
+        print('[TABLET ERROR] Failed to open MDT: ' .. tostring(err))
+        ESX.ShowNotification('❌ Erreur lors de l\'ouverture du MDT')
+    end
+
     cb('ok')
 end)
 
@@ -514,13 +530,5 @@ print('^2[TabletManager]^0 Client démarré avec succès')
 -- ============================================
 -- CALLBACK: OUVRIR LA MDT POLICE
 -- ============================================
-
-RegisterNUICallback('openMDT', function(data, cb)
-    -- Fermer la tablette
-    CloseTablet()
-    
-    -- Ouvrir la MDT Police (ressource zmdt)
-    exports.zmdt:OpenPoliceMDT()
-    
-    cb('ok')
-end)
+-- SUPPRIMÉ: Doublon du callback 'openMDT' à la ligne 352
+-- Le callback est maintenant géré plus haut dans le fichier
