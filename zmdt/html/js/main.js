@@ -187,6 +187,13 @@ function searchWeapon() {
     postData('police_searchWeapon', {query: query});
 }
 
+function quickSearchVehicle() {
+    const query = document.getElementById('vehicleQuickSearch').value;
+    if (!query) return;
+
+    postData('police_searchVehicle', {query: query});
+}
+
 // ============================================
 // POLICE - REPORTS
 // ============================================
@@ -228,6 +235,369 @@ function addBOLOToList(bolo) {
 
 function createBOLO() {
     openModal('createBOLOModal');
+}
+
+// ============================================
+// POLICE - ARRESTS
+// ============================================
+
+function createArrest() {
+    // Load nearby players first
+    loadNearbyPlayers('arrest');
+    openModal('createArrestModal');
+}
+
+function loadNearbyPlayers(type) {
+    fetch(`https://${GetParentResourceName()}/police_getNearbyPlayers`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({})
+    })
+    .then(resp => resp.json())
+    .then(players => {
+        const selectId = type === 'arrest' ? 'arrestSuspect' : 'citationTarget';
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Sélectionner...</option>';
+
+        players.forEach(player => {
+            const option = document.createElement('option');
+            option.value = player.identifier;
+            option.textContent = `${player.name} (${player.distance}m)`;
+            option.dataset.name = player.name;
+            select.appendChild(option);
+        });
+    });
+}
+
+// ============================================
+// POLICE - CITATIONS
+// ============================================
+
+function createCitation() {
+    loadNearbyPlayers('citation');
+    openModal('createCitationModal');
+}
+
+// ============================================
+// POLICE - EVIDENCE
+// ============================================
+
+function logEvidence() {
+    openModal('createEvidenceModal');
+}
+
+// ============================================
+// POLICE - CHARGES SELECTOR
+// ============================================
+
+let allCharges = [];
+let selectedCharges = [];
+
+function openChargesSelector() {
+    openModal('chargesSelectorModal');
+    loadCharges();
+}
+
+function loadCharges() {
+    fetch(`https://${GetParentResourceName()}/police_getCharges`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({})
+    })
+    .then(resp => resp.json())
+    .then(charges => {
+        allCharges = charges;
+        displayCharges(charges);
+    });
+}
+
+function displayCharges(charges) {
+    const container = document.getElementById('chargesListContainer');
+    container.innerHTML = '';
+
+    charges.forEach(charge => {
+        const div = document.createElement('div');
+        div.className = 'charge-item';
+        div.innerHTML = `
+            <input type="checkbox" id="charge_${charge.id}" value="${charge.id}">
+            <label for="charge_${charge.id}">
+                <strong>${charge.charge_code}</strong> - ${charge.charge_title}
+                <br><small>Class: ${charge.charge_class} | Jail: ${charge.jail_time_months || 0} mois | Fine: $${charge.fine_min}-$${charge.fine_max}</small>
+            </label>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function filterCharges() {
+    const search = document.getElementById('chargesSearch').value.toLowerCase();
+    const filtered = allCharges.filter(c =>
+        c.charge_title.toLowerCase().includes(search) ||
+        c.charge_code.toLowerCase().includes(search)
+    );
+    displayCharges(filtered);
+}
+
+function confirmChargesSelection() {
+    const checkboxes = document.querySelectorAll('#chargesListContainer input[type="checkbox"]:checked');
+    selectedCharges = [];
+
+    checkboxes.forEach(checkbox => {
+        const chargeId = checkbox.value;
+        const charge = allCharges.find(c => c.id == chargeId);
+        if (charge) {
+            selectedCharges.push(charge);
+        }
+    });
+
+    displaySelectedCharges();
+    closeModal('chargesSelectorModal');
+}
+
+function displaySelectedCharges() {
+    const container = document.getElementById('selectedCharges');
+    container.innerHTML = '';
+
+    selectedCharges.forEach((charge, index) => {
+        const div = document.createElement('div');
+        div.className = 'selected-charge';
+        div.innerHTML = `
+            <span><strong>${charge.charge_code}</strong> - ${charge.charge_title}</span>
+            <button type="button" onclick="removeCharge(${index})">&times;</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function removeCharge(index) {
+    selectedCharges.splice(index, 1);
+    displaySelectedCharges();
+}
+
+// ============================================
+// POLICE - CITIZEN PROFILE
+// ============================================
+
+let currentCitizenProfile = null;
+
+function viewCitizenProfile(identifier) {
+    fetch(`https://${GetParentResourceName()}/police_getCitizenProfile`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({identifier: identifier})
+    })
+    .then(resp => resp.json())
+    .then(profile => {
+        currentCitizenProfile = profile;
+        displayCitizenProfile(profile);
+        openModal('citizenProfileModal');
+    });
+}
+
+function displayCitizenProfile(profile) {
+    // Header
+    document.getElementById('profileName').textContent = `${profile.firstname} ${profile.lastname}`;
+    document.getElementById('profileDOB').textContent = `DOB: ${profile.dateofbirth} | ${profile.sex === 'M' ? 'Male' : 'Female'}`;
+    document.getElementById('profilePhone').textContent = `Phone: ${profile.phone_number || 'N/A'}`;
+
+    // Info Tab
+    let infoHTML = `
+        <div class="profile-stats">
+            <div class="profile-stat">
+                <i class="fa-solid fa-handcuffs"></i>
+                <span>Criminal Charges: ${profile.criminal_history?.length || 0}</span>
+            </div>
+            <div class="profile-stat">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <span>Pending Citations: ${profile.citations?.filter(c => c.payment_status === 'unpaid').length || 0}</span>
+            </div>
+            <div class="profile-stat">
+                <i class="fa-solid fa-car"></i>
+                <span>Owned Vehicles: ${profile.vehicles?.length || 0}</span>
+            </div>
+        </div>
+    `;
+    document.getElementById('profileInfoContent').innerHTML = infoHTML;
+
+    // Criminal Tab
+    let criminalHTML = profile.criminal_history && profile.criminal_history.length > 0
+        ? profile.criminal_history.map(record => `
+            <div class="record-item">
+                <strong>${record.charge_code}</strong> - ${record.charge_title}
+                <br><small>Date: ${record.arrest_date} | Class: ${record.charge_class} | Status: ${record.status}</small>
+            </div>
+        `).join('')
+        : '<p>No criminal history</p>';
+    document.getElementById('profileCriminalContent').innerHTML = criminalHTML;
+
+    // Citations Tab
+    let citationsHTML = profile.citations && profile.citations.length > 0
+        ? profile.citations.map(citation => `
+            <div class="record-item">
+                <strong>${citation.citation_number}</strong> - ${citation.violation_description}
+                <br><small>Amount: $${citation.fine_amount} | Status: ${citation.payment_status}</small>
+            </div>
+        `).join('')
+        : '<p>No citations</p>';
+    document.getElementById('profileCitationsContent').innerHTML = citationsHTML;
+
+    // Notes Tab
+    let notesHTML = profile.notes && profile.notes.length > 0
+        ? profile.notes.map(note => `
+            <div class="note-item note-${note.note_type}">
+                <strong>${note.note_type.toUpperCase()}</strong> - ${note.note_text}
+                <br><small>By: ${note.firstname} ${note.lastname} | ${note.created_at}</small>
+            </div>
+        `).join('')
+        : '<p>No notes</p>';
+    document.getElementById('profileNotesContent').innerHTML = notesHTML;
+
+    // Vehicles Tab
+    let vehiclesHTML = profile.vehicles && profile.vehicles.length > 0
+        ? profile.vehicles.map(vehicle => `
+            <div class="record-item">
+                <strong>${vehicle.plate}</strong> - ${vehicle.vehicle}
+                <br><small>Status: ${vehicle.stored ? 'Stored' : 'Out'} | Location: ${vehicle.parking || 'Unknown'}</small>
+            </div>
+        `).join('')
+        : '<p>No registered vehicles</p>';
+    document.getElementById('profileVehiclesContent').innerHTML = vehiclesHTML;
+
+    // Licenses Tab
+    let licensesHTML = profile.licenses && profile.licenses.length > 0
+        ? profile.licenses.map(license => `
+            <div class="record-item">
+                <strong>${license.license_type}</strong>
+                <br><small>Status: ${license.status} | Expires: ${license.expiry_date || 'N/A'}</small>
+            </div>
+        `).join('')
+        : '<p>No licenses</p>';
+    document.getElementById('profileLicensesContent').innerHTML = licensesHTML;
+}
+
+// Profile tabs switching
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.profileTab;
+
+            document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.profile-tab-panel').forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById('profile-' + tab).classList.add('active');
+        });
+    });
+});
+
+// ============================================
+// POLICE - NOTES
+// ============================================
+
+function addCitizenNote() {
+    openModal('addNoteModal');
+}
+
+// ============================================
+// POLICE - SEARCH RESULTS
+// ============================================
+
+function displaySearchResults(results, type) {
+    const container = document.getElementById('searchResults');
+    container.innerHTML = '';
+
+    if (!results || results.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #94a3b8;">No results found</p>';
+        return;
+    }
+
+    results.forEach(result => {
+        const div = document.createElement('div');
+        div.className = 'search-result-item';
+
+        if (type === 'citizen') {
+            div.innerHTML = `
+                <div class="result-header">
+                    <h4>${result.firstname} ${result.lastname}</h4>
+                    ${result.is_wanted ? '<span class="badge badge-high">WANTED</span>' : ''}
+                    ${result.flagged_notes > 0 ? '<span class="badge badge-medium">FLAGGED</span>' : ''}
+                </div>
+                <div class="result-body">
+                    <p>DOB: ${result.dateofbirth} | Phone: ${result.phone_number || 'N/A'}</p>
+                    <p>Criminal Charges: ${result.criminal_charges} | Unpaid Fines: $${result.total_unpaid_fines || 0}</p>
+                    <button onclick="viewCitizenProfile('${result.identifier}')">View Profile</button>
+                </div>
+            `;
+        } else if (type === 'vehicle') {
+            div.innerHTML = `
+                <div class="result-header">
+                    <h4>${result.plate} - ${result.vehicle}</h4>
+                    ${result.is_stolen ? '<span class="badge badge-high">STOLEN</span>' : ''}
+                    ${result.has_bolo ? '<span class="badge badge-medium">BOLO</span>' : ''}
+                </div>
+                <div class="result-body">
+                    <p>Owner: ${result.firstname} ${result.lastname}</p>
+                    <p>Status: ${result.stored ? 'Stored' : 'Out'} | Citations: ${result.unpaid_citations || 0}</p>
+                </div>
+            `;
+        } else if (type === 'weapon') {
+            div.innerHTML = `
+                <div class="result-header">
+                    <h4>${result.serial_number}</h4>
+                    <span class="badge badge-${result.legal_status === 'illegal' ? 'high' : 'low'}">${result.legal_status}</span>
+                </div>
+                <div class="result-body">
+                    <p>Type: ${result.weapon_type} | Make: ${result.make || 'Unknown'} | Model: ${result.model || 'Unknown'}</p>
+                    <p>Owner: ${result.firstname} ${result.lastname}</p>
+                </div>
+            `;
+        }
+
+        container.appendChild(div);
+    });
+}
+
+// Update search functions to display results
+const originalSearchCitizen = searchCitizen;
+function searchCitizen() {
+    const query = document.getElementById('searchInput').value;
+    if (!query) return;
+
+    fetch(`https://${GetParentResourceName()}/police_searchCitizen`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query: query})
+    })
+    .then(resp => resp.json())
+    .then(results => displaySearchResults(results, 'citizen'));
+}
+
+const originalSearchVehicle = searchVehicle;
+function searchVehicle() {
+    const query = document.getElementById('searchInput').value;
+    if (!query) return;
+
+    fetch(`https://${GetParentResourceName()}/police_searchVehicle`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query: query})
+    })
+    .then(resp => resp.json())
+    .then(results => displaySearchResults(results, 'vehicle'));
+}
+
+const originalSearchWeapon = searchWeapon;
+function searchWeapon() {
+    const query = document.getElementById('searchInput').value;
+    if (!query) return;
+
+    fetch(`https://${GetParentResourceName()}/police_searchWeapon`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query: query})
+    })
+    .then(resp => resp.json())
+    .then(results => displaySearchResults(results, 'weapon'));
 }
 
 // ============================================
@@ -410,6 +780,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
             postData('police_createBOLO', data);
             closeModal('createBOLOModal');
+        });
+    }
+
+    // Create Arrest Form
+    const createArrestForm = document.getElementById('createArrestForm');
+    if (createArrestForm) {
+        createArrestForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const suspectSelect = document.getElementById('arrestSuspect');
+            const selectedOption = suspectSelect.options[suspectSelect.selectedIndex];
+
+            const data = {
+                identifier: suspectSelect.value,
+                citizen_name: selectedOption.dataset.name,
+                location: document.getElementById('arrestLocation').value,
+                charges: selectedCharges,
+                miranda_read: document.getElementById('arrestMiranda').checked ? 1 : 0,
+                notes: document.getElementById('arrestNotes').value
+            };
+
+            postData('police_createArrest', data);
+            closeModal('createArrestModal');
+            selectedCharges = [];
+        });
+    }
+
+    // Create Citation Form
+    const createCitationForm = document.getElementById('createCitationForm');
+    if (createCitationForm) {
+        createCitationForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const targetSelect = document.getElementById('citationTarget');
+            const selectedOption = targetSelect.options[targetSelect.selectedIndex];
+
+            const data = {
+                identifier: targetSelect.value,
+                citizen_name: selectedOption.dataset.name,
+                violation_code: document.getElementById('citationViolationType').value,
+                violation_description: document.getElementById('citationDescription').value,
+                fine_amount: parseFloat(document.getElementById('citationAmount').value),
+                points: parseInt(document.getElementById('citationPoints').value) || 0,
+                location: document.getElementById('citationLocation').value
+            };
+
+            postData('police_createCitation', data);
+            closeModal('createCitationModal');
+        });
+    }
+
+    // Create Evidence Form
+    const createEvidenceForm = document.getElementById('createEvidenceForm');
+    if (createEvidenceForm) {
+        createEvidenceForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const data = {
+                item_type: document.getElementById('evidenceType').value,
+                description: document.getElementById('evidenceDescription').value,
+                quantity: parseInt(document.getElementById('evidenceQuantity').value),
+                seized_from: document.getElementById('evidenceSeizedFrom').value,
+                seized_location: document.getElementById('evidenceLocation').value,
+                storage_location: document.getElementById('evidenceStorage').value
+            };
+
+            postData('police_createEvidence', data);
+            closeModal('createEvidenceModal');
+        });
+    }
+
+    // Add Note Form
+    const addNoteForm = document.getElementById('addNoteForm');
+    if (addNoteForm) {
+        addNoteForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            if (!currentCitizenProfile) return;
+
+            const data = {
+                identifier: currentCitizenProfile.identifier,
+                note_text: document.getElementById('noteText').value,
+                note_type: document.getElementById('noteType').value,
+                is_flagged: document.getElementById('noteFlagged').checked ? 1 : 0
+            };
+
+            postData('police_addCitizenNote', data);
+            closeModal('addNoteModal');
         });
     }
 });

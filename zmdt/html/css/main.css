@@ -568,3 +568,345 @@ body {
     font-weight: 600;
     margin-top: 10px;
 }
+
+/* ============================================ */
+/* CITIZEN PROFILE MODAL */
+/* ============================================ */
+
+.profile-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.profile-info h3 {
+    color: #e2e8f0;
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.profile-info p {
+    color: #94a3b8;
+    font-size: 14px;
+    margin: 4px 0;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.profile-tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 2px solid #334155;
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.profile-tab-btn {
+    background: transparent;
+    border: none;
+    padding: 12px 20px;
+    color: #94a3b8;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.profile-tab-btn:hover {
+    color: #60a5fa;
+}
+
+.profile-tab-btn.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+
+.profile-tab-content {
+    min-height: 300px;
+}
+
+.profile-tab-panel {
+    display: none;
+}
+
+.profile-tab-panel.active {
+    display: block;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.profile-stat {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-stat i {
+    font-size: 24px;
+    color: #3b82f6;
+}
+
+.profile-stat span {
+    color: #e2e8f0;
+    font-size: 14px;
+}
+
+/* ============================================ */
+/* CHARGES SELECTOR */
+/* ============================================ */
+
+.charges-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.charges-tab-btn {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.charges-tab-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.charges-tab-btn.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.charges-container {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.charge-item {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid #334155;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.charge-item:hover {
+    background: rgba(30, 41, 59, 0.8);
+}
+
+.charge-item input[type="checkbox"] {
+    margin-top: 4px;
+}
+
+.charge-item label {
+    color: #e2e8f0;
+    cursor: pointer;
+    flex: 1;
+}
+
+.charge-item label strong {
+    color: #60a5fa;
+}
+
+.charge-item label small {
+    color: #94a3b8;
+}
+
+.charges-list {
+    margin-top: 10px;
+}
+
+.selected-charge {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selected-charge span {
+    color: #e2e8f0;
+}
+
+.selected-charge button {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.selected-charge button:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+/* ============================================ */
+/* NOTES */
+/* ============================================ */
+
+.note-item {
+    background: rgba(30, 41, 59, 0.5);
+    border-left: 4px solid #475569;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.note-item.note-info {
+    border-left-color: #3b82f6;
+}
+
+.note-item.note-caution {
+    border-left-color: #f59e0b;
+}
+
+.note-item.note-warning {
+    border-left-color: #ef4444;
+}
+
+.note-item.note-threat {
+    border-left-color: #dc2626;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.note-item strong {
+    color: #e2e8f0;
+}
+
+.note-item small {
+    color: #94a3b8;
+}
+
+/* ============================================ */
+/* RECORDS & RESULTS */
+/* ============================================ */
+
+.record-item {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid #334155;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.record-item strong {
+    color: #60a5fa;
+}
+
+.record-item small {
+    color: #94a3b8;
+}
+
+.search-result-item {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid #334155;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.result-header h4 {
+    color: #e2e8f0;
+    font-size: 16px;
+}
+
+.result-body {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.result-body p {
+    margin: 6px 0;
+}
+
+.result-body button {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+}
+
+.result-body button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* ============================================ */
+/* MODAL SIZES */
+/* ============================================ */
+
+.modal-content.modal-large {
+    max-width: 900px;
+}
+
+/* ============================================ */
+/* FORM ROW */
+/* ============================================ */
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* ============================================ */
+/* SCROLLBAR STYLING */
+/* ============================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}

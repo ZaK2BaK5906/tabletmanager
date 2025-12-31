@@ -46,6 +46,40 @@ end
 -- SYNCHRONISATION ESX
 -- ============================================
 
+-- Convertir date au format MySQL (YYYY-MM-DD)
+local function ConvertDateToMySQL(dateStr)
+    if not dateStr then return '2000-01-01' end
+
+    -- Si déjà au bon format (YYYY-MM-DD)
+    if string.match(dateStr, '^%d%d%d%d%-%d%d%-%d%d$') then
+        return dateStr
+    end
+
+    -- Format DD/MM/YYYY ou MM/DD/YYYY
+    local day, month, year = string.match(dateStr, '^(%d+)/(%d+)/(%d+)$')
+    if day and month and year then
+        -- Si année sur 2 chiffres, ajouter 2000 ou 1900
+        if #year == 2 then
+            year = tonumber(year) > 50 and ('19'..year) or ('20'..year)
+        end
+
+        -- Déterminer si c'est DD/MM/YYYY ou MM/DD/YYYY
+        -- Si le premier nombre > 12, c'est forcément le jour
+        if tonumber(day) > 12 then
+            return string.format('%04d-%02d-%02d', tonumber(year), tonumber(month), tonumber(day))
+        -- Si le deuxième nombre > 12, c'est forcément le mois
+        elseif tonumber(month) > 12 then
+            return string.format('%04d-%02d-%02d', tonumber(year), tonumber(day), tonumber(month))
+        -- Sinon on assume DD/MM/YYYY (format européen)
+        else
+            return string.format('%04d-%02d-%02d', tonumber(year), tonumber(month), tonumber(day))
+        end
+    end
+
+    -- Format par défaut si rien ne match
+    return '2000-01-01'
+end
+
 -- Sync ALL players au démarrage de la ressource
 CreateThread(function()
     Wait(2000) -- Attendre que ESX soit chargé
@@ -58,7 +92,7 @@ CreateThread(function()
             local identifier = xPlayer.identifier
             local firstname = xPlayer.get('firstName') or 'Unknown'
             local lastname = xPlayer.get('lastName') or 'Unknown'
-            local dob = xPlayer.get('dateofbirth') or '2000-01-01'
+            local dob = ConvertDateToMySQL(xPlayer.get('dateofbirth'))
             local sex = xPlayer.get('sex') or 'M'
             local height = xPlayer.get('height') or 175
 
@@ -88,7 +122,7 @@ AddEventHandler('esx:playerLoaded', function(playerId, xPlayer)
     local identifier = xPlayer.identifier
     local firstname = xPlayer.get('firstName') or 'Unknown'
     local lastname = xPlayer.get('lastName') or 'Unknown'
-    local dob = xPlayer.get('dateofbirth') or '2000-01-01'
+    local dob = ConvertDateToMySQL(xPlayer.get('dateofbirth'))
     local sex = xPlayer.get('sex') or 'M'
     local height = xPlayer.get('height') or 175
 
@@ -251,12 +285,173 @@ function LogAccess(source, recordType, recordId, action, granted, denialReason)
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then return end
 
-    local ip = GetPlayerEndpoint(source)
-
+    -- IP is optional (NULL) - no Steam required
     MySQL.insert([[
         INSERT INTO mdt_access_logs (user_identifier, user_job, record_type, record_id, action, access_granted, denial_reason, ip_address)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ]], {xPlayer.identifier, xPlayer.job.name, recordType, recordId, action, granted and 1 or 0, denialReason, ip})
+        VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+    ]], {xPlayer.identifier, xPlayer.job.name, recordType, recordId, action, granted and 1 or 0, denialReason})
 end
+
+-- ============================================
+-- BROADCAST FUNCTIONS
+-- ============================================
+
+function BroadcastToPolice(eventName, data)
+    local xPlayers = ESX.GetExtendedPlayers()
+    for _, player in ipairs(xPlayers) do
+        for _, job in ipairs(Config.PoliceJobs) do
+            if player.job.name == job then
+                TriggerClientEvent(eventName, player.source, data)
+            end
+        end
+    end
+end
+
+function BroadcastToDOJ(eventName, data)
+    local xPlayers = ESX.GetExtendedPlayers()
+    for _, player in ipairs(xPlayers) do
+        for _, job in ipairs(Config.DOJJobs) do
+            if player.job.name == job then
+                TriggerClientEvent(eventName, player.source, data)
+            end
+        end
+    end
+end
+
+function BroadcastToEMS(eventName, data)
+    local xPlayers = ESX.GetExtendedPlayers()
+    for _, player in ipairs(xPlayers) do
+        for _, job in ipairs(Config.EMSJobs) do
+            if player.job.name == job then
+                TriggerClientEvent(eventName, player.source, data)
+            end
+        end
+    end
+end
+
+-- ============================================
+-- NEARBY PLAYER INFO
+-- ============================================
+
+ESX.RegisterServerCallback('zmdt:getNearbyPlayerInfo', function(source, cb, targetId)
+    local targetPlayer = ESX.GetPlayerFromId(targetId)
+
+    if not targetPlayer then
+        cb(nil)
+        return
+    end
+
+    cb({
+        name = targetPlayer.getName(),
+        identifier = targetPlayer.identifier,
+        job = targetPlayer.job.name,
+        job_label = targetPlayer.job.label
+    })
+end)
+
+-- ============================================
+-- STATS & DASHBOARD
+-- ============================================
+
+ESX.RegisterServerCallback('zmdt:police:getStats', function(source, cb)
+    if not HasPermission(source, 'police.stats.view') then
+        cb(nil)
+        return
+    end
+
+    local stats = {}
+
+    -- Today stats
+    stats.arrests_today = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_arrests
+        WHERE DATE(arrest_date) = CURDATE()
+    ]]) or 0
+
+    stats.reports_today = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_reports
+        WHERE DATE(created_at) = CURDATE()
+    ]]) or 0
+
+    stats.citations_today = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_citations
+        WHERE DATE(created_at) = CURDATE()
+    ]]) or 0
+
+    stats.active_calls = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_calls
+        WHERE status IN ('pending', 'dispatched', 'on_scene')
+    ]]) or 0
+
+    stats.active_bolo = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_bolo
+        WHERE status = 'active'
+    ]]) or 0
+
+    stats.active_warrants = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_warrants
+        WHERE status = 'active'
+    ]]) or 0
+
+    -- Week stats
+    stats.arrests_week = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_arrests
+        WHERE arrest_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    ]]) or 0
+
+    stats.reports_week = MySQL.scalar.await([[
+        SELECT COUNT(*) FROM mdt_reports
+        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    ]]) or 0
+
+    cb(stats)
+end)
+
+-- ============================================
+-- PANIC BUTTON
+-- ============================================
+
+ESX.RegisterServerCallback('zmdt:police:sendPanic', function(source, cb, data)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then
+        cb(false)
+        return
+    end
+
+    -- Check si c'est un policier
+    local isPolice = false
+    for _, job in ipairs(Config.PoliceJobs) do
+        if xPlayer.job.name == job then
+            isPolice = true
+            break
+        end
+    end
+
+    if not isPolice then
+        cb(false)
+        return
+    end
+
+    -- Broadcast panic à tous les policiers
+    BroadcastToPolice('zmdt:police:panicReceived', {
+        officer = xPlayer.getName(),
+        location = data.location,
+        coords = data.coords
+    })
+
+    SendWebhook('PoliceReports', {
+        title = '🚨 PANIC BUTTON',
+        officer = xPlayer.getName(),
+        location = data.location,
+        coords = data.coords
+    })
+
+    cb(true)
+end)
+
+-- Recevoir panic côté client
+RegisterNetEvent('zmdt:police:panicReceived')
+AddEventHandler('zmdt:police:panicReceived', function(data)
+    -- Handled in client
+end)
 
 print('^2[ZMDT]^0 Server loaded successfully')
