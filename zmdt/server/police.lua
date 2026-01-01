@@ -2,6 +2,9 @@
 -- ZX POLICE MDT - BACKEND COMPLET
 -- ============================================
 
+-- Import ESX
+ESX = exports['es_extended']:getSharedObject()
+
 -- Note: Les webhooks sont chargés via fxmanifest.lua
 -- Accès via la variable globale Webhooks définie dans server/webhooks.lua
 
