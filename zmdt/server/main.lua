@@ -145,7 +145,13 @@ end)
 -- Get initial data when opening MDT
 ESX.RegisterServerCallback('zmdt:getInitialData', function(source, cb, service)
     local xPlayer = ESX.GetPlayerFromId(source)
-    if not xPlayer then cb(nil) return end
+    if not xPlayer then
+        print('[ZMDT ERROR] Player not found: ' .. source)
+        cb(nil)
+        return
+    end
+
+    print('[ZMDT DEBUG] Loading initial data for ' .. xPlayer.getName() .. ' (service: ' .. service .. ')')
 
     local data = {
         user = {
@@ -157,42 +163,61 @@ ESX.RegisterServerCallback('zmdt:getInitialData', function(source, cb, service)
             grade_label = xPlayer.job.grade_label
         },
         permissions = {}, -- TODO: Load permissions
-        service = service
+        service = service,
+        hasMDTAccess = true
     }
 
     -- Service-specific data
     if service == 'police' then
-        data.activeCalls = MySQL.query.await([[
-            SELECT * FROM mdt_calls
-            WHERE status IN ('pending', 'dispatched', 'on_scene')
-            ORDER BY priority DESC, created_at ASC
-            LIMIT 20
-        ]]) or {}
+        print('[ZMDT DEBUG] Loading police initial data...')
 
-        data.activeBOLO = MySQL.query.await([[
-            SELECT * FROM mdt_bolo
-            WHERE status = 'active'
-            ORDER BY priority DESC, issued_at DESC
-            LIMIT 20
-        ]]) or {}
+        -- Utiliser les NOUVELLES tables zx_police_*
+        local success, calls = pcall(function()
+            return MySQL.query.await([[
+                SELECT * FROM zx_police_calls
+                WHERE status IN ('pending', 'dispatched', 'on_scene')
+                ORDER BY priority DESC, created_at ASC
+                LIMIT 20
+            ]]) or {}
+        end)
+
+        if success then
+            data.activeCalls = calls
+            print('[ZMDT DEBUG] Loaded ' .. #calls .. ' active calls')
+        else
+            data.activeCalls = {}
+            print('[ZMDT ERROR] Failed to load calls: ' .. tostring(calls))
+        end
+
+        local success2, bolos = pcall(function()
+            return MySQL.query.await([[
+                SELECT * FROM zx_police_bolo
+                WHERE status = 'active'
+                ORDER BY priority DESC, issued_date DESC
+                LIMIT 20
+            ]]) or {}
+        end)
+
+        if success2 then
+            data.activeBOLO = bolos
+            print('[ZMDT DEBUG] Loaded ' .. #bolos .. ' active BOLOs')
+        else
+            data.activeBOLO = {}
+            print('[ZMDT ERROR] Failed to load BOLOs: ' .. tostring(bolos))
+        end
 
     elseif service == 'doj' then
-        data.activeCases = MySQL.query.await([[
-            SELECT * FROM mdt_cases
-            WHERE status NOT IN ('closed', 'dismissed')
-            ORDER BY created_at DESC
-            LIMIT 20
-        ]]) or {}
+        print('[ZMDT DEBUG] Loading DOJ initial data...')
+        data.activeCases = {}
+        -- TODO: DOJ tables not yet created
 
     elseif service == 'ems' then
-        data.activeCalls = MySQL.query.await([[
-            SELECT * FROM mdt_ems_calls
-            WHERE status IN ('pending', 'dispatched', 'on_scene', 'transport')
-            ORDER BY priority DESC, created_at ASC
-            LIMIT 20
-        ]]) or {}
+        print('[ZMDT DEBUG] Loading EMS initial data...')
+        data.activeCalls = {}
+        -- TODO: EMS tables not yet created
     end
 
+    print('[ZMDT DEBUG] Sending initial data to client. User: ' .. data.user.name .. ' | Service: ' .. service)
     cb(data)
 end)
 

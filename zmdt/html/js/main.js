@@ -60,6 +60,9 @@ window.addEventListener('message', (event) => {
 // ============================================
 
 function openMDT(service, data) {
+    console.log('[MDT DEBUG] Opening MDT with service:', service);
+    console.log('[MDT DEBUG] Initial data received:', data);
+
     currentService = service;
     mdtData = data;
 
@@ -76,6 +79,7 @@ function openMDT(service, data) {
     setupTabs();
 
     if (service === 'police') {
+        console.log('[MDT DEBUG] Loading police dashboard...');
         loadDashboard();
     }
 }
