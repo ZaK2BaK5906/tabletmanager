@@ -8,6 +8,13 @@ Config.Framework = 'esx' -- esx ou qb-core
 Config.Command = 'mdt' -- Commande pour ouvrir la MDT
 Config.UseSteam = false -- Utiliser Steam pour identifier les joueurs (false = fonctionne sans Steam)
 
+-- Synchronisation automatique avec ESX
+Config.SyncWithESX = {
+    citizens = false, -- Auto-sync joueurs dans mdt_citizens (désactivé car on utilise users directement)
+    vehicles = false, -- Auto-sync véhicules (désactivé car on utilise owned_vehicles directement)
+    jobs = true       -- Sync jobs pour permissions
+}
+
 -- ============================================
 -- COMMANDES
 -- ============================================

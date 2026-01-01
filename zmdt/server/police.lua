@@ -2,7 +2,8 @@
 -- ZX POLICE MDT - BACKEND COMPLET
 -- ============================================
 
-local Webhooks = require('server/webhooks')
+-- Note: Les webhooks sont chargés via fxmanifest.lua
+-- Accès via la variable globale Webhooks définie dans server/webhooks.lua
 
 -- ============================================
 -- UTILITAIRES

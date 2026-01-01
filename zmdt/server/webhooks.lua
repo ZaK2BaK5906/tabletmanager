@@ -2,7 +2,7 @@
 -- ZX POLICE MDT - WEBHOOKS DISCORD
 -- ============================================
 
-local Webhooks = {}
+Webhooks = {} -- Variable globale pour accès depuis police.lua
 
 -- ============================================
 -- FONCTION PRINCIPALE: ENVOYER UN WEBHOOK
