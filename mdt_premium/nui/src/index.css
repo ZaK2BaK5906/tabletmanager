@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Colors */
+    --bg-primary: #0A0E1A;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1F2937;
+    --bg-glass: rgba(17, 24, 39, 0.85);
+
+    --text-primary: #F9FAFB;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6B7280;
+
+    --border-default: #374151;
+    --border-light: #4B5563;
+
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-dark-primary text-gray-100 font-sans antialiased;
+    overflow: hidden;
+  }
+
+  #root {
+    @apply w-screen h-screen;
+  }
+}
+
+@layer components {
+  /* Glass Effect */
+  .glass {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+  }
+
+  /* Card */
+  .card {
+    @apply bg-dark-secondary rounded-lg border border-gray-700 shadow-lg;
+  }
+
+  .card-glass {
+    @apply glass rounded-lg shadow-premium;
+  }
+
+  /* Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-dark-secondary;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-600 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-500;
+  }
+
+  /* Animations */
+  .animate-in {
+    animation: fadeIn var(--transition-base);
+  }
+
+  /* Focus Ring */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-primary;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent;
+  }
+
+  .border-gradient {
+    border-image: linear-gradient(to right, #3B82F6, #2563EB) 1;
+  }
+}
