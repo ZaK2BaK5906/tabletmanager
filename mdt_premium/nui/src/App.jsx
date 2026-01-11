@@ -16,11 +16,15 @@ function App() {
   const { visible, setVisible } = useStore()
 
   useEffect(() => {
+    console.log('[MDT] App mounted, visible:', visible)
+
     // Listen for NUI messages
     const handleMessage = (event) => {
       const { action, data } = event.data
+      console.log('[MDT] Received message:', action, data)
 
       if (action === 'setVisible') {
+        console.log('[MDT] Setting visible to:', data.visible)
         setVisible(data.visible)
       } else if (action === 'updateUser') {
         // TODO: Update user data from ESX
@@ -51,10 +55,14 @@ function App() {
     }
   }, [visible, setVisible])
 
+  console.log('[MDT] Rendering, visible:', visible)
+
   if (!visible) {
+    console.log('[MDT] Not visible, returning null')
     return null
   }
 
+  console.log('[MDT] Visible, rendering UI')
   return (
     <BrowserRouter>
       <Routes>
