@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import MainLayout from './components/layout/MainLayout'
 import Dashboard from './pages/Dashboard'
 import Invoices from './pages/Invoices'
+import MyInvoices from './pages/MyInvoices'
 import Employees from './pages/Employees'
 import Taxes from './pages/Taxes'
 import Commissions from './pages/Commissions'
@@ -17,6 +18,7 @@ function App() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="invoices" element={<Invoices />} />
+          <Route path="my-invoices" element={<MyInvoices />} />
           <Route path="employees" element={<Employees />} />
           <Route path="taxes" element={<Taxes />} />
           <Route path="commissions" element={<Commissions />} />

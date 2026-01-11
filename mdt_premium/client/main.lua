@@ -209,6 +209,35 @@ RegisterNUICallback('createPartnership', function(data, cb)
     end, data)
 end)
 
+-- Get Player Invoices
+RegisterNUICallback('getPlayerInvoices', function(data, cb)
+    ESX.TriggerServerCallback('mdt_premium:getPlayerInvoices', function(invoices)
+        cb({ success = true, invoices = invoices })
+    end)
+end)
+
+-- Pay Invoice
+RegisterNUICallback('payInvoice', function(data, cb)
+    ESX.TriggerServerCallback('mdt_premium:payInvoice', function(success, message)
+        if success then
+            ESX.ShowNotification('~g~Facture payée avec succès')
+            cb({ success = true })
+        else
+            ESX.ShowNotification('~r~' .. (message or 'Erreur lors du paiement'))
+            cb({ success = false, message = message })
+        end
+    end, data)
+end)
+
+-- Receive Invoice (from server)
+RegisterNetEvent('mdt_premium:receiveInvoice')
+AddEventHandler('mdt_premium:receiveInvoice', function(invoice)
+    ESX.ShowNotification('~b~Nouvelle facture reçue de ' .. invoice.company .. ' : ~g~$' .. invoice.total)
+
+    -- Play sound
+    PlaySoundFrontend(-1, 'BACK', 'HUD_AMMO_SHOP_SOUNDSET', false)
+end)
+
 -- Delete Partnership
 RegisterNUICallback('deletePartnership', function(data, cb)
     ESX.TriggerServerCallback('mdt_premium:deletePartnership', function(success, message)

@@ -11,7 +11,7 @@ lua54 'yes'
 dependencies {
     'es_extended',
     'oxmysql',
-    'esx_billing'
+    'ox_banking'
 }
 
 -- Server

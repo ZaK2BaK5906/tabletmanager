@@ -17,6 +17,7 @@ MySQL.ready(function()
         CREATE TABLE IF NOT EXISTS mdt_invoices (
             id INT AUTO_INCREMENT PRIMARY KEY,
             number VARCHAR(50) UNIQUE,
+            company_job VARCHAR(50),
             company_name VARCHAR(100),
             client_id VARCHAR(50),
             client_name VARCHAR(100),
@@ -29,7 +30,10 @@ MySQL.ready(function()
             status VARCHAR(20) DEFAULT 'pending',
             created_by VARCHAR(100),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            paid_at TIMESTAMP NULL
+            paid_at TIMESTAMP NULL,
+            INDEX idx_client (client_id),
+            INDEX idx_company (company_job),
+            INDEX idx_status (status)
         )
     ]])
 
@@ -227,8 +231,9 @@ ESX.RegisterServerCallback('mdt_premium:createInvoice', function(source, cb, dat
     local invoiceNumber = GenerateInvoiceNumber()
 
     -- Insert invoice
-    MySQL.insert('INSERT INTO mdt_invoices (number, company_name, client_id, client_name, amount, tax, total, description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', {
+    MySQL.insert('INSERT INTO mdt_invoices (number, company_job, company_name, client_id, client_name, amount, tax, total, description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
         invoiceNumber,
+        xPlayer.job.name,
         xPlayer.job.label,
         xTarget.identifier,
         xTarget.getName(),
@@ -239,9 +244,6 @@ ESX.RegisterServerCallback('mdt_premium:createInvoice', function(source, cb, dat
         xPlayer.getName()
     }, function(insertId)
         if insertId then
-            -- Send bill to player
-            TriggerEvent('esx_billing:sendBill', xTarget.source, 'society_' .. xPlayer.job.name, xPlayer.job.label, total)
-
             -- Calculate commission (5% of amount)
             local commission = math.floor(amount * 0.05)
             MySQL.insert('INSERT INTO mdt_commissions (employee_id, employee_name, amount, invoice_id) VALUES (?, ?, ?, ?)', {
@@ -249,6 +251,17 @@ ESX.RegisterServerCallback('mdt_premium:createInvoice', function(source, cb, dat
                 xPlayer.getName(),
                 commission,
                 insertId
+            })
+
+            -- Notify target player they received an invoice
+            TriggerClientEvent('mdt_premium:receiveInvoice', xTarget.source, {
+                id = insertId,
+                number = invoiceNumber,
+                company = xPlayer.job.label,
+                amount = amount,
+                tax = tax,
+                total = total,
+                description = description
             })
 
             cb(true)
@@ -470,6 +483,91 @@ ESX.RegisterServerCallback('mdt_premium:createPartnership', function(source, cb,
                 cb(true)
             else
                 cb(false, 'Erreur base de données')
+            end
+        end)
+    end)
+end)
+
+-- Get Player Invoices Callback
+ESX.RegisterServerCallback('mdt_premium:getPlayerInvoices', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then
+        cb(nil)
+        return
+    end
+
+    MySQL.query('SELECT * FROM mdt_invoices WHERE client_id = ? ORDER BY created_at DESC', {
+        xPlayer.identifier
+    }, function(invoices)
+        cb(invoices)
+    end)
+end)
+
+-- Pay Invoice Callback
+ESX.RegisterServerCallback('mdt_premium:payInvoice', function(source, cb, data)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then
+        cb(false, 'Joueur introuvable')
+        return
+    end
+
+    local invoiceId = tonumber(data.invoiceId)
+
+    if not invoiceId then
+        cb(false, 'ID de facture invalide')
+        return
+    end
+
+    -- Get invoice details
+    MySQL.single('SELECT * FROM mdt_invoices WHERE id = ? AND client_id = ? AND status = "pending"', {
+        invoiceId,
+        xPlayer.identifier
+    }, function(invoice)
+        if not invoice then
+            cb(false, 'Facture introuvable ou déjà payée')
+            return
+        end
+
+        -- Check if player has enough money (bank account)
+        local bankBalance = xPlayer.getAccount('bank').money
+
+        if bankBalance < invoice.total then
+            cb(false, 'Fonds insuffisants')
+            return
+        end
+
+        -- Remove money from player (ox_banking)
+        local success = exports.ox_banking:RemoveBankBalance(xPlayer.source, {
+            amount = invoice.total,
+            message = 'Paiement facture ' .. invoice.number
+        })
+
+        if not success then
+            cb(false, 'Erreur lors du paiement')
+            return
+        end
+
+        -- Add money to company (ox_banking)
+        local companyAccount = 'society_' .. invoice.company_job
+        exports.ox_banking:AddBankBalance(companyAccount, {
+            amount = invoice.total,
+            message = 'Paiement facture ' .. invoice.number .. ' par ' .. xPlayer.getName()
+        })
+
+        -- Update invoice status
+        MySQL.update('UPDATE mdt_invoices SET status = "paid", paid_at = NOW() WHERE id = ?', {
+            invoiceId
+        }, function(affectedRows)
+            if affectedRows > 0 then
+                -- Notify company (if online)
+                MySQL.scalar('SELECT created_by FROM mdt_invoices WHERE id = ?', {
+                    invoiceId
+                }, function(createdBy)
+                    -- Could notify the employee who created the invoice
+                    cb(true)
+                end)
+            else
+                cb(false, 'Erreur lors de la mise à jour')
             end
         end)
     end)

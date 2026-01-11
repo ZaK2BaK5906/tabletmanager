@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   FileText,
+  Receipt,
   Users,
   DollarSign,
   TrendingUp,
@@ -15,6 +16,7 @@ import useStore from '../../store/useStore'
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: FileText, label: 'Factures', path: '/invoices' },
+  { icon: Receipt, label: 'Mes Factures', path: '/my-invoices' },
   { icon: Users, label: 'Employés', path: '/employees' },
   { icon: DollarSign, label: 'Taxes', path: '/taxes' },
   { icon: TrendingUp, label: 'Commissions', path: '/commissions' },
