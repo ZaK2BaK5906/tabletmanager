@@ -4,18 +4,38 @@ import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import Modal, { ModalHeader, ModalBody, ModalFooter } from '../components/ui/Modal'
 import useStore from '../store/useStore'
-import { Car, DollarSign, ShoppingCart, TrendingDown } from 'lucide-react'
+import { Car, DollarSign, ShoppingCart, TrendingDown, Search } from 'lucide-react'
 
 export default function Dealership() {
   const { vehicles, company } = useStore()
   const [selectedVehicle, setSelectedVehicle] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  // Filtrer les véhicules par recherche
+  const filteredVehicles = vehicles.filter(vehicle =>
+    vehicle.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vehicle.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vehicle.model.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div className="space-y-6 animate-in">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-100">Concession</h1>
-        <p className="text-gray-400 mt-1">Catalogue véhicules avec réduction -40%</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-100">Concession</h1>
+          <p className="text-gray-400 mt-1">Catalogue véhicules avec réduction -40%</p>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Rechercher un véhicule..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-4 py-2 w-80 bg-dark-tertiary border border-gray-700 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
       </div>
 
       {/* Stats */}
@@ -81,7 +101,14 @@ export default function Dealership() {
 
       {/* Vehicle Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {vehicles.map((vehicle) => (
+        {filteredVehicles.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <Car className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400">Aucun véhicule trouvé</p>
+            <p className="text-sm text-gray-500 mt-1">Essayez une autre recherche</p>
+          </div>
+        ) : (
+          filteredVehicles.map((vehicle) => (
           <Card key={vehicle.id} hover className="overflow-hidden">
             <div className="h-48 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative">
               <Car className="w-24 h-24 text-gray-600" />
@@ -128,8 +155,16 @@ export default function Dealership() {
               </Button>
             </CardBody>
           </Card>
-        ))}
+        ))
+        )}
       </div>
+
+      {/* Search Info */}
+      {searchQuery && (
+        <p className="text-sm text-gray-400 text-center">
+          {filteredVehicles.length} véhicule(s) trouvé(s) pour "{searchQuery}"
+        </p>
+      )}
 
       {/* Purchase Modal */}
       {selectedVehicle && (

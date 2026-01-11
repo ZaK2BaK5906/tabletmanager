@@ -14,7 +14,7 @@ const useStore = create((set) => ({
     grade: 'Directeur',
     company: 'Elite Motors',
     balance: 125000,
-    canAccessDOJ: false,
+    canAccessDOJ: true, // Activé pour test - En production, sera géré par ESX
   },
 
   // Company State (données de démo)
@@ -137,14 +137,49 @@ const useStore = create((set) => ({
   // DOJ State (si user a accès DOJ)
   dojData: {
     globalTaxRate: 15,
+    paymentDeadlineDay: 25,
     totalTaxesCollected: 245000,
-    companiesCount: 12,
-    suspiciousCompanies: [
+    suspiciousCompanies: ['Garage Central', 'Auto Express'],
+    companies: [
       {
-        company: 'Garage Central',
-        noTaxInvoices: 15,
-        totalNoTax: 75000,
-        reason: 'Trop de factures sans taxe',
+        id: 1,
+        name: 'Elite Motors',
+        owner: 'John Doe',
+        taxesDue: 67500,
+        lastPayment: '11/12/2023',
+        status: 'compliant',
+      },
+      {
+        id: 2,
+        name: 'Garage Central',
+        owner: 'Marc Durant',
+        taxesDue: 12000,
+        lastPayment: '15/10/2023',
+        status: 'overdue',
+      },
+      {
+        id: 3,
+        name: 'Auto Express',
+        owner: 'Sophie Martin',
+        taxesDue: 8500,
+        lastPayment: '05/01/2024',
+        status: 'warning',
+      },
+      {
+        id: 4,
+        name: 'Luxury Cars LS',
+        owner: 'Pierre Lefèvre',
+        taxesDue: 45000,
+        lastPayment: '10/01/2024',
+        status: 'compliant',
+      },
+      {
+        id: 5,
+        name: 'Mécanique Pro',
+        owner: 'Ahmed Benali',
+        taxesDue: 3200,
+        lastPayment: '08/01/2024',
+        status: 'compliant',
       },
     ],
   },

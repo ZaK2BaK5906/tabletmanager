@@ -5,6 +5,7 @@ import Badge from '../components/ui/Badge'
 import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table'
 import Modal, { ModalHeader, ModalBody, ModalFooter } from '../components/ui/Modal'
 import Input, { Textarea } from '../components/ui/Input'
+import PlayerSelector from '../components/ui/PlayerSelector'
 import useStore from '../store/useStore'
 import { Plus, Eye, Download } from 'lucide-react'
 
@@ -12,6 +13,8 @@ export default function Invoices() {
   const { invoices, company } = useStore()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState(null)
+  const [selectedPlayer, setSelectedPlayer] = useState(null)
+  const [invoiceAmount, setInvoiceAmount] = useState('')
 
   const getStatusBadge = (status) => {
     if (status === 'paid') return <Badge variant="success">Payée</Badge>
@@ -122,42 +125,76 @@ export default function Invoices() {
       {/* Create Modal */}
       <Modal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false)
+          setSelectedPlayer(null)
+          setInvoiceAmount('')
+        }}
         size="lg"
       >
-        <ModalHeader onClose={() => setIsCreateModalOpen(false)}>
+        <ModalHeader onClose={() => {
+          setIsCreateModalOpen(false)
+          setSelectedPlayer(null)
+          setInvoiceAmount('')
+        }}>
           Nouvelle Facture
         </ModalHeader>
         <ModalBody>
           <div className="space-y-4">
-            <Input label="Nom du Client" placeholder="Ex: Marc Dupont" />
-            <Input label="Montant HT (€)" type="number" placeholder="0" />
+            {/* Player Selection */}
+            <PlayerSelector
+              onPlayerSelect={setSelectedPlayer}
+              selectedPlayer={selectedPlayer}
+            />
+
+            {/* Invoice Details */}
+            <Input
+              label="Montant HT (€)"
+              type="number"
+              placeholder="0"
+              value={invoiceAmount}
+              onChange={(e) => setInvoiceAmount(e.target.value)}
+            />
             <Textarea
               label="Description"
               placeholder="Description des services..."
               rows={3}
             />
+
+            {/* Price Summary */}
             <div className="p-4 bg-dark-tertiary rounded-lg border border-gray-700">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-400">Montant HT</span>
-                <span className="font-medium text-gray-100">0€</span>
+                <span className="font-medium text-gray-100">
+                  {invoiceAmount ? parseFloat(invoiceAmount).toLocaleString() : '0'}€
+                </span>
               </div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-400">Taxe ({company.taxRate}%)</span>
-                <span className="font-medium text-yellow-400">0€</span>
+                <span className="font-medium text-yellow-400">
+                  {invoiceAmount ? Math.round(parseFloat(invoiceAmount) * (company.taxRate / 100)).toLocaleString() : '0'}€
+                </span>
               </div>
               <div className="pt-2 border-t border-gray-600 flex items-center justify-between">
                 <span className="font-semibold text-gray-100">Total TTC</span>
-                <span className="text-xl font-bold text-green-400">0€</span>
+                <span className="text-xl font-bold text-green-400">
+                  {invoiceAmount ? Math.round(parseFloat(invoiceAmount) * (1 + company.taxRate / 100)).toLocaleString() : '0'}€
+                </span>
               </div>
             </div>
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>
+          <Button variant="ghost" onClick={() => {
+            setIsCreateModalOpen(false)
+            setSelectedPlayer(null)
+            setInvoiceAmount('')
+          }}>
             Annuler
           </Button>
-          <Button>Créer la Facture</Button>
+          <Button disabled={!selectedPlayer || !invoiceAmount || parseFloat(invoiceAmount) <= 0}>
+            Créer la Facture
+          </Button>
         </ModalFooter>
       </Modal>
 
