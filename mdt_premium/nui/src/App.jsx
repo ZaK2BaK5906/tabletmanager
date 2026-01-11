@@ -7,6 +7,7 @@ import Employees from './pages/Employees'
 import Taxes from './pages/Taxes'
 import Commissions from './pages/Commissions'
 import Dealership from './pages/Dealership'
+import Partnerships from './pages/Partnerships'
 import DOJ from './pages/DOJ'
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="taxes" element={<Taxes />} />
           <Route path="commissions" element={<Commissions />} />
           <Route path="dealership" element={<Dealership />} />
+          <Route path="partnerships" element={<Partnerships />} />
           <Route path="doj" element={<DOJ />} />
         </Route>
       </Routes>

@@ -2,13 +2,10 @@ local ESX = exports['es_extended']:getSharedObject()
 
 -- Configuration
 Config = {}
-Config.AuthorizedJobs = {
-    'cardealer', 'concessionnaire', 'dealership',
-    'doj', 'judge', 'justice'
-}
 Config.DOJJobs = { 'doj', 'judge', 'justice' }
 Config.DefaultTaxRate = 15
 Config.DealerDiscount = 0.40 -- 40% discount
+Config.UnemployedJobs = { 'unemployed', 'chomeur' } -- Jobs that cannot access tablet
 
 -- Global Tax Rate (stored in database)
 local globalTaxRate = Config.DefaultTaxRate
@@ -58,6 +55,19 @@ MySQL.ready(function()
         )
     ]])
 
+    MySQL.query([[
+        CREATE TABLE IF NOT EXISTS mdt_partnerships (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            company_job VARCHAR(50),
+            company_name VARCHAR(100),
+            partner_job VARCHAR(50),
+            partner_name VARCHAR(100),
+            status VARCHAR(20) DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_partnership (company_job, partner_job)
+        )
+    ]])
+
     -- Load global tax rate
     MySQL.scalar('SELECT global_rate FROM mdt_tax_settings WHERE id = 1', {}, function(rate)
         if rate then
@@ -73,12 +83,13 @@ end)
 
 -- Helper Functions
 function IsAuthorized(xPlayer)
-    for _, job in pairs(Config.AuthorizedJobs) do
+    -- Everyone with a job can access (except unemployed)
+    for _, job in pairs(Config.UnemployedJobs) do
         if xPlayer.job.name == job then
-            return true
+            return false
         end
     end
-    return false
+    return true
 end
 
 function IsDOJ(xPlayer)
@@ -374,6 +385,121 @@ ESX.RegisterServerCallback('mdt_premium:updateTaxRate', function(source, cb, dat
             cb(true)
         else
             cb(false, 'Erreur base de données')
+        end
+    end)
+end)
+
+-- Get All Companies (Jobs) Callback
+ESX.RegisterServerCallback('mdt_premium:getAllCompanies', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer or not IsAuthorized(xPlayer) then
+        cb(nil)
+        return
+    end
+
+    -- Get all jobs from database (excluding unemployed)
+    MySQL.query('SELECT name, label FROM jobs WHERE name NOT IN (?, ?)', {
+        'unemployed', 'chomeur'
+    }, function(jobs)
+        local companies = {}
+        for _, job in pairs(jobs) do
+            table.insert(companies, {
+                job = job.name,
+                name = job.label
+            })
+        end
+        cb(companies)
+    end)
+end)
+
+-- Get Partnerships Callback
+ESX.RegisterServerCallback('mdt_premium:getPartnerships', function(source, cb)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer or not IsAuthorized(xPlayer) then
+        cb(nil)
+        return
+    end
+
+    MySQL.query('SELECT * FROM mdt_partnerships WHERE company_job = ? OR partner_job = ?', {
+        xPlayer.job.name,
+        xPlayer.job.name
+    }, function(partnerships)
+        cb(partnerships)
+    end)
+end)
+
+-- Create Partnership Callback
+ESX.RegisterServerCallback('mdt_premium:createPartnership', function(source, cb, data)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer or not IsAuthorized(xPlayer) then
+        cb(false, 'Non autorisé')
+        return
+    end
+
+    local partnerJob = data.partnerJob
+    local partnerName = data.partnerName
+
+    if not partnerJob or not partnerName then
+        cb(false, 'Données invalides')
+        return
+    end
+
+    -- Cannot partner with yourself
+    if partnerJob == xPlayer.job.name then
+        cb(false, 'Vous ne pouvez pas faire un partenariat avec votre propre entreprise')
+        return
+    end
+
+    -- Check if partnership already exists
+    MySQL.scalar('SELECT id FROM mdt_partnerships WHERE (company_job = ? AND partner_job = ?) OR (company_job = ? AND partner_job = ?)', {
+        xPlayer.job.name, partnerJob, partnerJob, xPlayer.job.name
+    }, function(exists)
+        if exists then
+            cb(false, 'Partenariat déjà existant')
+            return
+        end
+
+        -- Create partnership
+        MySQL.insert('INSERT INTO mdt_partnerships (company_job, company_name, partner_job, partner_name) VALUES (?, ?, ?, ?)', {
+            xPlayer.job.name,
+            xPlayer.job.label,
+            partnerJob,
+            partnerName
+        }, function(insertId)
+            if insertId then
+                cb(true)
+            else
+                cb(false, 'Erreur base de données')
+            end
+        end)
+    end)
+end)
+
+-- Delete Partnership Callback
+ESX.RegisterServerCallback('mdt_premium:deletePartnership', function(source, cb, data)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer or not IsAuthorized(xPlayer) then
+        cb(false, 'Non autorisé')
+        return
+    end
+
+    local partnershipId = tonumber(data.partnershipId)
+
+    if not partnershipId then
+        cb(false, 'ID invalide')
+        return
+    end
+
+    -- Check if partnership belongs to this company
+    MySQL.update('DELETE FROM mdt_partnerships WHERE id = ? AND (company_job = ? OR partner_job = ?)', {
+        partnershipId,
+        xPlayer.job.name,
+        xPlayer.job.name
+    }, function(affectedRows)
+        if affectedRows > 0 then
+            cb(true)
+        else
+            cb(false, 'Partenariat introuvable')
         end
     end)
 end)

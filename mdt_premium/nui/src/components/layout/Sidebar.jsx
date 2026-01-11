@@ -7,6 +7,7 @@ import {
   DollarSign,
   TrendingUp,
   Car,
+  Building2,
   Scale,
 } from 'lucide-react'
 import useStore from '../../store/useStore'
@@ -18,6 +19,7 @@ const menuItems = [
   { icon: DollarSign, label: 'Taxes', path: '/taxes' },
   { icon: TrendingUp, label: 'Commissions', path: '/commissions' },
   { icon: Car, label: 'Concession', path: '/dealership' },
+  { icon: Building2, label: 'Partenariats', path: '/partnerships' },
 ]
 
 export default function Sidebar() {

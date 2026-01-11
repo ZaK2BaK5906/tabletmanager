@@ -33,22 +33,9 @@ RegisterKeyMapping('mdt', 'Ouvrir la tablette MDT', 'keyboard', 'F6')
 function ToggleTablet()
     if not PlayerData.job then return end
 
-    -- Check if player has authorized job
-    local authorizedJobs = {
-        'cardealer', 'concessionnaire', 'dealership',
-        'doj', 'judge', 'justice'
-    }
-
-    local hasAccess = false
-    for _, job in pairs(authorizedJobs) do
-        if PlayerData.job.name == job then
-            hasAccess = true
-            break
-        end
-    end
-
-    if not hasAccess then
-        ESX.ShowNotification('~r~Vous n\'avez pas accès à cette tablette')
+    -- EVERYONE with a job can access the tablet
+    if PlayerData.job.name == 'unemployed' or PlayerData.job.name == 'chomeur' then
+        ESX.ShowNotification('~r~Vous devez avoir un emploi pour accéder à cette tablette')
         return
     end
 
@@ -190,6 +177,46 @@ RegisterNUICallback('updateTaxRate', function(data, cb)
             cb({ success = true })
         else
             ESX.ShowNotification('~r~' .. (message or 'Accès refusé'))
+            cb({ success = false, message = message })
+        end
+    end, data)
+end)
+
+-- Get All Companies
+RegisterNUICallback('getAllCompanies', function(data, cb)
+    ESX.TriggerServerCallback('mdt_premium:getAllCompanies', function(companies)
+        cb({ success = true, companies = companies })
+    end)
+end)
+
+-- Get Partnerships
+RegisterNUICallback('getPartnerships', function(data, cb)
+    ESX.TriggerServerCallback('mdt_premium:getPartnerships', function(partnerships)
+        cb({ success = true, partnerships = partnerships })
+    end)
+end)
+
+-- Create Partnership
+RegisterNUICallback('createPartnership', function(data, cb)
+    ESX.TriggerServerCallback('mdt_premium:createPartnership', function(success, message)
+        if success then
+            ESX.ShowNotification('~g~Partenariat créé avec succès')
+            cb({ success = true })
+        else
+            ESX.ShowNotification('~r~' .. (message or 'Erreur lors de la création'))
+            cb({ success = false, message = message })
+        end
+    end, data)
+end)
+
+-- Delete Partnership
+RegisterNUICallback('deletePartnership', function(data, cb)
+    ESX.TriggerServerCallback('mdt_premium:deletePartnership', function(success, message)
+        if success then
+            ESX.ShowNotification('~g~Partenariat supprimé')
+            cb({ success = true })
+        else
+            ESX.ShowNotification('~r~' .. (message or 'Erreur lors de la suppression'))
             cb({ success = false, message = message })
         end
     end, data)
