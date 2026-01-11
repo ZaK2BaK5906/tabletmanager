@@ -11,9 +11,11 @@ Tablette MDT Premium pour Entreprises ESX avec interface React moderne et intég
 ### 🏢 Pour les Entreprises (Concessionnaires)
 - **Dashboard** - Vue d'ensemble avec statistiques en temps réel
 - **Factures** - Création avec sélection de joueur (auto-détection ou ID manuel)
+- **Mes Factures** - Paiement de vos factures reçues (ox_banking)
 - **Employés** - Gestion des employés et suivi des performances
 - **Commissions** - Calcul automatique (5%) et paiement
 - **Concession** - Catalogue véhicules avec -40% de réduction
+- **Partenariats** - Créer alliances avec autres entreprises
 - **Taxes** - Suivi et paiement des taxes dues
 
 ### ⚖️ Pour le DOJ (Department of Justice)
@@ -36,7 +38,7 @@ Tablette MDT Premium pour Entreprises ESX avec interface React moderne et intég
 ### Prérequis
 - **ESX Legacy** (dernière version)
 - **oxmysql**
-- **esx_billing**
+- **ox_banking** (système de factures personnalisé intégré)
 - **Node.js 18+** (pour build NUI)
 
 ### 1. Installation du Resource
@@ -57,7 +59,7 @@ npm run build
 ```lua
 ensure oxmysql
 ensure es_extended
-ensure esx_billing
+ensure ox_banking
 ensure mdt_premium
 ```
 
