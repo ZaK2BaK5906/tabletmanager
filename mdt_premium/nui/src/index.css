@@ -23,24 +23,25 @@
     --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  * {
-    @apply border-border;
-  }
-
   body {
-    @apply bg-dark-primary text-gray-100 font-sans antialiased;
+    background-color: #0A0E1A;
+    color: #F9FAFB;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
   }
 
   #root {
-    @apply w-screen h-screen;
+    width: 100vw;
+    height: 100vh;
   }
 }
 
 @layer components {
   /* Glass Effect */
   .glass {
-    background: var(--bg-glass);
+    background: rgba(17, 24, 39, 0.85);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(75, 85, 99, 0.3);
@@ -48,44 +49,62 @@
 
   /* Card */
   .card {
-    @apply bg-dark-secondary rounded-lg border border-gray-700 shadow-lg;
+    background-color: #111827;
+    border-radius: 0.5rem;
+    border: 1px solid #374151;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
   }
 
   .card-glass {
-    @apply glass rounded-lg shadow-premium;
+    background: rgba(17, 24, 39, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: 0.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
   }
 
   /* Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
-    @apply w-2;
+    width: 0.5rem;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-dark-secondary;
+    background-color: #111827;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-gray-600 rounded-full;
+    background-color: #4B5563;
+    border-radius: 9999px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary-500;
+    background-color: #3B82F6;
   }
 
   /* Animations */
   .animate-in {
-    animation: fadeIn var(--transition-base);
+    animation: fadeIn 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Focus Ring */
   .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-primary;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+
+  .focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #0A0E1A, 0 0 0 4px #3B82F6;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent;
+    background: linear-gradient(to right, #60A5FA, #2563EB);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .border-gradient {
