@@ -26,8 +26,9 @@ client_scripts {
 }
 
 -- NUI
-ui_page 'nui/dist/index.html'
+ui_page 'nui/index.html'
 
 files {
-    'nui/dist/**/*'
+    'nui/index.html',
+    'nui/assets/**/*'
 }

@@ -40,9 +40,19 @@ function ToggleTablet()
     end
 
     isTabletOpen = not isTabletOpen
-    SetNuiFocus(isTabletOpen, isTabletOpen)
 
     if isTabletOpen then
+        -- Play tablet animation
+        local playerPed = PlayerPedId()
+        RequestAnimDict('amb@world_human_seat_wall_tablet@female@base')
+        while not HasAnimDictLoaded('amb@world_human_seat_wall_tablet@female@base') do
+            Wait(100)
+        end
+        TaskPlayAnim(playerPed, 'amb@world_human_seat_wall_tablet@female@base', 'base', 8.0, -8.0, -1, 49, 0, false, false, false)
+
+        SetNuiFocus(true, true)
+        SetNuiFocusKeepInput(false)
+
         -- Send player data to NUI
         ESX.TriggerServerCallback('mdt_premium:getPlayerData', function(data)
             SendNUIMessage({
@@ -51,6 +61,11 @@ function ToggleTablet()
             })
         end)
     else
+        -- Stop animation
+        local playerPed = PlayerPedId()
+        ClearPedTasks(playerPed)
+
+        SetNuiFocus(false, false)
         SendNUIMessage({
             action = 'closeTablet'
         })

@@ -33,8 +33,20 @@
   }
 
   #root {
-    width: 100vw;
-    height: 100vh;
+    position: fixed;
+    top: 50%;
+    right: 5%;
+    transform: translateY(-50%) perspective(1200px) rotateY(-15deg);
+    width: 70%;
+    height: 85%;
+    transform-style: preserve-3d;
+    animation: tabletFloat 3s ease-in-out infinite;
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.5),
+      0 0 40px rgba(99, 102, 241, 0.3),
+      -20px 0 60px rgba(99, 102, 241, 0.2);
+    border-radius: 1rem;
+    overflow: hidden;
   }
 }
 
@@ -109,5 +121,15 @@
 
   .border-gradient {
     border-image: linear-gradient(to right, #3B82F6, #2563EB) 1;
+  }
+}
+
+/* Tablet 3D Float Animation */
+@keyframes tabletFloat {
+  0%, 100% {
+    transform: translateY(-50%) perspective(1200px) rotateY(-15deg) translateZ(0);
+  }
+  50% {
+    transform: translateY(-52%) perspective(1200px) rotateY(-15deg) translateZ(10px);
   }
 }
