@@ -24,19 +24,22 @@
   }
 
   body {
-    background-color: #0A0E1A;
+    background: transparent;
     color: #F9FAFB;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
+    perspective: 1500px;
   }
 
   #root {
     position: fixed;
     top: 50%;
     right: 5%;
-    transform: translateY(-50%) perspective(1200px) rotateY(-15deg);
+    transform: translateY(-50%) rotateY(-15deg);
     width: 70%;
     height: 85%;
     transform-style: preserve-3d;
@@ -127,9 +130,9 @@
 /* Tablet 3D Float Animation */
 @keyframes tabletFloat {
   0%, 100% {
-    transform: translateY(-50%) perspective(1200px) rotateY(-15deg) translateZ(0);
+    transform: translateY(-50%) rotateY(-15deg) translateZ(0);
   }
   50% {
-    transform: translateY(-52%) perspective(1200px) rotateY(-15deg) translateZ(10px);
+    transform: translateY(-52%) rotateY(-15deg) translateZ(10px);
   }
 }
