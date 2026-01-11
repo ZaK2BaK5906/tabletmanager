@@ -536,23 +536,15 @@ ESX.RegisterServerCallback('mdt_premium:payInvoice', function(source, cb, data)
             return
         end
 
-        -- Remove money from player (ox_banking)
-        local success = exports.ox_banking:RemoveBankBalance(xPlayer.source, {
-            amount = invoice.total,
-            message = 'Paiement facture ' .. invoice.number
-        })
+        -- Remove money from player (ESX bank account)
+        xPlayer.removeAccountMoney('bank', invoice.total)
 
-        if not success then
-            cb(false, 'Erreur lors du paiement')
-            return
-        end
-
-        -- Add money to company (ox_banking)
-        local companyAccount = 'society_' .. invoice.company_job
-        exports.ox_banking:AddBankBalance(companyAccount, {
-            amount = invoice.total,
-            message = 'Paiement facture ' .. invoice.number .. ' par ' .. xPlayer.getName()
-        })
+        -- Add money to company (ESX addonaccount)
+        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_' .. invoice.company_job, function(account)
+            if account then
+                account.addMoney(invoice.total)
+            end
+        end)
 
         -- Update invoice status
         MySQL.update('UPDATE mdt_invoices SET status = "paid", paid_at = NOW() WHERE id = ?', {

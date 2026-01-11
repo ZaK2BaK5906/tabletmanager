@@ -11,7 +11,7 @@ lua54 'yes'
 dependencies {
     'es_extended',
     'oxmysql',
-    'ox_banking'
+    'esx_addonaccount'
 }
 
 -- Server
@@ -26,9 +26,9 @@ client_scripts {
 }
 
 -- NUI
-ui_page 'nui/index.html'
+ui_page 'nui/dist/index.html'
 
 files {
-    'nui/index.html',
-    'nui/assets/**/*'
+    'nui/dist/index.html',
+    'nui/dist/assets/**/*'
 }
