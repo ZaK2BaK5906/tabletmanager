@@ -5,7 +5,11 @@ import Topbar from './Topbar'
 
 export default function MainLayout() {
   return (
-    <div className="flex h-screen overflow-hidden bg-dark-primary">
+    <div className="flex h-screen overflow-hidden" style={{
+      background: 'linear-gradient(135deg, rgba(10, 14, 26, 0.95) 0%, rgba(17, 24, 39, 0.90) 100%)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)'
+    }}>
       {/* Sidebar */}
       <Sidebar />
 
