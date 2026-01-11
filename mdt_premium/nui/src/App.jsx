@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import useStore from './store/useStore'
 import MainLayout from './components/layout/MainLayout'
 import Dashboard from './pages/Dashboard'
 import Invoices from './pages/Invoices'
@@ -12,6 +13,48 @@ import Partnerships from './pages/Partnerships'
 import DOJ from './pages/DOJ'
 
 function App() {
+  const { visible, setVisible } = useStore()
+
+  useEffect(() => {
+    // Listen for NUI messages
+    const handleMessage = (event) => {
+      const { action, data } = event.data
+
+      if (action === 'setVisible') {
+        setVisible(data.visible)
+      } else if (action === 'updateUser') {
+        // TODO: Update user data from ESX
+      } else if (action === 'updateCompany') {
+        // TODO: Update company data from ESX
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+
+    // Close on ESC
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && visible) {
+        fetch('https://mdt_premium/close', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        })
+        setVisible(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [visible, setVisible])
+
+  if (!visible) {
+    return null
+  }
+
   return (
     <BrowserRouter>
       <Routes>

@@ -56,8 +56,12 @@ function ToggleTablet()
         -- Send player data to NUI
         ESX.TriggerServerCallback('mdt_premium:getPlayerData', function(data)
             SendNUIMessage({
-                action = 'openTablet',
-                data = data
+                action = 'setVisible',
+                data = {
+                    visible = true,
+                    user = data.user,
+                    company = data.company
+                }
             })
         end)
     else
@@ -67,14 +71,17 @@ function ToggleTablet()
 
         SetNuiFocus(false, false)
         SendNUIMessage({
-            action = 'closeTablet'
+            action = 'setVisible',
+            data = { visible = false }
         })
     end
 end
 
 -- Close Tablet (from NUI)
-RegisterNUICallback('closeTablet', function(data, cb)
-    ToggleTablet()
+RegisterNUICallback('close', function(data, cb)
+    if isTabletOpen then
+        ToggleTablet()
+    end
     cb('ok')
 end)
 

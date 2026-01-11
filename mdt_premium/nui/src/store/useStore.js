@@ -2,6 +2,10 @@ import { create } from 'zustand'
 
 // Store principal
 const useStore = create((set) => ({
+  // Visibility State
+  visible: false,
+  setVisible: (visible) => set({ visible }),
+
   // UI State
   sidebarCollapsed: false,
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
