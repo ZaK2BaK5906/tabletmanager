@@ -62,7 +62,7 @@ export default function Dealership() {
               </div>
               <div>
                 <p className="text-xs text-gray-400">Solde Société</p>
-                <p className="text-xl font-bold text-green-400">{company.balance.toLocaleString()}€</p>
+                <p className="text-xl font-bold text-green-400">{company.balance.toLocaleString()}$</p>
               </div>
             </div>
           </CardBody>
@@ -131,16 +131,16 @@ export default function Dealership() {
               <div className="space-y-2 mb-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">Prix Public</span>
-                  <span className="text-gray-500 line-through">{vehicle.price.toLocaleString()}€</span>
+                  <span className="text-gray-500 line-through">{vehicle.price.toLocaleString()}$</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">Prix Concession (-40%)</span>
-                  <span className="text-xl font-bold text-green-400">{vehicle.dealerPrice.toLocaleString()}€</span>
+                  <span className="text-xl font-bold text-green-400">{vehicle.dealerPrice.toLocaleString()}$</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-primary-400">Économie</span>
                   <span className="text-primary-400 font-semibold">
-                    {(vehicle.price - vehicle.dealerPrice).toLocaleString()}€
+                    {(vehicle.price - vehicle.dealerPrice).toLocaleString()}$
                   </span>
                 </div>
               </div>
@@ -186,28 +186,28 @@ export default function Dealership() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Prix Public</span>
-                  <span className="text-gray-500 line-through">{selectedVehicle.price.toLocaleString()}€</span>
+                  <span className="text-gray-500 line-through">{selectedVehicle.price.toLocaleString()}$</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Réduction (-40%)</span>
-                  <span className="text-green-400">-{(selectedVehicle.price - selectedVehicle.dealerPrice).toLocaleString()}€</span>
+                  <span className="text-green-400">-{(selectedVehicle.price - selectedVehicle.dealerPrice).toLocaleString()}$</span>
                 </div>
                 <div className="pt-2 border-t border-gray-700 flex justify-between">
                   <span className="font-semibold text-gray-100">Prix Concession</span>
-                  <span className="text-2xl font-bold text-green-400">{selectedVehicle.dealerPrice.toLocaleString()}€</span>
+                  <span className="text-2xl font-bold text-green-400">{selectedVehicle.dealerPrice.toLocaleString()}$</span>
                 </div>
               </div>
 
               <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                 <p className="text-sm text-blue-400">
-                  <span className="font-semibold">Solde après achat :</span> {(company.balance - selectedVehicle.dealerPrice).toLocaleString()}€
+                  <span className="font-semibold">Solde après achat :</span> {(company.balance - selectedVehicle.dealerPrice).toLocaleString()}$
                 </p>
               </div>
 
               {company.balance < selectedVehicle.dealerPrice && (
                 <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                   <p className="text-sm text-red-400">
-                    <span className="font-semibold">Fonds insuffisants !</span> Il vous manque {(selectedVehicle.dealerPrice - company.balance).toLocaleString()}€
+                    <span className="font-semibold">Fonds insuffisants !</span> Il vous manque {(selectedVehicle.dealerPrice - company.balance).toLocaleString()}$
                   </p>
                 </div>
               )}

@@ -6,9 +6,9 @@ export default function Topbar() {
   const { user, company } = useStore()
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'USD',
     }).format(amount)
   }
 

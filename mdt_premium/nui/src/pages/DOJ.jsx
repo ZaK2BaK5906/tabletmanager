@@ -159,7 +159,7 @@ export default function DOJ() {
                   <TableCell className="font-medium">{company.name}</TableCell>
                   <TableCell>{company.owner}</TableCell>
                   <TableCell className="font-semibold text-yellow-400">
-                    {company.taxesDue.toLocaleString()}€
+                    {company.taxesDue.toLocaleString()}$
                   </TableCell>
                   <TableCell>{company.lastPayment}</TableCell>
                   <TableCell>

@@ -59,7 +59,7 @@ export default function Taxes() {
               </div>
               <div>
                 <p className="text-xs text-gray-400">Taxes Dues</p>
-                <p className="text-2xl font-bold text-red-400">{company.totalTaxes.toLocaleString()}€</p>
+                <p className="text-2xl font-bold text-red-400">{company.totalTaxes.toLocaleString()}$</p>
               </div>
             </div>
           </CardBody>
@@ -113,7 +113,7 @@ export default function Taxes() {
                         <p className="font-medium text-gray-100">{invoice.client}</p>
                         <p className="text-sm text-gray-400">{invoice.number}</p>
                       </div>
-                      <p className="font-semibold text-green-400">{invoice.total.toLocaleString()}€</p>
+                      <p className="font-semibold text-green-400">{invoice.total.toLocaleString()}$</p>
                     </div>
                     <div className="text-sm text-orange-400">
                       <span className="font-semibold">Raison :</span> {invoice.noTaxReason}
@@ -139,7 +139,7 @@ export default function Taxes() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-400">25/12/2023</span>
-                  <span className="font-semibold text-green-400">15,250€</span>
+                  <span className="font-semibold text-green-400">15,250$</span>
                 </div>
               </div>
               <div className="p-4 bg-dark-tertiary rounded-lg">
@@ -149,7 +149,7 @@ export default function Taxes() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-400">25/11/2023</span>
-                  <span className="font-semibold text-green-400">12,800€</span>
+                  <span className="font-semibold text-green-400">12,800$</span>
                 </div>
               </div>
             </div>

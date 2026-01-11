@@ -18,7 +18,7 @@ export default function Commissions() {
         </div>
         <Button>
           <DollarSign className="w-5 h-5 mr-2" />
-          Tout Payer ({company.pendingCommissions.toLocaleString()}€)
+          Tout Payer ({company.pendingCommissions.toLocaleString()}$)
         </Button>
       </div>
 
@@ -33,7 +33,7 @@ export default function Commissions() {
               <div>
                 <p className="text-sm text-gray-400">Total Commissions</p>
                 <p className="text-2xl font-bold text-yellow-400">
-                  {company.pendingCommissions.toLocaleString()}€
+                  {company.pendingCommissions.toLocaleString()}$
                 </p>
               </div>
             </div>
@@ -63,7 +63,7 @@ export default function Commissions() {
               <div>
                 <p className="text-sm text-gray-400">Moyenne</p>
                 <p className="text-2xl font-bold text-green-400">
-                  {Math.round(company.pendingCommissions / employees.length).toLocaleString()}€
+                  {Math.round(company.pendingCommissions / employees.length).toLocaleString()}$
                 </p>
               </div>
             </div>
@@ -90,7 +90,7 @@ export default function Commissions() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">CA Généré</span>
                   <span className="font-medium text-green-400">
-                    {employee.totalInvoiced.toLocaleString()}€
+                    {employee.totalInvoiced.toLocaleString()}$
                   </span>
                 </div>
 
@@ -107,7 +107,7 @@ export default function Commissions() {
                 <div className="pt-3 border-t border-gray-700 flex items-center justify-between">
                   <span className="font-semibold text-gray-100">Commission</span>
                   <span className="text-xl font-bold text-yellow-400">
-                    {employee.commission.toLocaleString()}€
+                    {employee.commission.toLocaleString()}$
                   </span>
                 </div>
               </div>

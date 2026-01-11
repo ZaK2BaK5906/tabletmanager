@@ -43,7 +43,7 @@ export default function Employees() {
               </div>
               <div>
                 <p className="text-sm text-gray-400">Commissions Dues</p>
-                <p className="text-2xl font-bold text-green-400">{totalCommissions.toLocaleString()}€</p>
+                <p className="text-2xl font-bold text-green-400">{totalCommissions.toLocaleString()}$</p>
               </div>
             </div>
           </CardBody>
@@ -103,14 +103,14 @@ export default function Employees() {
                   </TableCell>
                   <TableCell>{employee.grade}</TableCell>
                   <TableCell className="font-semibold text-green-400">
-                    {employee.totalInvoiced.toLocaleString()}€
+                    {employee.totalInvoiced.toLocaleString()}$
                   </TableCell>
                   <TableCell>
                     <Badge variant="info">{employee.invoiceCount}</Badge>
                   </TableCell>
                   <TableCell>{employee.commissionRate}%</TableCell>
                   <TableCell className="font-semibold text-yellow-400">
-                    {employee.commission.toLocaleString()}€
+                    {employee.commission.toLocaleString()}$
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

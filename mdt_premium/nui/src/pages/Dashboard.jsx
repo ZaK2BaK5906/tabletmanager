@@ -10,7 +10,7 @@ export default function Dashboard() {
   const stats = [
     {
       label: 'Chiffre d\'Affaires',
-      value: `${company.totalInvoiced.toLocaleString()}€`,
+      value: `${company.totalInvoiced.toLocaleString()}$`,
       change: '+12.5%',
       trend: 'up',
       icon: TrendingUp,
@@ -18,7 +18,7 @@ export default function Dashboard() {
     },
     {
       label: 'Taxes Dues',
-      value: `${company.totalTaxes.toLocaleString()}€`,
+      value: `${company.totalTaxes.toLocaleString()}$`,
       change: `${company.taxRate}%`,
       trend: 'neutral',
       icon: DollarSign,
@@ -26,7 +26,7 @@ export default function Dashboard() {
     },
     {
       label: 'Commissions',
-      value: `${company.pendingCommissions.toLocaleString()}€`,
+      value: `${company.pendingCommissions.toLocaleString()}$`,
       change: '8 employés',
       trend: 'neutral',
       icon: Users,
@@ -103,7 +103,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-400">{invoice.createdAt}</span>
-                    <span className="font-semibold text-green-400">{invoice.total.toLocaleString()}€</span>
+                    <span className="font-semibold text-green-400">{invoice.total.toLocaleString()}$</span>
                   </div>
                 </div>
               ))}
@@ -132,7 +132,7 @@ export default function Dashboard() {
                       <p className="text-sm text-gray-400">{employee.grade}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-green-400">{employee.totalInvoiced.toLocaleString()}€</p>
+                      <p className="font-semibold text-green-400">{employee.totalInvoiced.toLocaleString()}$</p>
                       <p className="text-xs text-gray-400">{employee.invoiceCount} factures</p>
                     </div>
                   </div>
@@ -153,7 +153,7 @@ export default function Dashboard() {
             <div>
               <h3 className="font-semibold text-gray-100 mb-1">Paiement des taxes</h3>
               <p className="text-sm text-gray-400">
-                Vous devez payer <span className="text-yellow-400 font-semibold">{company.totalTaxes.toLocaleString()}€</span> de taxes avant le <span className="text-yellow-400">25/01/2024</span>.
+                Vous devez payer <span className="text-yellow-400 font-semibold">{company.totalTaxes.toLocaleString()}$</span> de taxes avant le <span className="text-yellow-400">25/01/2024</span>.
               </p>
             </div>
           </div>

@@ -42,7 +42,7 @@ export default function Invoices() {
           <CardBody>
             <p className="text-sm text-gray-400 mb-1">Total Facturé</p>
             <p className="text-2xl font-bold text-green-400">
-              {company.totalInvoiced.toLocaleString()}€
+              {company.totalInvoiced.toLocaleString()}$
             </p>
           </CardBody>
         </Card>
@@ -50,7 +50,7 @@ export default function Invoices() {
           <CardBody>
             <p className="text-sm text-gray-400 mb-1">Taxes Collectées</p>
             <p className="text-2xl font-bold text-yellow-400">
-              {company.totalTaxes.toLocaleString()}€
+              {company.totalTaxes.toLocaleString()}$
             </p>
           </CardBody>
         </Card>
@@ -88,16 +88,16 @@ export default function Invoices() {
                 <TableRow key={invoice.id}>
                   <TableCell className="font-medium">{invoice.number}</TableCell>
                   <TableCell>{invoice.client}</TableCell>
-                  <TableCell>{invoice.amount.toLocaleString()}€</TableCell>
+                  <TableCell>{invoice.amount.toLocaleString()}$</TableCell>
                   <TableCell>
                     {invoice.withTax ? (
-                      <span className="text-yellow-400">{invoice.tax.toLocaleString()}€</span>
+                      <span className="text-yellow-400">{invoice.tax.toLocaleString()}$</span>
                     ) : (
                       <Badge variant="danger" size="sm">Exonéré</Badge>
                     )}
                   </TableCell>
                   <TableCell className="font-semibold text-green-400">
-                    {invoice.total.toLocaleString()}€
+                    {invoice.total.toLocaleString()}$
                   </TableCell>
                   <TableCell>{invoice.createdAt}</TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
@@ -149,7 +149,7 @@ export default function Invoices() {
 
             {/* Invoice Details */}
             <Input
-              label="Montant HT (€)"
+              label="Montant HT ($)"
               type="number"
               placeholder="0"
               value={invoiceAmount}
@@ -166,19 +166,19 @@ export default function Invoices() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-400">Montant HT</span>
                 <span className="font-medium text-gray-100">
-                  {invoiceAmount ? parseFloat(invoiceAmount).toLocaleString() : '0'}€
+                  {invoiceAmount ? parseFloat(invoiceAmount).toLocaleString() : '0'}$
                 </span>
               </div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-400">Taxe ({company.taxRate}%)</span>
                 <span className="font-medium text-yellow-400">
-                  {invoiceAmount ? Math.round(parseFloat(invoiceAmount) * (company.taxRate / 100)).toLocaleString() : '0'}€
+                  {invoiceAmount ? Math.round(parseFloat(invoiceAmount) * (company.taxRate / 100)).toLocaleString() : '0'}$
                 </span>
               </div>
               <div className="pt-2 border-t border-gray-600 flex items-center justify-between">
                 <span className="font-semibold text-gray-100">Total TTC</span>
                 <span className="text-xl font-bold text-green-400">
-                  {invoiceAmount ? Math.round(parseFloat(invoiceAmount) * (1 + company.taxRate / 100)).toLocaleString() : '0'}€
+                  {invoiceAmount ? Math.round(parseFloat(invoiceAmount) * (1 + company.taxRate / 100)).toLocaleString() : '0'}$
                 </span>
               </div>
             </div>
@@ -227,15 +227,15 @@ export default function Invoices() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Montant HT</span>
-                    <span className="font-medium">{selectedInvoice.amount.toLocaleString()}€</span>
+                    <span className="font-medium">{selectedInvoice.amount.toLocaleString()}$</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Taxe</span>
-                    <span className="font-medium text-yellow-400">{selectedInvoice.tax.toLocaleString()}€</span>
+                    <span className="font-medium text-yellow-400">{selectedInvoice.tax.toLocaleString()}$</span>
                   </div>
                   <div className="pt-2 border-t border-gray-600 flex justify-between">
                     <span className="font-semibold">Total TTC</span>
-                    <span className="text-xl font-bold text-green-400">{selectedInvoice.total.toLocaleString()}€</span>
+                    <span className="text-xl font-bold text-green-400">{selectedInvoice.total.toLocaleString()}$</span>
                   </div>
                 </div>
               </div>
